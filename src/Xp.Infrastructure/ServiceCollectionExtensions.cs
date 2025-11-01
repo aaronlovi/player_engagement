@@ -18,7 +18,7 @@ public static class ServiceCollectionExtensions {
     /// <param name="services">The service collection to configure.</param>
     /// <param name="cfg">The application configuration.</param>
     /// <param name="externalMigrationAssemblies">
-    /// Optional list of assemblies containing migrations. The "Identity.Infrastructure" assembly is always included.
+    /// Optional list of assemblies containing migrations. The "Xp.Infrastructure" assembly is always included.
     /// </param>
     /// <returns>The updated service collection.</returns>
     public static IServiceCollection AddInfrastructureServices(

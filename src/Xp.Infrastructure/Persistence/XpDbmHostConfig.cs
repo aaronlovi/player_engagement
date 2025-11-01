@@ -59,15 +59,33 @@ public static class XpDbmHostConfig {
     private static IServiceCollection ConfigurePostgresServices(
         IServiceCollection services,
         IEnumerable<Assembly>? externalMigrationAssemblies) {
-        Assembly[] migrationsAssemblies = externalMigrationAssemblies switch {
-            null => Array.Empty<Assembly>(),
-            IEnumerable<Assembly> assemblies => assemblies is Assembly[] array ? array : new List<Assembly>(assemblies).ToArray()
-        };
+        IReadOnlyCollection<Assembly> migrationsAssemblies = BuildMigrationAssemblies(externalMigrationAssemblies);
 
         return services
             .AddSingleton<PostgresExecutor>()
             .AddSingleton(provider => CreateDbMigrations(provider, migrationsAssemblies))
             .AddSingleton<IXpDbmService>(CreatePostgresDbmService);
+    }
+
+    private static IReadOnlyCollection<Assembly> BuildMigrationAssemblies(IEnumerable<Assembly>? externalAssemblies) {
+        var uniqueAssemblies = new HashSet<Assembly>();
+        var orderedAssemblies = new List<Assembly>();
+
+        AddIfMissing(typeof(XpDbmHostConfig).Assembly);
+
+        if (externalAssemblies != null) {
+            foreach (Assembly assembly in externalAssemblies) {
+                if (assembly is not null)
+                    AddIfMissing(assembly);
+            }
+        }
+
+        return orderedAssemblies;
+
+        void AddIfMissing(Assembly assembly) {
+            if (uniqueAssemblies.Add(assembly))
+                orderedAssemblies.Add(assembly);
+        }
     }
 
     private static DbMigrations CreateDbMigrations(
