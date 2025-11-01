@@ -195,3 +195,20 @@ These decisions lock the relational model and will be carried directly into the 
 6. Create indexes and unique constraints after table definitions to keep the script readable.
 7. Use `${schema}` token in every relation reference (e.g., `${schema}.xp_users`) to match Identity patterns.
 8. End with any optional `ANALYZE` or data seeding decisions (for this migration, no seed data).
+
+---
+
+## Step 7 – DbmService Wiring Task List
+
+To validate migrations without manual `psql`, mirror the Identity repo’s persistence wiring:
+
+1. **Create Infrastructure Project** – Add `src/Xp.Infrastructure/Xp.Infrastructure.csproj` referencing `InnoAndLogic.Persistence` and embedding `Persistence/Migrations/*.sql`.
+2. **Define Interfaces** – Introduce `Persistence/IXpDbmService.cs` describing the persistence surface (even if it only exposes a health check initially) to keep parity with Identity.
+3. **Implement `XpDbmService`** – Derive from `DbmService`, inject `PostgresExecutor`, `DatabaseOptions`, `DbMigrations`; invoke the base constructor so migrations apply on activation.
+4. **Optional In-Memory Stub** – Add `XpDbmInMemoryService` for tests/development parity with Identity (can return `Result.Success`).
+5. **Host Configuration Extension** – Create `XpDbmHostConfig.ConfigureXpPersistenceServices` extension method that binds `DatabaseOptions`, registers `DbMigrations`, and wires either the real or in-memory service based on `DatabaseProvider`.
+6. **Embed Migration Assembly** – Ensure the extension accepts external migration assemblies and defaults to `Xp.Infrastructure` assembly so embedded SQL is discoverable.
+7. **Update Host Startup** – In `src/XpService.Host/Program.cs`, call `services.ConfigureXpPersistenceServices(configuration, "DbmOptions", new[]{ typeof(Xp.Infrastructure.Persistence.XpDbmService).Assembly })` and keep a scope that resolves `IXpDbmService` at startup.
+8. **Configuration Files** – Add a `DbmOptions` section in `appsettings.json`/`appsettings.Development.json` (provider, connection string, schema) or map existing Postgres settings to `DatabaseOptions` via configuration binding.
+9. **Project References & Build** – Reference `Xp.Infrastructure` from `XpService.Host` (and solution) so DI wiring compiles.
+10. **Verify Run** – Build and run the host; the `DbmService` constructor should execute migrations automatically against the compose Postgres instance.
