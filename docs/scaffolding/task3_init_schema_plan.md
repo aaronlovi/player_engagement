@@ -81,3 +81,92 @@ These notes will drive the column definitions in Step 4.
 - Confirmed future migration files will be named `V###__description.sql` (e.g., `V001__init_schema.sql`) and leverage the `${schema}` token for substitution by `DbMigrations`.
 - We will follow the same separator/comment convention (`-------------------------------------------------------------------------------`) and schema-qualified statements (`${schema}.table`) used in `Identity.Infrastructure`.
 - Statements and DTO folders remain empty for now but establish the path for upcoming repository and query objects.
+
+---
+
+## Step 3 – Schema Bootstrap Outline
+
+- Open the migration with Identity-style boilerplate:
+  - `create schema if not exists ${schema};`
+  - `set local search_path to ${schema}, public;`
+- Define a reusable UTC helper:
+  ```sql
+  create or replace function ${schema}.now_utc() returns timestamp with time zone as $$
+      select now() at time zone 'utc';
+  $$ language sql stable;
+  ```
+- All timestamp columns (`created_at`, `updated_at`, etc.) will default to `${schema}.now_utc()`.
+- We do **not** need a `generator` table because XP ids will use `generated always as identity`, unlike Identity’s manual id strategy.
+- Maintain `-------------------------------------------------------------------------------` separators and add `COMMENT ON` statements for tables/columns where clarity matters.
+
+---
+
+## Step 4 – Table Specification Drafts
+
+**Conventions**
+- `bigint` for identifiers and XP totals; `integer` for streak counters.
+- Timestamp columns default to `${schema}.now_utc()`.
+- JSON payloads default to `'{}'::jsonb` and are declared `not null`.
+- Numeric XP values remain non-negative unless a future requirement introduces explicit debits.
+
+**`${schema}.xp_users`**
+- Columns: `user_id bigint generated always as identity primary key`, `external_user_id text not null`, `reward_tz text not null`, `segment_key text null`, `created_at timestamptz not null default ${schema}.now_utc()`, `updated_at timestamptz not null default ${schema}.now_utc()`.
+- Indexes/Constraints: unique index on `external_user_id`; FK target for all other tables.
+
+**`${schema}.xp_ledger`**
+- Columns: `ledger_id bigint generated always as identity primary key`, `user_id bigint not null`, `amount bigint not null`, `reason text not null`, `correlation_id uuid not null`, `policy_key text not null`, `policy_version int not null`, `season_id text null`, `metadata jsonb not null default '{}'::jsonb`, `created_at timestamptz not null default ${schema}.now_utc()`.
+- Constraints: FK to `xp_users`; check `amount <> 0`.
+- Indexes: unique on `correlation_id`; btree on `(user_id, created_at desc)`; optional composite on `(policy_key, policy_version)`.
+
+**`${schema}.xp_balance`**
+- Columns: `user_id bigint primary key`, `current_balance bigint not null default 0`, `lifetime_xp bigint not null default 0`, `seasonal_xp bigint not null default 0`, `season_id text null`, `updated_at timestamptz not null default ${schema}.now_utc()`.
+- Constraints: FK to `xp_users`, checks ensuring each XP column ≥ 0.
+- Notes: maintained via balance trigger in Task 4.
+
+**`${schema}.xp_streaks`**
+- Columns: `user_id bigint primary key`, `current_streak int not null default 0`, `longest_streak int not null default 0`, `grace_used int not null default 0`, `last_reward_day_id text null`, `model_state jsonb not null default '{}'::jsonb`, `updated_at timestamptz not null default ${schema}.now_utc()`.
+- Constraints: FK to `xp_users`; checks forcing non-negative counters.
+- Indexes: optional index on `last_reward_day_id` for analytics/queries.
+
+**`${schema}.xp_rules`**
+- Columns: `policy_key text not null`, `version int not null`, `is_active boolean not null default false`, `definition jsonb not null`, `created_by text not null`, `created_at timestamptz not null default ${schema}.now_utc()`, `updated_at timestamptz not null default ${schema}.now_utc()`.
+- Constraints: PK on `(policy_key, version)`; partial unique index enforcing single active version (`where is_active`).
+- Notes: row immutability per version; updates happen by inserting a new version.
+
+**`${schema}.xp_awards`**
+- Columns: `award_id bigint generated always as identity primary key`, `user_id bigint not null`, `reward_day_id text not null`, `xp_awarded bigint not null`, `streak_day int not null`, `policy_key text not null`, `policy_version int not null`, `receipt_id uuid not null`, `model_state_snapshot jsonb not null default '{}'::jsonb`, `created_at timestamptz not null default ${schema}.now_utc()`.
+- Constraints: FK to `xp_users`; unique constraint on `(user_id, reward_day_id)`; checks `xp_awarded > 0` and `streak_day >= 0`.
+- Indexes: composite on `(policy_key, policy_version)` for analytics, plus optional `reward_day_id`.
+
+Draft choices above will be validated and tightened in Step 5 when finalizing keys and relationships.
+
+---
+
+## Step 5 – Keys, Relationships & Index Strategy
+
+- **Foreign Keys**
+  - `xp_ledger.user_id`, `xp_balance.user_id`, `xp_streaks.user_id`, and `xp_awards.user_id` reference `${schema}.xp_users(user_id)` with `ON DELETE CASCADE` so removing a user cleans dependent projections/awards while ledger rows follow user lifecycle policies.
+  - `xp_balance` and `xp_streaks` are 1:1 with `xp_users`; enforce via PK=FK design.
+- **Primary Keys**
+  - Identity columns (`generated always as identity`) provide surrogate PKs for `xp_users`, `xp_ledger`, and `xp_awards`.
+  - Composite primary key for `xp_rules` on `(policy_key, version)`; `xp_balance`/`xp_streaks` use the FK-as-PK pattern.
+- **Unique Constraints**
+  - `xp_users_external_user_id_uidx` ensures one XP profile per platform user.
+  - `xp_ledger_correlation_id_uidx` enforces idempotent claims.
+  - `xp_awards_user_day_uidx` prevents duplicate daily awards.
+  - Partial unique index `xp_rules_active_uidx` on `(policy_key)` where `is_active` is true guarantees a single active version.
+- **Indexes**
+  - `xp_ledger_user_created_at_idx` on `(user_id, created_at DESC)` optimizes balance/streak recalculations and history lookups.
+  - `xp_ledger_policy_idx` on `(policy_key, policy_version)` supports analytics by rule.
+  - `xp_awards_policy_idx` on `(policy_key, policy_version)` mirrors ledger analytics; optional `xp_awards_reward_day_idx` on `reward_day_id` for reporting.
+  - `xp_streaks_last_reward_day_idx` (optional) enables troubleshooting around reward day transitions.
+  - `xp_users_reward_tz_idx` on `reward_tz` helps find cohorts for timezone governance.
+- **Check Constraints**
+  - `xp_ledger_amount_chk` (`amount <> 0`).
+  - `xp_balance_totals_chk` ensuring `current_balance >= 0`, `lifetime_xp >= 0`, `seasonal_xp >= 0`.
+  - `xp_streaks_non_negative_chk` covering `current_streak`, `longest_streak`, `grace_used`.
+  - `xp_awards_positive_chk` (`xp_awarded > 0`, `streak_day >= 0`).
+- **Comments**
+  - Add `COMMENT ON` statements for each table/critical column (e.g., correlation id, policy version) mirroring Identity’s style for clarity.
+
+These decisions lock the relational model and will be carried directly into the migration in Step 6.
