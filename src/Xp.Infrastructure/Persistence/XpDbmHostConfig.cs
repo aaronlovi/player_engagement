@@ -30,17 +30,17 @@ public static class XpDbmHostConfig {
         IConfiguration configuration,
         string sectionName,
         IEnumerable<Assembly>? externalMigrationAssemblies = null) {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configuration);
 
-        // Configure DatabaseOptions from configuration section
-        _ = services.Configure<DatabaseOptions>(options => {
-            IConfigurationSection section = configuration.GetSection(sectionName);
-            section.Bind(options);
-        });
+        if (string.IsNullOrWhiteSpace(sectionName))
+            throw new ArgumentException("Configuration section name cannot be null or whitespace.", nameof(sectionName));
 
-        // Get the options to determine the provider
-        var databaseOptions = new DatabaseOptions();
-        IConfigurationSection configSection = configuration.GetSection(sectionName);
-        configSection.Bind(databaseOptions);
+        IConfigurationSection optionsSection = configuration.GetSection(sectionName);
+        _ = services.AddOptions<DatabaseOptions>()
+            .Configure(optionsSection.Bind);
+
+        DatabaseOptions databaseOptions = optionsSection.Get<DatabaseOptions>() ?? new DatabaseOptions();
 
         return databaseOptions.Provider switch {
             DatabaseProvider.InMemory => ConfigureInMemoryServices(services),
@@ -59,19 +59,32 @@ public static class XpDbmHostConfig {
     private static IServiceCollection ConfigurePostgresServices(
         IServiceCollection services,
         IEnumerable<Assembly>? externalMigrationAssemblies) {
-        return services.
-            AddSingleton<PostgresExecutor>().
-            AddSingleton<DbMigrations>(provider => new DbMigrations(
-                provider.GetRequiredService<ILoggerFactory>(),
-                provider.GetRequiredService<IOptions<DatabaseOptions>>(),
-                externalMigrationAssemblies)).
-            AddSingleton<IXpDbmService, XpDbmService>(provider => {
-                ILoggerFactory loggerFactory = provider.GetRequiredService<ILoggerFactory>();
-                PostgresExecutor executor = provider.GetRequiredService<PostgresExecutor>();
-                DbMigrations migrations = provider.GetRequiredService<DbMigrations>();
-                DatabaseOptions databaseOptions = provider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
+        Assembly[] migrationsAssemblies = externalMigrationAssemblies switch {
+            null => Array.Empty<Assembly>(),
+            IEnumerable<Assembly> assemblies => assemblies is Assembly[] array ? array : new List<Assembly>(assemblies).ToArray()
+        };
 
-                return new XpDbmService(loggerFactory, executor, databaseOptions, migrations);
-            });
+        return services
+            .AddSingleton<PostgresExecutor>()
+            .AddSingleton(provider => CreateDbMigrations(provider, migrationsAssemblies))
+            .AddSingleton<IXpDbmService>(CreatePostgresDbmService);
+    }
+
+    private static DbMigrations CreateDbMigrations(
+        IServiceProvider provider,
+        IReadOnlyCollection<Assembly> migrationAssemblies) {
+        ILoggerFactory loggerFactory = provider.GetRequiredService<ILoggerFactory>();
+        IOptions<DatabaseOptions> databaseOptions = provider.GetRequiredService<IOptions<DatabaseOptions>>();
+
+        return new DbMigrations(loggerFactory, databaseOptions, migrationAssemblies);
+    }
+
+    private static IXpDbmService CreatePostgresDbmService(IServiceProvider provider) {
+        ILoggerFactory loggerFactory = provider.GetRequiredService<ILoggerFactory>();
+        PostgresExecutor executor = provider.GetRequiredService<PostgresExecutor>();
+        DbMigrations migrations = provider.GetRequiredService<DbMigrations>();
+        DatabaseOptions databaseOptions = provider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
+
+        return new XpDbmService(loggerFactory, executor, databaseOptions, migrations);
     }
 }
