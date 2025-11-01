@@ -43,9 +43,9 @@ internal class Program {
                     AddEnvironmentVariables();
             })
             .ConfigureServices((context, services) => {
-                var migrationAssemblies = new List<Assembly> {
-                    typeof(Xp.Infrastructure.ServiceCollectionExtensions).Assembly
-                };
+                Assembly[] migrationAssemblies = [
+                    typeof(XpDbmService).Assembly
+                ];
                 _ = services.ConfigureXpPersistenceServices(
                     context.Configuration,
                     "DbmOptions",
