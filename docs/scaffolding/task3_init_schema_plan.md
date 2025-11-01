@@ -170,3 +170,28 @@ Draft choices above will be validated and tightened in Step 5 when finalizing ke
   - Add `COMMENT ON` statements for each table/critical column (e.g., correlation id, policy version) mirroring Identity’s style for clarity.
 
 These decisions lock the relational model and will be carried directly into the migration in Step 6.
+
+---
+
+## Step 6 – Migration Authoring Checklist
+
+1. Create `src/Xp.Infrastructure/Persistence/Migrations/V001__init_schema.sql`.
+2. Add banner line (`-------------------------------------------------------------------------------`) separators between major sections, following the Identity baseline.
+3. Bootstrap:
+   - `create schema if not exists ${schema};`
+   - `set local search_path to ${schema}, public;`
+   - `create or replace function ${schema}.now_utc() ...`
+4. `CREATE TABLE` blocks in order:
+   - `xp_users`
+   - `xp_ledger`
+   - `xp_balance`
+   - `xp_streaks`
+   - `xp_rules`
+   - `xp_awards`
+5. For each table:
+   - Define columns per Step 4.
+   - Apply constraints, foreign keys, and check clauses from Step 5.
+   - Add `COMMENT ON TABLE` and `COMMENT ON COLUMN` statements where clarity helps future maintainers.
+6. Create indexes and unique constraints after table definitions to keep the script readable.
+7. Use `${schema}` token in every relation reference (e.g., `${schema}.xp_users`) to match Identity patterns.
+8. End with any optional `ANALYZE` or data seeding decisions (for this migration, no seed data).
