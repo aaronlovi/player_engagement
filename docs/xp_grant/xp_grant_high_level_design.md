@@ -27,11 +27,11 @@
 
 | **Entity / Event**        | **Fields (logical)**                                                                                                  | **Purpose**                                  | **Linked Requirements**                                |
 | ------------------------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------ |
-| `daily_login_award`       | user_id, reward_day_id (YYYY‑MM‑DD@IANA), xp_awarded, streak_day, model_state, policy_version, receipt_id, created_at | Idempotent record of a day’s claim per user. | BR-01, BR-04, BR-12, BR-09; TR-04, TR-08, TR-07        |
+| `daily_login_award`       | user_id, reward_day_id (YYYY‑MM‑DD in reward timezone), xp_awarded, streak_day, model_state, policy_version, receipt_id, created_at | Idempotent record of a day’s claim per user. | BR-01, BR-04, BR-12, BR-09; TR-04, TR-08, TR-07        |
 | `streak_state`            | user_id, current_streak, last_reward_day_id, grace_used, longest_streak, model_state                                  | Quick path to compute next outcome.          | BR-02, BR-16, BR-03; TR-06, TR-26                      |
 | `xp_ledger`               | user_id, amount, reason=DAILY_LOGIN, correlation_id=receipt_id, policy_version, season_id, created_at                 | Append‑only XP journal.                      | BR-11, BR-10; TR-07, TR-28, TR-15                      |
 | `policy`                  | policy_id, version, base_xp, streak_curve, model, claim_window, grace, seasonal, segment rules                        | Policy‑as‑data; immutable versions.          | BR-13, BR-09, BR-07, BR-06, BR-16; TR-01, TR-02, TR-12 |
-| Event `DailyLoginClaimed` | user_id, reward_day_id, xp, streak_data, policy_version, receipt_id                                                   | Downstream analytics and triggers.           | BR-05; TR-14, TR-15, TR-13                             |
+| Event `DailyLoginClaimed` | user_id, reward_day_id (YYYY‑MM‑DD in reward timezone), xp, streak_data, policy_version, receipt_id                    | Downstream analytics and triggers.           | BR-05; TR-14, TR-15, TR-13                             |
 
 ---
 

@@ -5,8 +5,8 @@
 ### Immediate Close-Out Checklist
 
 - [x] **Ledger debit semantics** — Keep `xp_ledger.amount` as a signed (non-zero) column with no separate credit flag; ensure docs/specs call out that negative entries represent debits.
-- [ ] **Balance trigger contract** — With the ledger decision in hand, outline how `xp.fn_apply_ledger()` will consume those columns so Task 4 begins with a locked spec.
-- [ ] **Canonical `reward_day_id` format** — Choose the storage convention shared by `xp_streaks` and `xp_awards` (e.g., `YYYY-MM-DD` in UTC) and reflect it in the migration plus DTO plans.
+- [x] **Balance projection contract** — Documented in `docs/scaffolding/balance_projection_contract.md`; Task 4 should implement the Orleans grain workflow described there.
+- [x] **Canonical `reward_day_id` format** — Store reward days as `YYYY-MM-DD` strings interpreted in the player’s reward timezone at grant time; migration comments updated to match.
 
 ### Deferred Until Downstream Tasks
 

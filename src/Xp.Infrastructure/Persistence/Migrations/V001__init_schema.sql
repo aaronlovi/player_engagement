@@ -116,7 +116,7 @@ comment on column ${schema}.xp_streaks.user_id is 'Foreign key to ${schema}.xp_u
 comment on column ${schema}.xp_streaks.current_streak is 'Current consecutive-day login streak length.';
 comment on column ${schema}.xp_streaks.longest_streak is 'Historical maximum streak achieved by the user.';
 comment on column ${schema}.xp_streaks.grace_used is 'Count of grace days consumed under the active policy.';
-comment on column ${schema}.xp_streaks.last_reward_day_id is 'Last reward-day identifier processed for the user.';
+comment on column ${schema}.xp_streaks.last_reward_day_id is 'Last reward-day date (YYYY-MM-DD) in the user''s reward timezone that the streak engine processed.';
 comment on column ${schema}.xp_streaks.model_state is 'JSON blob storing policy-specific streak state.';
 comment on column ${schema}.xp_streaks.updated_at is 'Timestamp when the streak snapshot was last updated.';
 
@@ -168,7 +168,7 @@ create index xp_awards_reward_day_idx on ${schema}.xp_awards (reward_day_id);
 comment on table ${schema}.xp_awards is 'Idempotent record of daily login XP claims per user.';
 comment on column ${schema}.xp_awards.award_id is 'Surrogate key for the award row.';
 comment on column ${schema}.xp_awards.user_id is 'Foreign key to ${schema}.xp_users for the claimant.';
-comment on column ${schema}.xp_awards.reward_day_id is 'Logical day identifier (YYYY-MM-DD@IANA) used for idempotency.';
+comment on column ${schema}.xp_awards.reward_day_id is 'Reward-day date (YYYY-MM-DD) evaluated in the player''s reward timezone at grant time.';
 comment on column ${schema}.xp_awards.xp_awarded is 'Amount of XP granted for the reward day.';
 comment on column ${schema}.xp_awards.streak_day is 'Derived streak index associated with the award.';
 comment on column ${schema}.xp_awards.policy_key is 'Policy key responsible for the award.';
