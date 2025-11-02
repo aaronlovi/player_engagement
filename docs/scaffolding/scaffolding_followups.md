@@ -2,14 +2,13 @@
 
 ## Task 3 – `V001__init_schema.sql`
 
-- **Timezone change history on `xp_users`**  
-  Capture how reward timezone changes are audited (trigger vs. history table) before exposing admin tooling. Source: `task3_init_schema_plan.md` notes around user metadata.
+### Immediate Close-Out Checklist
 
-- **Balance trigger contract**  
-  Confirm the upcoming `xp.fn_apply_ledger()` trigger consumes signed `xp_ledger.amount` values (credits positive, debits negative) and/or introduce an explicit `is_credit` flag so balance math stays deterministic. Align this design before starting Task 4.
+- [ ] **Ledger debit semantics** — Decide whether `xp_ledger.amount` stays signed-only or gains an explicit `is_credit` flag, then update the migration (and docs) accordingly.
+- [ ] **Balance trigger contract** — With the ledger decision in hand, outline how `xp.fn_apply_ledger()` will consume those columns so Task 4 begins with a locked spec.
+- [ ] **Canonical `reward_day_id` format** — Choose the storage convention shared by `xp_streaks` and `xp_awards` (e.g., `YYYY-MM-DD` in UTC) and reflect it in the migration plus DTO plans.
 
-- **Canonical `reward_day_id` format**  
-  Decide on the storage convention (`YYYY-MM-DD`, `YYYYMMDD`, tz suffix, etc.) shared by `xp_streaks` and `xp_awards`, then update the migration and downstream DTOs accordingly.
+### Deferred Until Downstream Tasks
 
-- **Optional analytics indexes**  
-  Re-evaluate `xp_streaks_last_reward_day_idx`, `xp_awards_reward_day_idx`, and other “optional” indexes once repository query patterns are defined to avoid unnecessary bloat.
+- [ ] **Optional analytics indexes** — Re-evaluate `xp_streaks_last_reward_day_idx`, `xp_awards_reward_day_idx`, and similar indexes after repository query patterns settle.
+- [ ] **Timezone change audit strategy** — Capture how reward timezone updates are recorded (trigger vs. history table) before implementing admin tooling for timezone changes.
