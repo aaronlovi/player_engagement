@@ -4,7 +4,7 @@
 
 ### Immediate Close-Out Checklist
 
-- [ ] **Ledger debit semantics** — Decide whether `xp_ledger.amount` stays signed-only or gains an explicit `is_credit` flag, then update the migration (and docs) accordingly.
+- [x] **Ledger debit semantics** — Keep `xp_ledger.amount` as a signed (non-zero) column with no separate credit flag; ensure docs/specs call out that negative entries represent debits.
 - [ ] **Balance trigger contract** — With the ledger decision in hand, outline how `xp.fn_apply_ledger()` will consume those columns so Task 4 begins with a locked spec.
 - [ ] **Canonical `reward_day_id` format** — Choose the storage convention shared by `xp_streaks` and `xp_awards` (e.g., `YYYY-MM-DD` in UTC) and reflect it in the migration plus DTO plans.
 
