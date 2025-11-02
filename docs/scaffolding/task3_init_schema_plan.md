@@ -1,3 +1,5 @@
+> Follow-up items for this task now live in `docs/scaffolding/scaffolding_followups.md`. Keep this checklist only while Task 3 remains in flight; it can be archived once the migration is finalized.
+
 # Task 3 – V001__init_schema.sql Planning Checklist
 
 Goal: author the first XP migration (`V001__init_schema.sql`) using the same conventions as `Identity.Infrastructure/Persistence/Migrations` so the future `Xp.Infrastructure` layer plugs into `InnoAndLogic.Persistence` cleanly.
