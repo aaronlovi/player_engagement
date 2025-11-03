@@ -7,7 +7,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Xp.Infrastructure\Xp.Infrastructure.csproj" />
+    <ProjectReference Include="..\PlayerEngagement.Infrastructure\PlayerEngagement.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

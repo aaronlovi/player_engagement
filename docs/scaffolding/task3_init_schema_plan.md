@@ -2,7 +2,7 @@
 
 # Task 3 – V001__init_schema.sql Planning Checklist
 
-Goal: author the first XP migration (`V001__init_schema.sql`) using the same conventions as `Identity.Infrastructure/Persistence/Migrations` so the future `Xp.Infrastructure` layer plugs into `InnoAndLogic.Persistence` cleanly.
+Goal: author the first XP migration (`V001__init_schema.sql`) using the same conventions as `Identity.Infrastructure/Persistence/Migrations` so the future `PlayerEngagement.Infrastructure` layer plugs into `InnoAndLogic.Persistence` cleanly.
 
 ## Step-by-Step Plan
 
@@ -11,7 +11,7 @@ Goal: author the first XP migration (`V001__init_schema.sql`) using the same con
    - Extract mandatory entities, JSON payloads, uniqueness rules, and audit requirements.
 
 2. **Align With Identity Infrastructure Pattern**
-   - Mirror the directory layout: `src/Xp.Infrastructure/Persistence/Migrations`.
+   - Mirror the directory layout: `src/PlayerEngagement.Infrastructure/Persistence/Migrations`.
    - Use the `${schema}` token and lower-case file naming (`V001__init_schema.sql`) exactly as `Identity` does so the `DbMigrations` loader can perform token substitution.
    - Ensure accompanying folders (`Statements`, DTOs, Dbm services) can be added later without relocating the migration.
 
@@ -32,7 +32,7 @@ Goal: author the first XP migration (`V001__init_schema.sql`) using the same con
    - Create helpful secondary indexes (e.g., `created_at`, `policy_version`, `season_id`) mirroring the Identity pattern of indexing read paths.
 
 6. **Author the Migration Script**
-   - Write the final SQL under `src/Xp.Infrastructure/Persistence/Migrations/V001__init_schema.sql`.
+   - Write the final SQL under `src/PlayerEngagement.Infrastructure/Persistence/Migrations/V001__init_schema.sql`.
    - Group related DDL blocks with `-------------------------------------------------------------------------------` separators and `COMMENT ON` statements, matching the reference repo’s style.
    - Keep statements schema-qualified (`${schema}.table`) to avoid relying on session state.
 
@@ -47,7 +47,7 @@ Goal: author the first XP migration (`V001__init_schema.sql`) using the same con
 
 ## Deliverables
 
-- File: `src/Xp.Infrastructure/Persistence/Migrations/V001__init_schema.sql`.
+- File: `src/PlayerEngagement.Infrastructure/Persistence/Migrations/V001__init_schema.sql`.
 - Verification notes or command transcript confirming the migration applies cleanly to Postgres.
 
 ---
@@ -77,9 +77,9 @@ These notes will drive the column definitions in Step 4.
 ## Step 2 Notes – Identity Infrastructure Alignment
 
 - Created the XP infrastructure scaffolding directories to mirror the Identity layout:
-  - `src/Xp.Infrastructure/Persistence/Migrations`
-  - `src/Xp.Infrastructure/Persistence/Statements`
-  - `src/Xp.Infrastructure/Persistence/DTOs`
+  - `src/PlayerEngagement.Infrastructure/Persistence/Migrations`
+  - `src/PlayerEngagement.Infrastructure/Persistence/Statements`
+  - `src/PlayerEngagement.Infrastructure/Persistence/DTOs`
 - Confirmed future migration files will be named `V###__description.sql` (e.g., `V001__init_schema.sql`) and leverage the `${schema}` token for substitution by `DbMigrations`.
 - We will follow the same separator/comment convention (`-------------------------------------------------------------------------------`) and schema-qualified statements (`${schema}.table`) used in `Identity.Infrastructure`.
 - Statements and DTO folders remain empty for now but establish the path for upcoming repository and query objects.
@@ -177,7 +177,7 @@ These decisions lock the relational model and will be carried directly into the 
 
 ## Step 6 – Migration Authoring Checklist
 
-1. Create `src/Xp.Infrastructure/Persistence/Migrations/V001__init_schema.sql`.
+1. Create `src/PlayerEngagement.Infrastructure/Persistence/Migrations/V001__init_schema.sql`.
 2. Add banner line (`-------------------------------------------------------------------------------`) separators between major sections, following the Identity baseline.
 3. Bootstrap:
    - `create schema if not exists ${schema};`
@@ -204,13 +204,13 @@ These decisions lock the relational model and will be carried directly into the 
 
 To validate migrations without manual `psql`, mirror the Identity repo’s persistence wiring:
 
-1. **Create Infrastructure Project** – Add `src/Xp.Infrastructure/Xp.Infrastructure.csproj` referencing `InnoAndLogic.Persistence` and embedding `Persistence/Migrations/*.sql`.
-2. **Define Interfaces** – Introduce `Persistence/IXpDbmService.cs` describing the persistence surface (even if it only exposes a health check initially) to keep parity with Identity.
-3. **Implement `XpDbmService`** – Derive from `DbmService`, inject `PostgresExecutor`, `DatabaseOptions`, `DbMigrations`; invoke the base constructor so migrations apply on activation.
-4. **Optional In-Memory Stub** – Add `XpDbmInMemoryService` for tests/development parity with Identity (can return `Result.Success`).
-5. **Host Configuration Extension** – Create `XpDbmHostConfig.ConfigureXpPersistenceServices` extension method that binds `DatabaseOptions`, registers `DbMigrations`, and wires either the real or in-memory service based on `DatabaseProvider`.
-6. **Embed Migration Assembly** – Ensure the extension accepts external migration assemblies and defaults to `Xp.Infrastructure` assembly so embedded SQL is discoverable.
-7. **Update Host Startup** – In `src/XpService.Host/Program.cs`, call `services.ConfigureXpPersistenceServices(configuration, "DbmOptions", new[]{ typeof(Xp.Infrastructure.Persistence.XpDbmService).Assembly })` and keep a scope that resolves `IXpDbmService` at startup.
+1. **Create Infrastructure Project** – Add `src/PlayerEngagement.Infrastructure/PlayerEngagement.Infrastructure.csproj` referencing `InnoAndLogic.Persistence` and embedding `Persistence/Migrations/*.sql`.
+2. **Define Interfaces** – Introduce `Persistence/IPlayerEngagementDbmService.cs` describing the persistence surface (even if it only exposes a health check initially) to keep parity with Identity.
+3. **Implement `PlayerEngagementDbmService`** – Derive from `DbmService`, inject `PostgresExecutor`, `DatabaseOptions`, `DbMigrations`; invoke the base constructor so migrations apply on activation.
+4. **Optional In-Memory Stub** – Add `PlayerEngagementDbmInMemoryService` for tests/development parity with Identity (can return `Result.Success`).
+5. **Host Configuration Extension** – Create `PlayerEngagementDbmHostConfig.ConfigurePlayerEngagementPersistenceServices` extension method that binds `DatabaseOptions`, registers `DbMigrations`, and wires either the real or in-memory service based on `DatabaseProvider`.
+6. **Embed Migration Assembly** – Ensure the extension accepts external migration assemblies and defaults to `PlayerEngagement.Infrastructure` assembly so embedded SQL is discoverable.
+7. **Update Host Startup** – In `src/PlayerEngagement.Host/Program.cs`, call `services.ConfigurePlayerEngagementPersistenceServices(configuration, "DbmOptions", new[]{ typeof(PlayerEngagement.Infrastructure.Persistence.PlayerEngagementDbmService).Assembly })` and keep a scope that resolves `IPlayerEngagementDbmService` at startup.
 8. **Configuration Files** – Add a `DbmOptions` section in `appsettings.json`/`appsettings.Development.json` (provider, connection string, schema) or map existing Postgres settings to `DatabaseOptions` via configuration binding.
-9. **Project References & Build** – Reference `Xp.Infrastructure` from `XpService.Host` (and solution) so DI wiring compiles.
+9. **Project References & Build** – Reference `PlayerEngagement.Infrastructure` from `PlayerEngagement.Host` (and solution) so DI wiring compiles.
 10. **Verify Run** – Build and run the host; the `DbmService` constructor should execute migrations automatically against the compose Postgres instance.

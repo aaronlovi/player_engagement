@@ -2,9 +2,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using InnoAndLogic.Shared;
 
-namespace Xp.Infrastructure.Persistence;
+namespace PlayerEngagement.Infrastructure.Persistence;
 
-public interface IXpDbmService
+public interface IPlayerEngagementDbmService
 {
     Task<Result> HealthCheckAsync(CancellationToken ct);
 }

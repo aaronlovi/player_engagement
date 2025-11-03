@@ -5,24 +5,24 @@ using InnoAndLogic.Persistence.Migrations;
 using InnoAndLogic.Shared;
 using Microsoft.Extensions.Logging;
 
-namespace Xp.Infrastructure.Persistence;
+namespace PlayerEngagement.Infrastructure.Persistence;
 
-public sealed class XpDbmService : DbmService, IXpDbmService
+public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDbmService
 {
-    private readonly ILogger<XpDbmService> _logger;
+    private readonly ILogger<PlayerEngagementDbmService> _logger;
 
-    public XpDbmService(
+    public PlayerEngagementDbmService(
         ILoggerFactory loggerFactory,
         PostgresExecutor executor,
         DatabaseOptions options,
         DbMigrations migrations) : base(loggerFactory, executor, options, migrations)
     {
-        _logger = loggerFactory.CreateLogger<XpDbmService>();
+        _logger = loggerFactory.CreateLogger<PlayerEngagementDbmService>();
     }
 
     public Task<Result> HealthCheckAsync(CancellationToken ct)
     {
-        _logger.LogInformation("XP DBM health check requested.");
+        _logger.LogInformation("Player Engagement DBM health check requested.");
         return Task.FromResult(Result.Success);
     }
 }

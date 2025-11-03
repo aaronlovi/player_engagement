@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XpService.Host", "XpService.Host\XpService.Host.csproj", "{ACF78DEE-74A8-4F18-8464-43CA2DFD2081}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerEngagement.Host", "PlayerEngagement.Host\PlayerEngagement.Host.csproj", "{ACF78DEE-74A8-4F18-8464-43CA2DFD2081}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XpService.Domain", "XpService.Domain\XpService.Domain.csproj", "{72E71722-BCB3-4722-8EFB-E116761A37E3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerEngagement.Domain", "PlayerEngagement.Domain\PlayerEngagement.Domain.csproj", "{72E71722-BCB3-4722-8EFB-E116761A37E3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xp.Infrastructure", "Xp.Infrastructure\Xp.Infrastructure.csproj", "{B58D7527-9409-4267-BD7A-CE3D5309C0B9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerEngagement.Infrastructure", "PlayerEngagement.Infrastructure\PlayerEngagement.Infrastructure.csproj", "{B58D7527-9409-4267-BD7A-CE3D5309C0B9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

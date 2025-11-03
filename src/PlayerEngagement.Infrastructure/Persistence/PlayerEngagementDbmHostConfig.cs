@@ -8,14 +8,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Xp.Infrastructure.Persistence;
+namespace PlayerEngagement.Infrastructure.Persistence;
 
 /// <summary>
 /// Provides configuration methods for setting up database persistence services specific to the Player Engagement context.
 /// </summary>
-public static class XpDbmHostConfig {
+public static class PlayerEngagementDbmHostConfig {
     /// <summary>
-    /// Configures services for the XpDbmService or XpDbmInMemoryService based on the database provider specified in <see cref="DatabaseOptions"/>.
+    /// Configures services for the PlayerEngagementDbmService or PlayerEngagementDbmInMemoryService based on the database provider specified in <see cref="DatabaseOptions"/>.
     /// </summary>
     /// <param name="services">The IServiceCollection to add services to.</param>
     /// <param name="configuration">The IConfiguration instance to bind options from.</param>
@@ -25,7 +25,7 @@ public static class XpDbmHostConfig {
     /// If not provided, only the default assembly is used.
     /// </param>
     /// <returns>The updated <see cref="IServiceCollection"/> with the configured services.</returns>
-    public static IServiceCollection ConfigureXpPersistenceServices(
+    public static IServiceCollection ConfigurePlayerEngagementPersistenceServices(
         this IServiceCollection services,
         IConfiguration configuration,
         string sectionName,
@@ -50,9 +50,9 @@ public static class XpDbmHostConfig {
     }
 
     private static IServiceCollection ConfigureInMemoryServices(IServiceCollection services) {
-        return services.AddSingleton<IXpDbmService, XpDbmInMemoryService>(provider => {
+        return services.AddSingleton<IPlayerEngagementDbmService, PlayerEngagementDbmInMemoryService>(provider => {
             ILoggerFactory loggerFactory = provider.GetRequiredService<ILoggerFactory>();
-            return new XpDbmInMemoryService(loggerFactory);
+            return new PlayerEngagementDbmInMemoryService(loggerFactory);
         });
     }
 
@@ -64,14 +64,14 @@ public static class XpDbmHostConfig {
         return services
             .AddSingleton<PostgresExecutor>()
             .AddSingleton(provider => CreateDbMigrations(provider, migrationsAssemblies))
-            .AddSingleton<IXpDbmService>(CreatePostgresDbmService);
+            .AddSingleton<IPlayerEngagementDbmService>(CreatePostgresDbmService);
     }
 
     private static IReadOnlyCollection<Assembly> BuildMigrationAssemblies(IEnumerable<Assembly>? externalAssemblies) {
         var uniqueAssemblies = new HashSet<Assembly>();
         var orderedAssemblies = new List<Assembly>();
 
-        AddIfMissing(typeof(XpDbmHostConfig).Assembly);
+        AddIfMissing(typeof(PlayerEngagementDbmHostConfig).Assembly);
 
         if (externalAssemblies != null) {
             foreach (Assembly assembly in externalAssemblies) {
@@ -97,12 +97,12 @@ public static class XpDbmHostConfig {
         return new DbMigrations(loggerFactory, databaseOptions, migrationAssemblies);
     }
 
-    private static IXpDbmService CreatePostgresDbmService(IServiceProvider provider) {
+    private static IPlayerEngagementDbmService CreatePostgresDbmService(IServiceProvider provider) {
         ILoggerFactory loggerFactory = provider.GetRequiredService<ILoggerFactory>();
         PostgresExecutor executor = provider.GetRequiredService<PostgresExecutor>();
         DbMigrations migrations = provider.GetRequiredService<DbMigrations>();
         DatabaseOptions databaseOptions = provider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
 
-        return new XpDbmService(loggerFactory, executor, databaseOptions, migrations);
+        return new PlayerEngagementDbmService(loggerFactory, executor, databaseOptions, migrations);
     }
 }

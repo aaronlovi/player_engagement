@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Xp.Infrastructure.Persistence;
+using PlayerEngagement.Infrastructure.Persistence;
 
-namespace Xp.Infrastructure;
+namespace PlayerEngagement.Infrastructure;
 
 /// <summary>
 /// Extension methods for configuring infrastructure services.
@@ -18,7 +18,7 @@ public static class ServiceCollectionExtensions {
     /// <param name="services">The service collection to configure.</param>
     /// <param name="cfg">The application configuration.</param>
     /// <param name="externalMigrationAssemblies">
-    /// Optional list of assemblies containing migrations. The "Xp.Infrastructure" assembly is always included.
+    /// Optional list of assemblies containing migrations. The "PlayerEngagement.Infrastructure" assembly is always included.
     /// </param>
     /// <returns>The updated service collection.</returns>
     public static IServiceCollection AddInfrastructureServices(
@@ -28,12 +28,12 @@ public static class ServiceCollectionExtensions {
 
         externalMigrationAssemblies = EnsureMigrationAssemblies(externalMigrationAssemblies);
 
-        return XpDbmHostConfig.ConfigureXpPersistenceServices(
+        return PlayerEngagementDbmHostConfig.ConfigurePlayerEngagementPersistenceServices(
             services, cfg, DbmOptionsSectionName, externalMigrationAssemblies);
     }
 
     /// <summary>
-    /// Ensures the external migration assemblies list is initialized and always contains the Xp.Infrastructure assembly.
+    /// Ensures the external migration assemblies list is initialized and always contains the PlayerEngagement.Infrastructure assembly.
     /// </summary>
     /// <param name="externalMigrationAssemblies">The list of external migration assemblies.</param>
     /// <returns>A list of assemblies containing the Identity.Infrastructure assembly.</returns>

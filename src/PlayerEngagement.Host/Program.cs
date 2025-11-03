@@ -9,12 +9,12 @@ using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Hosting;
 using Orleans.Serialization;
-using Xp.Infrastructure;
-using Xp.Infrastructure.Persistence;
+using PlayerEngagement.Infrastructure;
+using PlayerEngagement.Infrastructure.Persistence;
 
 using Hosting = Microsoft.Extensions.Hosting;
 
-namespace XpService.Host;
+namespace PlayerEngagement.Host;
 
 internal class Program {
     private static async Task Main(string[] args) {
@@ -44,9 +44,9 @@ internal class Program {
             })
             .ConfigureServices((context, services) => {
                 Assembly[] migrationAssemblies = [
-                    typeof(XpDbmService).Assembly
+                    typeof(PlayerEngagementDbmService).Assembly
                 ];
-                _ = services.ConfigureXpPersistenceServices(
+                _ = services.ConfigurePlayerEngagementPersistenceServices(
                     context.Configuration,
                     "DbmOptions",
                     migrationAssemblies);
@@ -58,7 +58,7 @@ internal class Program {
 
         // Resolve DbmService from DI container and test migrations
         using (IServiceScope scope = host.Services.CreateScope()) {
-            IXpDbmService dbmService = scope.ServiceProvider.GetRequiredService<IXpDbmService>();
+            IPlayerEngagementDbmService dbmService = scope.ServiceProvider.GetRequiredService<IPlayerEngagementDbmService>();
             Console.WriteLine("DbmService resolved and migrations tested.");
         }
 

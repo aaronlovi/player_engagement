@@ -1,6 +1,6 @@
 | ID | Section                 | Task Title                                  | Description / Acceptance Criteria                                                                                   | Input Dependencies         | Expected Output                                  | Complexity (1–3) | Notes / Tips                                                    |
 | -- | ----------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------- | ------------------------------------------------ | ---------------- | --------------------------------------------------------------- |
-| 1  | Environment Setup       | Initialize .NET Solution                    | Create a new .NET 8 solution named `XpService` with Orleans dependencies and `InnoAndLogic.Persistence` referenced. Solution lives under `src/` with host and supporting projects split (e.g., `XpService.Host`, `XpService.Domain`). Use the ASP.NET Core minimal API template as the starting point for the host so Orleans can share the same process as the HTTP surface. | None                       | `.sln` file and initial project structure.       | 1                | Run `dotnet new sln` in `src/` and `dotnet new web` for the host project; additional class libraries can be added as empty shells. |
+| 1  | Environment Setup       | Initialize .NET Solution                    | Create a new .NET 8 solution named `PlayerEngagement` with Orleans dependencies and `InnoAndLogic.Persistence` referenced. Solution lives under `src/` with host and supporting projects split (e.g., `PlayerEngagement.Host`, `PlayerEngagement.Domain`). Use the ASP.NET Core minimal API template as the starting point for the host so Orleans can share the same process as the HTTP surface. | None                       | `.sln` file and initial project structure.       | 1                | Run `dotnet new sln` in `src/` and `dotnet new web` for the host project; additional class libraries can be added as empty shells. |
 | 2  | Environment Setup       | Add PostgreSQL Connection Config            | Add environment variables or appsettings for PostgreSQL connection (`Host`, `Port`, `DB`, `User`, `Password`).      | Task 1                     | Config section in `appsettings.Development.json` | 1                | Use the `Postgres` configuration section (`Postgres:Host`, etc.); env overrides follow `Postgres__Host` format. |
 | 3  | Database Schema         | Create Migration Script V1__init_schema.sql | Write SQL script with tables `xp_users`, `xp_ledger`, `xp_balance`, `xp_streaks`, `xp_rules`, `xp_awards`.          | Technical requirements doc | `Sql/migrations/V1__init_schema.sql`             | 2                | Must conform to Evolve format and `xp` schema.                  |
 | 4  | Database Schema         | Create Trigger for Balance Updates          | Write SQL script that updates `xp_balance` after inserting into `xp_ledger`.                                        | Task 3                     | `Sql/migrations/V2__balance_trigger.sql`         | 2                | Use `xp.fn_apply_ledger()` as specified.                        |
@@ -19,7 +19,7 @@
 | 17 | Angular UI              | Implement Rules List Component              | Fetch `/xp/rules` and display in table.                                                                             | Task 14                    | `rules-list.component.ts`                        | 2                | Include columns for key, base XP, caps, multipliers.            |
 | 18 | Angular UI              | Implement Rule Editor Component             | Form editor for adding/updating XP rules.                                                                           | Task 14                    | `rule-editor.component.ts`                       | 2                | Use reactive forms; submit via PUT `/xp/rules/{rule_key}`.      |
 | 19 | Angular UI              | Implement API Service                       | Create service for backend interaction (`xp-api.service.ts`).                                                       | Task 14                    | `xp-api.service.ts`                              | 1                | Handle CRUD + simulate endpoint.                                |
-| 20 | Testing                 | Implement xUnit Setup                       | Add base test project and PostgreSQL Testcontainers.                                                                | Task 1                     | `XpService.Tests` project.                       | 2                | Run migrations during test setup.                               |
+| 20 | Testing                 | Implement xUnit Setup                       | Add base test project and PostgreSQL Testcontainers.                                                                | Task 1                     | `PlayerEngagement.Tests` project.                       | 2                | Run migrations during test setup.                               |
 | 21 | Testing                 | Write Grant Tests                           | Validate grant logic, caps, and idempotency.                                                                        | Task 13, Task 20           | `GrantTests.cs`                                  | 3                | Use seeded rules + mock users.                                  |
 | 22 | Testing                 | Write Streak Tests                          | Validate streak increment logic (calendar vs rolling).                                                              | Task 12, Task 20           | `StreakTests.cs`                                 | 2                | Verify grace day policy.                                        |
 | 23 | Testing                 | Write Rule Tests                            | Verify rule CRUD and JSON parsing correctness.                                                                      | Task 11, Task 20           | `RulesTests.cs`                                  | 1                | Include boundary test cases.                                    |
@@ -34,32 +34,33 @@
 
 | Folder / File           | Purpose                                                            |
 | ----------------------- | ------------------------------------------------------------------ |
-| `/src/Xp.sln`           | Solution file (groups all Xp projects).                            |
-| `/src/Xp.Host/`         | Orleans silo host (startup, Orleans config, health).               |
-| `/src/Xp.Gateway/`      | Public HTTP API (Minimal API/Controllers) for XP endpoints.        |
-| `/src/Xp.Grains/`       | Orleans grains and domain logic (Grant, Streak, Rule).             |
-| `/src/Xp.Common/`       | Shared code (DTOs, repository, Evolve runner, Npgsql data source). |
-| `/src/Xp.Protos/`       | (Optional) gRPC contracts if needed later.                         |
-| `/src/Xp.Tests/`        | xUnit tests (unit + integration; can spin ephemeral Postgres).     |
-| `/infra/migrations/xp/` | Evolve SQL migration scripts (`V1__...sql`, `V2__...sql`).         |
-| `/infra/seeds/xp/`      | SQL seed files (e.g., `seed_rules.sql`).                           |
-| `/docs/`                | Design notes/ADRs related to XP (optional).                        |
-| `/ui/xp-config-ui/`     | Angular app for XP rules configuration.                            |
+| `/src/PlayerEngagement.sln`                  | Solution file (groups all Player Engagement projects).                                     |
+| `/src/PlayerEngagement.Host/`                | Orleans silo host (startup, Orleans config, health).                                       |
+| `/src/PlayerEngagement.Gateway/`             | Public HTTP API (Minimal API/Controllers) for XP endpoints.                                |
+| `/src/PlayerEngagement.Grains/`              | Orleans grains and domain logic (Grant, Streak, Rule).                                     |
+| `/src/PlayerEngagement.Common/`              | Shared code (DTOs, repository, Evolve runner, Npgsql data source).                        |
+| `/src/PlayerEngagement.Protos/`              | (Optional) gRPC contracts if needed later.                                                 |
+| `/src/PlayerEngagement.Tests/`               | xUnit tests (unit + integration; can spin ephemeral Postgres).                             |
+| `/src/PlayerEngagement.Infrastructure/`      | Infrastructure project embedding migrations and database wiring.                           |
+| `/infra/migrations/player_engagement/`       | Evolve SQL migration scripts (`V1__...sql`, `V2__...sql`).                                 |
+| `/infra/seeds/player_engagement/`            | SQL seed files (e.g., `seed_rules.sql`).                                                   |
+| `/docs/`                                     | Design notes/ADRs related to player engagement systems (optional).                         |
+| `/ui/player-engagement-config-ui/`           | Angular app for configuring engagement (XP, streaks, bonuses).                             |
 
 ## Pathing for Tasks
 
 | Task Area                           | Where artifacts should live                                                                                                                               |
 | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Migrations & Seeds**              | `/infra/migrations/xp`, `/infra/seeds/xp`                                                                                                                 |
-| **Orleans Grains**                  | `/src/Xp.Grains`                                                                                                                                          |
-| **Grain Interfaces (Abstractions)** | `/src/Xp.Grains/Abstractions` or directly under `Xp.Grains`                                                                                               |
-| **Npgsql Repository & Evolve**      | `/src/Xp.Common/Data` and `/src/Xp.Common/Infra`                                                                                                          |
-| **Mappers**                         | `/src/Xp.Common/Mappers` — similar to `Identity.Common/Mappers`; include classes like `XpRuleMapper`, `XpGrantMapper` for DTO↔Domain conversions.         |
-| **API Endpoints & DTOs**            | `/src/Xp.Gateway/Api`                                                                                                                                     |
-| **Host Startup**                    | `/src/Xp.Host`                                                                                                                                            |
-| **Tests**                           | `/src/Xp.Tests` (integration tests; spin Postgres, run migrations from `/infra/migrations/xp`)                                                            |
-| **Common Unit Tests**               | `/src/Xp.Common.Tests` — xUnit tests for all components in `/src/Xp.Common`, including repositories, data utilities, mappers, and infrastructure helpers. |
-| **Grains Unit Tests**               | `/src/Xp.Grains.Tests` — xUnit tests for grain behavior (e.g., streak logic, grant application).                                                          |
+| **Migrations & Seeds**              | `/src/PlayerEngagement.Infrastructure/Persistence/Migrations`, `/infra/migrations/player_engagement`, `/infra/seeds/player_engagement`                     |
+| **Orleans Grains**                  | `/src/PlayerEngagement.Grains`                                                                                                                            |
+| **Grain Interfaces (Abstractions)** | `/src/PlayerEngagement.Grains/Abstractions` or directly under `PlayerEngagement.Grains`                                                                   |
+| **Npgsql Repository & Evolve**      | `/src/PlayerEngagement.Common/Data` and `/src/PlayerEngagement.Common/Infra`                                                                              |
+| **Mappers**                         | `/src/PlayerEngagement.Common/Mappers` — similar to `Identity.Common/Mappers`; include classes like `XpRuleMapper`, `XpGrantMapper` for DTO↔Domain conversions. |
+| **API Endpoints & DTOs**            | `/src/PlayerEngagement.Gateway/Api`                                                                                                                       |
+| **Host Startup**                    | `/src/PlayerEngagement.Host`                                                                                                                              |
+| **Tests**                           | `/src/PlayerEngagement.Tests` (integration tests; spin Postgres, run migrations from `/src/PlayerEngagement.Infrastructure/Persistence/Migrations`)        |
+| **Common Unit Tests**               | `/src/PlayerEngagement.Common.Tests` — xUnit tests for all components in `/src/PlayerEngagement.Common`, including repositories, data utilities, mappers, and infrastructure helpers. |
+| **Grains Unit Tests**               | `/src/PlayerEngagement.Grains.Tests` — xUnit tests for grain behavior (e.g., streak logic, grant application).                                            |
 
 ### Mapper Pattern (from Identity.Common/Mappers)
 
@@ -87,7 +88,7 @@
 
 **Testing Guidance**:
 
-* Unit test each mapper in `/src/Xp.Common.Tests` with round‑trip tests (`ToDomain` then `ToDto` reproduces inputs where expected), null/empty edge cases, and enum error cases.
+* Unit test each mapper in `/src/PlayerEngagement.Common.Tests` with round‑trip tests (`ToDomain` then `ToDto` reproduces inputs where expected), null/empty edge cases, and enum error cases.
 * Avoid mocking; treat as pure functions with table‑driven tests.
 
 **Why this pattern?**
