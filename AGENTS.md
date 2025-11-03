@@ -18,6 +18,7 @@ Target xUnit for new tests, mirroring project structure (e.g., `src/PlayerEngage
 
 ## Commit & Pull Request Guidelines
 Follow the existing history: imperative, capitalized subjects (`Add`, `Refactor`, `Update`) limited to ~72 characters. Squash incidental work before pushing. Each PR should describe the change, outline testing performed, link relevant design docs or issues, and include screenshots or API traces when behavior changes. Update `docs/` or configuration notes alongside code so reviewers can trace the impact.
+- Do not create commits or push changes until the repository owner reviews the diff; share staged work for approval first.
 
 ## Security & Configuration Tips
 Never commit secrets; keep `.env` files local and document required variables in PRs. Align `appsettings.Development.json` with the compose values, and prefer environment variables for production secrets. When introducing new services, extend `infra/docker-compose.yml` and document port usage to avoid collisions.
