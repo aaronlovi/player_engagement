@@ -1,79 +1,108 @@
 using System;
-using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Orleans;
 using Orleans.Hosting;
 using Orleans.Serialization;
-using PlayerEngagement.Infrastructure;
 using PlayerEngagement.Infrastructure.Persistence;
-
-using Hosting = Microsoft.Extensions.Hosting;
 
 namespace PlayerEngagement.Host;
 
-internal class Program {
-    private static async Task Main(string[] args) {
-        string env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+internal static class Program
+{
+    private static async Task Main(string[] args)
+    {
+        WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-        // Build the host with Orleans silo
-        IHostBuilder hostBuilder = Hosting.Host.CreateDefaultBuilder(args)
-            .UseOrleans((context, siloBuilder) => {
-                // Use localhost clustering for local development
-                _ = siloBuilder.UseLocalhostClustering()
-                    .ConfigureLogging(logging => logging.AddConsole())
-                    .UseDashboard(options => { })
-                    .ConfigureServices(services => {
-                        // Configure protobuf serialization for Identity.Protos types
-                        _ = services.AddSerializer(serializerBuilder => {
-                            _ = serializerBuilder.AddProtobufSerializer(
-                                isSerializable: type => type.Namespace?.StartsWith("Identity.Protos") == true,
-                                isCopyable: type => type.Namespace?.StartsWith("Identity.Protos") == true);
-                        });
-                    }); // Optional: Orleans Dashboard for monitoring
-            })
-            .ConfigureAppConfiguration((context, config) => {
-                _ = config.
-                    AddJsonFile("appsettings.json", optional: false, reloadOnChange: true).
-                    AddJsonFile($"appsettings.{env}.json", optional: true, reloadOnChange: true).
-                    AddEnvironmentVariables();
-            })
-            .ConfigureServices((context, services) => {
-                Assembly[] migrationAssemblies = [
-                    typeof(PlayerEngagementDbmService).Assembly
-                ];
-                _ = services.ConfigurePlayerEngagementPersistenceServices(
-                    context.Configuration,
-                    "DbmOptions",
-                    migrationAssemblies);
-            })
-            .ConfigureLogging((context, builder) => builder.ClearProviders())
-            .UseConsoleLifetime();
+        builder.Host.UseOrleans((context, siloBuilder) =>
+        {
+            _ = siloBuilder.UseLocalhostClustering()
+                .ConfigureLogging(logging => logging.AddConsole())
+                .ConfigureServices(services =>
+                {
+                    _ = services.AddSerializer(serializerBuilder =>
+                    {
+                        _ = serializerBuilder.AddProtobufSerializer(
+                            isSerializable: type => type.Namespace?.StartsWith("Identity.Protos") == true,
+                            isCopyable: type => type.Namespace?.StartsWith("Identity.Protos") == true);
+                    });
+                });
+        });
 
-        IHost host = hostBuilder.Build();
+        builder.Logging.ClearProviders();
 
-        // Resolve DbmService from DI container and test migrations
-        using (IServiceScope scope = host.Services.CreateScope()) {
-            IPlayerEngagementDbmService dbmService = scope.ServiceProvider.GetRequiredService<IPlayerEngagementDbmService>();
-            Console.WriteLine("DbmService resolved and migrations tested.");
-        }
+        Assembly[] migrationAssemblies = [
+            typeof(PlayerEngagementDbmService).Assembly
+        ];
+        _ = builder.Services.ConfigurePlayerEngagementPersistenceServices(
+            builder.Configuration,
+            "DbmOptions",
+            migrationAssemblies);
 
-        // Start the Orleans silo
-        Console.WriteLine("Starting Orleans silo...");
-        await host.StartAsync();
+        WebApplication app = builder.Build();
 
-        Console.WriteLine("Orleans silo is running. Press Ctrl+C to shut down.");
+        await EnsureDatabaseAsync(app.Services);
 
-        // IGrainFactory grainFactory = host.Services.GetRequiredService<IGrainFactory>();
-        // IUserManagementGrain adminGrain = grainFactory.GetGrain<IUserManagementGrain>(12345);
+        MapHealthEndpoints(app);
+        MapXpEndpoints(app);
 
-        // Wait for shutdown
-        await host.WaitForShutdownAsync();
+        await app.RunAsync();
+    }
 
-        Console.WriteLine("Orleans silo stopped.");
+    private static async Task EnsureDatabaseAsync(IServiceProvider services)
+    {
+        using IServiceScope scope = services.CreateScope();
+        IPlayerEngagementDbmService dbmService = scope.ServiceProvider.GetRequiredService<IPlayerEngagementDbmService>();
+        Console.WriteLine("DbmService resolved and migrations tested.");
+        await dbmService.HealthCheckAsync(CancellationToken.None);
+    }
+
+    private static void MapHealthEndpoints(WebApplication app)
+    {
+        _ = app.MapGet("/health/live", () =>
+                Results.Ok(new { status = "live" }))
+            .WithName("HealthLive")
+            .WithTags("Health");
+
+        _ = app.MapGet("/health/ready", async (IPlayerEngagementDbmService dbmService, CancellationToken ct) =>
+        {
+            try
+            {
+                await dbmService.HealthCheckAsync(ct);
+                return Results.Ok(new { status = "ready" });
+            }
+            catch (Exception ex)
+            {
+                return Results.Json(
+                    new { status = "unavailable", error = ex.Message },
+                    statusCode: StatusCodes.Status503ServiceUnavailable);
+            }
+        })
+            .WithName("HealthReady")
+            .WithTags("Health");
+    }
+
+    private static void MapXpEndpoints(WebApplication app)
+    {
+        RouteGroupBuilder xpGroup = app.MapGroup("/xp").WithTags("XP");
+
+        // TODO: Replace scaffolding stubs with real handlers once XP workflows are implemented.
+        _ = xpGroup.MapGet("/ledger", () =>
+                Results.Json(
+                    new { message = "Not implemented - scaffolding stub" },
+                    statusCode: StatusCodes.Status501NotImplemented))
+            .WithName("XpGetLedger");
+
+        _ = xpGroup.MapPost("/grants", () =>
+                Results.Json(
+                    new { message = "Not implemented - scaffolding stub" },
+                    statusCode: StatusCodes.Status501NotImplemented))
+            .WithName("XpPostGrants");
     }
 }
