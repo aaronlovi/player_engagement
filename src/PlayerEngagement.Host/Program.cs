@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -37,6 +38,12 @@ internal static class Program
 
         builder.Logging.ClearProviders();
 
+        _ = builder.Services.AddHttpLogging(logging => {
+            logging.LoggingFields = HttpLoggingFields.RequestMethod
+                | HttpLoggingFields.RequestPath
+                | HttpLoggingFields.ResponseStatusCode;
+        });
+
         const string CorsPolicyName = "LocalDevCors";
         _ = builder.Services.AddCors(options => {
             options.AddPolicy(name: CorsPolicyName, configurePolicy: policy => {
@@ -58,6 +65,7 @@ internal static class Program
 
         await EnsureDatabaseAsync(app.Services);
 
+        app.UseRequestPipelineLogging();
         app.UseCors(CorsPolicyName);
 
         MapHealthEndpoints(app);
