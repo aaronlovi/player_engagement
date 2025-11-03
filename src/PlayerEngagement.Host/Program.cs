@@ -37,6 +37,15 @@ internal static class Program
 
         builder.Logging.ClearProviders();
 
+        const string CorsPolicyName = "LocalDevCors";
+        _ = builder.Services.AddCors(options => {
+            options.AddPolicy(name: CorsPolicyName, configurePolicy: policy => {
+                policy.WithOrigins("http://localhost:4200")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            });
+        });
+
         Assembly[] migrationAssemblies = [
             typeof(PlayerEngagementDbmService).Assembly
         ];

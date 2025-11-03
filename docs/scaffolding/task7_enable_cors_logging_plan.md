@@ -2,18 +2,18 @@
 
 Goal: permit local UI origins while adding lightweight request logging to the Orleans host without introducing business logic.
 
-**Status:** Not started — update after each step to signal progress.
+**Status:** In progress — context reviewed and ready to proceed with configuration decisions.
 
 ## Step-by-Step Checklist
 
-- [ ] Confirm context  
+- [x] Confirm context  
   Review Task 7 requirements in `docs/scaffolding/scaffolding_detailed_tasks.md` and current host configuration in `src/PlayerEngagement.Host/Program.cs`.
-- [ ] Decide configuration layout  
-  Choose between inline configuration or helper extension methods for CORS and logging so changes stay maintainable.
-- [ ] Define allowed origins  
-  Capture expected local front-end origins (e.g., `http://localhost:4200`) and map them to a named CORS policy.
-- [ ] Register CORS services  
-  Call `builder.Services.AddCors(...)` in `Program.cs`, configure allowed methods/headers, and ensure credentials handling aligns with UI needs.
+- [x] Decide configuration layout  
+  Keep CORS policy registration in `Program.cs` for visibility, but delegate request logging to an extension method (e.g., `LoggingPipelineExtensions`) so middleware wiring stays readable as features grow.
+- [x] Define allowed origins  
+  Allow `http://localhost:4200` (Angular dev server). Document additional origins later as new clients appear.
+- [x] Register CORS services  
+  Added `LocalDevCors` policy in `Program.cs` allowing `http://localhost:4200` with any header/method.
 - [ ] Apply CORS middleware  
   Use `app.UseCors("<policy-name>")` before endpoint mappings; document ordering to avoid regressions.
 - [ ] Configure request logging  
