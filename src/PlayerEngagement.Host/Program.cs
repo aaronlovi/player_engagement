@@ -58,6 +58,8 @@ internal static class Program
 
         await EnsureDatabaseAsync(app.Services);
 
+        app.UseCors(CorsPolicyName);
+
         MapHealthEndpoints(app);
         MapXpEndpoints(app);
 

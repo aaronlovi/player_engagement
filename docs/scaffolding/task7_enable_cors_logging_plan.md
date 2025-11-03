@@ -14,8 +14,8 @@ Goal: permit local UI origins while adding lightweight request logging to the Or
   Allow `http://localhost:4200` (Angular dev server). Document additional origins later as new clients appear.
 - [x] Register CORS services  
   Added `LocalDevCors` policy in `Program.cs` allowing `http://localhost:4200` with any header/method.
-- [ ] Apply CORS middleware  
-  Use `app.UseCors("<policy-name>")` before endpoint mappings; document ordering to avoid regressions.
+- [x] Apply CORS middleware  
+  Added `app.UseCors(CorsPolicyName)` prior to endpoint mapping to ensure responses include CORS headers.
 - [ ] Configure request logging  
   Add standard ASP.NET Core logging (e.g., `UseHttpLogging` or custom middleware) that logs method, path, status code, and duration without PII.
 - [ ] Verify middleware ordering  
