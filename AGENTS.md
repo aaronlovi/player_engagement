@@ -5,6 +5,8 @@ All solution code lives under `src`. The `PlayerEngagement.sln` ties together `P
 
 The front-end/admin interface sits in `ui/player-engagement-config-ui`, built with Angular. Run `ng serve` from that directory for local development (optionally with `--proxy-config proxy.conf.json` to forward `/xp/*` calls to the host) to manage engagement configuration through the browser.
 
+Current implementation work targets a local development environment. Use Docker Desktop plus the compose files under `infra/` for background services such as Postgres or Redis; cloud/Kubernetes deployment is out of scope for now.
+
 ## Build, Test, and Development Commands
 - `dotnet restore src/PlayerEngagement.sln` – hydrate external packages.
 - `dotnet build src/PlayerEngagement.sln` – compile all projects with warnings treated as actionable.
