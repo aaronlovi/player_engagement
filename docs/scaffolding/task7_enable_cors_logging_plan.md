@@ -18,10 +18,10 @@ Goal: permit local UI origins while adding lightweight request logging to the Or
   Added `app.UseCors(CorsPolicyName)` prior to endpoint mapping to ensure responses include CORS headers.
 - [x] Configure request logging  
   Registered `AddHttpLogging` with method/path/status fields and wired `app.UseRequestPipelineLogging()` extension around `UseHttpLogging`.
-- [ ] Verify middleware ordering  
-  Confirm Orleans dashboard (if enabled later), CORS, and logging middlwares execute in correct order with minimal pipeline changes.
+- [x] Verify middleware ordering  
+  Positioned `UseRequestPipelineLogging` ahead of `UseCors` so requests are logged regardless of CORS outcome; Orleans dashboard remains disabled for now so no further ordering needed.
 - [ ] Manual verification  
-  Run `dotnet run --project src/PlayerEngagement.Host` and issue test requests (including an `Origin` header) to ensure CORS headers and logs appear as expected.
+  Blocked: `dotnet run` currently waits on the Postgres-backed `EnsureDatabaseAsync` health check, so endpoint probing needs the compose stack running before re-testing CORS/log headers.
 - [ ] Update documentation  
   Note the CORS policy and logging approach in `docs/scaffolding/quickstart.md` or relevant docs once Task 8 is executed.
 
