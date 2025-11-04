@@ -24,5 +24,5 @@ Establish how the daily login XP grant is currently implemented so we can identi
 - `docs/daily_login_bonus.md` for motivation context.
 
 ## Open Questions
-- Are there legacy policy experiments or feature flags that need migration into the new model?
-- Which teams own the current configuration touchpoints (engineering vs. live-ops)?
+- Legacy policy experiments or feature flags to migrate? → None; this is a greenfield implementation with no prior experiments.
+- Team ownership of configuration touchpoints? → Currently a single developer maintains the system; future contributors will be onboarded later.

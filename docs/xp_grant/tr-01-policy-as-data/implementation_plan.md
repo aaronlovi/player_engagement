@@ -4,7 +4,7 @@
 This implementation plan captures the work required to satisfy `TR-01 Policy-as-Data` from the Daily Login Bonus XP Grant technical requirements. Before executing tasks, review the supporting context in `AGENTS.md`, `docs/game-engagement-mechanics.md`, `docs/daily_login_bonus.md`, and the XP Grant business, glossary, high-level design, and technical requirements documents under `docs/xp_grant/`. These references define the vocabulary, business goals, system constraints, and architecture assumptions that inform every step below.
 
 ## Initiator Brief (for operator)
-Completing this plan delivers a versioned, policy-driven configuration system for daily login XP grants. Live-ops operators will author and manage the policies through back-office tools, while backend services consume the same data to calculate streak-based rewards consistently and audibly across segments.
+Completing this plan delivers a versioned, policy-driven configuration system for daily login XP grants. Live-ops operators will author and manage the policies through back-office tools, while backend services consume the same data to calculate streak-based rewards consistently and audibly across segments. Implementation is scoped to the local development environment using Docker Desktop and the compose files in `infra/`; cloud or Kubernetes deployment is deferred.
 
 | Status | Step | Focus | Key Tasks & Artifacts | Notes / Dependencies |
 | --- | --- | --- | --- | --- |
