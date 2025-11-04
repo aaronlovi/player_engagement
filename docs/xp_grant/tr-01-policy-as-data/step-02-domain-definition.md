@@ -10,21 +10,26 @@ Shape the canonical domain model for policy documents so every service and UI co
 - HLD policy component section (`docs/xp_grant/xp_grant_high_level_design.md`).
 
 ## Tasks
-- [ ] Draft a domain model describing policy aggregates (base XP, streak curves, grace configuration, claim window, streak model, seasonal boosts, segment overrides).
-- [ ] Define immutability and versioning rules (publish vs. draft states, effective/expiration timestamps).
-- [ ] Specify validation rules (e.g., streak model enum values, allowable claim window ranges, seasonal multiplier caps).
-- [ ] Review model with product/game design stakeholders to confirm business semantics.
-- [ ] Record decisions in a lightweight ADR or design note linked from implementation plan.
+- [x] Draft a domain model describing policy aggregates (base XP, streak curves, grace configuration, claim window, streak model, seasonal boosts, segment overrides).
+- [x] Define immutability and versioning rules (publish vs. draft states, effective/expiration timestamps).
+- [x] Specify validation rules (e.g., streak model enum values, allowable claim window ranges, seasonal multiplier caps).
+- [x] Review model with product/game design stakeholders to confirm business semantics. *(Confirmed with current operator/developer; future stakeholders TBD.)*
+- [x] Record decisions in a lightweight ADR or design note linked from implementation plan.
+
+## Summary
+- `docs/xp_grant/tr-01-policy-as-data/domain_model.md` documents the `PolicyAggregate`, its sub-components (base award, streak curve, grace policy, claim window, streak model enums, seasonal boosts, segment overrides), and serialization approach. The model assumes JSONB storage to keep iteration lightweight during local development.
+- Versioning: each `policyKey` supports multiple versions with statuses `Draft`, `Published`, and `Archived`. Publishing enforces single active version semantics and immutability of past versions.
+- Validation rules include sequential streak curve days, multiplier/bonus bounds, non-overlapping seasonal boosts, grace configuration constraints, and segment reference checks. XP caps default to 5000 XP per claim (configurable constant to be finalized during implementation).
+- Serialization strategy leverages System.Text.Json with schema validation. Policy payloads are stored in `xp_rules.definition`, aligning with existing migration shell.
 
 ## Deliverables
-- Domain model document (class diagram or structured Markdown) ready for implementation.
-- Approved glossary-aligned definitions for each policy field.
-- List of outstanding questions to resolve before data modeling (if any).
+- Domain model specification: `docs/xp_grant/tr-01-policy-as-data/domain_model.md`
+- Outstanding question logged regarding milestone reward inventory integration; to be addressed when cosmetic economy details are defined.
+
+## Open Questions
+- Milestone rewards may depend on external cosmetic or currency systems. Determine integration requirements before implementing milestone model payouts.
+- Segment catalog source remains TBD until Step 7 defines resolver and data source.
 
 ## References
 - `AGENTS.md` coding and documentation guidelines.
 - `docs/game-engagement-mechanics.md` and `docs/daily_login_bonus.md` for user experience rationale.
-
-## Open Questions
-- Do we support draft policies that are never published, and how long should drafts persist?
-- Are seasonal boosts modeled as separate feature flags or embedded policy fields?
