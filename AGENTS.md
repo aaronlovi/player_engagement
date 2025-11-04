@@ -12,6 +12,7 @@ All solution code lives under `src`. The `PlayerEngagement.sln` ties together `P
 
 ## Coding Style & Naming Conventions
 Adopt default .NET formatting: four-space indentation, file-scoped namespaces when practical, PascalCase for classes and public members, camelCase for locals, and suffix asynchronous methods with `Async`. Keep `internal` types inside their domain project and prefer small, focused files. Run `dotnet format` before submitting changes to ensure consistent spacing, ordering, and usings.
+- Keep functions short and cohesive; break out repeated or complex logic into helpers to stay DRY and leave `Program.Main` as a thin orchestration layer.
 
 ## Testing Guidelines
 Target xUnit for new tests, mirroring project structure (e.g., `src/PlayerEngagement.Domain.Tests`). Name test classes `<TypeUnderTest>Tests` and methods `Method_Scenario_ExpectedOutcome`. Guard external dependencies with fakes or use the compose stack for integration coverage. Run `dotnet test` locally and watch for flaky behavior by rerunning critical suites with `--filter`.
