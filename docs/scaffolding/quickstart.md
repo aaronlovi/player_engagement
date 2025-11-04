@@ -52,3 +52,10 @@ Press `Ctrl+C` to stop the host, then tear down infrastructure if desired:
 ```bash
 docker compose -f infra/docker-compose.yml down
 ```
+
+## Angular Placeholder Page
+- Once the host is running, start the UI (`npm run start` inside `ui/player-engagement-config-ui`).
+- The home page fetches `/health/live`, `/health/ready`, `/xp/ledger`, and `/xp/grants` to verify the scaffold.
+- Expect the XP responses to return `501` with stub messaging until real workflows arrive.
+
+- Placeholder page shows live/ready health and XP stubs with 501 responses.
