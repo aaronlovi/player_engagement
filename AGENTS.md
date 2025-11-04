@@ -7,6 +7,8 @@ The front-end/admin interface sits in `ui/player-engagement-config-ui`, built wi
 
 Current implementation work targets a local development environment. Use Docker Desktop plus the compose files under `infra/` for background services such as Postgres or Redis; cloud/Kubernetes deployment is out of scope for now.
 
+When modeling back-end behavior, favor Orleans grains as the primary caching boundary. Each grain should reload its state (including policy configuration) from persistence on activation and avoid relying on distributed caches like Redis unless a specific cross-grain composition requires it. This keeps cache coherence simple and resilient if a node goes offline.
+
 ## Build, Test, and Development Commands
 - `dotnet restore src/PlayerEngagement.sln` – hydrate external packages.
 - `dotnet build src/PlayerEngagement.sln` – compile all projects with warnings treated as actionable.

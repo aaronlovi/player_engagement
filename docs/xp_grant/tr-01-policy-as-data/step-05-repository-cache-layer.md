@@ -24,5 +24,5 @@ Provide infrastructure services that load policy documents efficiently and expos
 - `docs/xp_grant/xp_grant_technical_requirements.md` (TR-01, TR-08, TR-10).
 
 ## Open Questions
-- Do we require distributed cache coherence across Orleans silos?
-- Should cache entries respect policy effective dates or rely solely on version ids?
+- Distributed cache coherence across Orleans silos? → Avoid for now; Orleans grains act as the caching boundary. Each grain reloads policy state from the database on activation, so distributed caches (Redis) are unnecessary unless a future feature demands cross-grain composition.
+- Should cache entries respect policy effective dates or rely solely on version ids? → Repository lookups should filter for `effective_at <= now` when serving the active policy. Cache keys remain `(policy_key, policy_version)`, but grains can also retain a scheduled “next” version to swap in once it becomes effective; no additional cache invalidation is required beyond reloading on grain activation or explicit publish events.
