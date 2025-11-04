@@ -22,8 +22,8 @@ Goal: permit local UI origins while adding lightweight request logging to the Or
   Positioned `UseRequestPipelineLogging` ahead of `UseCors` so requests are logged regardless of CORS outcome; Orleans dashboard remains disabled for now so no further ordering needed.
 - [x] Manual verification  
   With docker compose up, `curl -i -X OPTIONS -H "Origin: http://localhost:4200" -H "Access-Control-Request-Method: GET" http://localhost:5000/health/live` returns 204 + `Access-Control-Allow-Origin`, confirming CORS and logging output.
-- [ ] Update documentation  
-  Note the CORS policy and logging approach in `docs/scaffolding/quickstart.md` or relevant docs once Task 8 is executed.
+- [x] Update documentation  
+  Added run + verification steps (including docker compose, `dotnet run`, and CORS curl) to `docs/scaffolding/quickstart.md`.
 
 ## Dependencies & References
 
