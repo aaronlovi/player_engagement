@@ -2,25 +2,25 @@
 
 Goal: generate the initial Angular workspace under `ui/player-engagement-config-ui/` with routing enabled and environment files prepared for the backend host.
 
-**Status:** Not started — outline below will track progress as steps complete.
+**Status:** Completed — workspace scaffolded and quickstart/docs updated.
 
 ## Step-by-Step Checklist
 
-- [ ] Confirm context  
+- [x] Confirm context  
   Re-read Task 9 requirements in `docs/scaffolding/scaffolding_detailed_tasks.md` and the UI expectations in `docs/scaffolding/scaffolding_technical_requirements.md`.
-- [ ] Decide workspace options  
+- [x] Decide workspace options  
   Choose Angular CLI parameters (standalone components vs NgModule, SCSS vs CSS, strict templates) to align with scaffolding scope.
-- [ ] Generate workspace  
+- [x] Generate workspace  
   Run Angular CLI to create `ui/player-engagement-config-ui/` with routing and default spec generation disabled.
-- [ ] Configure environment base URLs  
+- [x] Configure environment base URLs  
   Update `environment.ts` and `environment.development.ts` with the API base (`http://localhost:5000`) and note where future env overrides go.
-- [ ] Adjust npm scripts  
-  Ensure `package.json` exposes `npm start` (`ng serve`) and add a `lint` or `test` script stub if required by the repo conventions.
-- [ ] Capture proxy guidance  
+- [x] Adjust npm scripts  
+  Angular CLI scaffold already ships `start`, `build`, and placeholder `test`/`watch` scripts in `package.json`; no additional changes needed yet.
+- [x] Capture proxy guidance  
   Document (via README inside the workspace or inline comment) how to add an Angular CLI proxy to forward `/xp/*` to the host when needed.
-- [ ] Initial smoke test  
+- [x] Initial smoke test  
   From the workspace run `npm install` and `npm run start -- --open` (or equivalent) to validate the scaffold builds; note any manual steps in the plan.
-- [ ] Update docs/backlog  
+- [x] Update docs/backlog  
   Link the Angular workspace path and run instructions in `docs/scaffolding/scaffolding_detailed_tasks.md` notes or the quickstart as appropriate.
 
 ## Dependencies & References

@@ -36,6 +36,17 @@ curl -i -X OPTIONS \
 - Expect `{"status":"live"}` for the first call.
 - The preflight should return `204` with `Access-Control-Allow-Origin` and `Access-Control-Allow-Methods` headers, confirming the CORS policy.
 
+
+## Run the Angular Workspace
+Navigate to the UI workspace and start the dev server (after installing dependencies once).
+```bash
+cd ui/player-engagement-config-ui
+npm install
+npm run start
+```
+- The app serves on `http://localhost:4200`.
+- To proxy API calls, launch with `npm run start -- --proxy-config proxy.conf.json` after creating the proxy file described in the workspace README.
+
 ## Stop Services
 Press `Ctrl+C` to stop the host, then tear down infrastructure if desired:
 ```bash
