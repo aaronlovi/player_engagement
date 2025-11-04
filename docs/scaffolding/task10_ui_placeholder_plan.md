@@ -2,7 +2,7 @@
 
 Goal: add an HttpClient-based service and temporary UI that surfaces the host's `/health` and `/xp` stub responses so the scaffolding proves end-to-end wiring.
 
-**Status:** In progress — awaiting manual smoke test confirmation from user.
+**Status:** Completed — placeholder UI validated against host stubs.
 
 ## Step-by-Step Checklist
 
@@ -18,9 +18,9 @@ Goal: add an HttpClient-based service and temporary UI that surfaces the host's 
   Implement a top-level component or route that calls the service on init, displays health status, and renders XP stub responses (status codes/message).
 - [x] Handle loading/error states  
   Provide minimal UI feedback (loading spinner text, error banner) so later teams know where to extend behavior.
-- [ ] Manual smoke test  
+- [x] Manual smoke test  
   Run the host + Angular app concurrently and confirm the placeholder page renders data without console errors.
-- [ ] Update docs/backlog  
+- [x] Update docs/backlog  
   Capture new commands/notes in `docs/scaffolding/quickstart.md` or backlog files reflecting the placeholder UI behavior.
 
 ## Dependencies & References
