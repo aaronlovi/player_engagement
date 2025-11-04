@@ -1,7 +1,9 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-All solution code lives under `src`. The `PlayerEngagement.sln` ties together `PlayerEngagement.Domain` for business rules, `PlayerEngagement.Infrastructure` for persistence and Orleans wiring, and `PlayerEngagement.Host` for the ASP.NET/Orleans host. SQL migrations live in `src/PlayerEngagement.Infrastructure/Persistence/Migrations`. Product and design context stays in `docs/` (see `docs/workflow_guidelines.md` and the engagement mechanic references). Local infrastructure manifests are under `infra/`, where `docker-compose.yml` provisions Postgres and pgAdmin.
+All solution code lives under `src`. The `PlayerEngagement.sln` ties together `PlayerEngagement.Domain` for business rules, `PlayerEngagement.Infrastructure` for persistence and Orleans wiring, and `PlayerEngagement.Host` for the ASP.NET/Orleans host. SQL migrations live in `src/PlayerEngagement.Infrastructure/Persistence/Migrations`. Product and design context stays in `docs/` (see the engagement mechanic references). Workflow and coding guidelines live in this `AGENTS.md` file so there is a single source of truth.
+
+The front-end/admin interface sits in `ui/player-engagement-config-ui`, built with Angular. Run `ng serve` from that directory for local development (optionally with `--proxy-config proxy.conf.json` to forward `/xp/*` calls to the host) to manage engagement configuration through the browser.
 
 ## Build, Test, and Development Commands
 - `dotnet restore src/PlayerEngagement.sln` – hydrate external packages.
@@ -9,6 +11,15 @@ All solution code lives under `src`. The `PlayerEngagement.sln` ties together `P
 - `dotnet run --project src/PlayerEngagement.Host` – launch the Orleans silo and health endpoints on localhost.
 - `dotnet test src/PlayerEngagement.sln` – execute the solution test suite (add `--collect:"XPlat Code Coverage"` when validating coverage).
 - `docker compose -f infra/docker-compose.yml up -d` – start Postgres/pgAdmin dependencies.
+
+## Workflow Checklist
+1. **Build before you call it done** – run `dotnet build` (or the equivalent for the task) after each plan step and do not mark work complete until it succeeds.
+2. **Run tests whenever they exist** – execute existing unit or integration suites before declaring success; if coverage is missing, log the gap and plan to add it.
+3. **Keep tasks atomic** – scope changes to the current task or plan step and resolve build/test issues immediately instead of carrying them forward.
+4. **Favor application-layer logic** – keep domain rules, projections, and invariants in C# services; use database triggers or functions only with a documented operational need.
+5. **Document deviations** – when a task cannot meet these standards (e.g., blocked by an external dependency), record the reason and next steps in the relevant planning doc.
+
+Refer back to this checklist before finalizing any task.
 
 ## Coding Style & Naming Conventions
 Adopt default .NET formatting: four-space indentation, file-scoped namespaces when practical, PascalCase for classes and public members, camelCase for locals, and suffix asynchronous methods with `Async`. Keep `internal` types inside their domain project and prefer small, focused files. Run `dotnet format` before submitting changes to ensure consistent spacing, ordering, and usings.
