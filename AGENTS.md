@@ -9,6 +9,12 @@ Current implementation work targets a local development environment. Use Docker 
 
 When modeling back-end behavior, favor Orleans grains as the primary caching boundary. Each grain should reload its state (including policy configuration) from persistence on activation and avoid relying on distributed caches like Redis unless a specific cross-grain composition requires it. This keeps cache coherence simple and resilient if a node goes offline.
 
+For database design, avoid using the Dapper library; rely on hand-written data access aligned with project conventions. Tables should typically include an identity `BIGINT` primary key unless a compelling reason dictates a different strategy. Default to non-nullable columns—store empty strings instead of null for text fields, and only allow nullable timestamps when semantically required (e.g., `obsoleted_at`).
+
+Avoid LINQ in production C# code paths; favor explicit loops and conditionals for clarity and performance. LINQ is acceptable in unit tests where brevity outweighs allocation costs.
+
+Keep C# namespaces aligned with folder structure (e.g., file `Policies/Mappers/Foo.cs` uses namespace `PlayerEngagement.Infrastructure.Policies.Mappers`).
+
 ## Build, Test, and Development Commands
 - `dotnet restore src/PlayerEngagement.sln` – hydrate external packages.
 - `dotnet build src/PlayerEngagement.sln` – compile all projects with warnings treated as actionable.
