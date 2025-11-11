@@ -10,12 +10,10 @@ using PlayerEngagement.Infrastructure.Persistence.DTOs.XpPolicyDTOs;
 
 namespace PlayerEngagement.Infrastructure.Persistence;
 
-public sealed class PlayerEngagementDbmInMemoryService : DbmInMemoryService, IPlayerEngagementDbmService, IDbmService
-{
+public sealed class PlayerEngagementDbmInMemoryService : DbmInMemoryService, IPlayerEngagementDbmService, IDbmService {
     private readonly ILogger<PlayerEngagementDbmInMemoryService> _logger;
 
-    public PlayerEngagementDbmInMemoryService(ILoggerFactory loggerFactory) : base(loggerFactory)
-    {
+    public PlayerEngagementDbmInMemoryService(ILoggerFactory loggerFactory) : base(loggerFactory) {
         _logger = loggerFactory.CreateLogger<PlayerEngagementDbmInMemoryService>();
         _logger.LogWarning("PlayerEngagementDbmInMemoryService instantiated: persistence in RAM only");
     }

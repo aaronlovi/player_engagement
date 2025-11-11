@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerEngagement.Domain", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerEngagement.Infrastructure", "PlayerEngagement.Infrastructure\PlayerEngagement.Infrastructure.csproj", "{B58D7527-9409-4267-BD7A-CE3D5309C0B9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerEngagement.Infrastructure.Tests", "PlayerEngagement.Infrastructure.Tests\PlayerEngagement.Infrastructure.Tests.csproj", "{9C2CD8A7-56DA-4D77-8D5D-27971952F819}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{B58D7527-9409-4267-BD7A-CE3D5309C0B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B58D7527-9409-4267-BD7A-CE3D5309C0B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B58D7527-9409-4267-BD7A-CE3D5309C0B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C2CD8A7-56DA-4D77-8D5D-27971952F819}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C2CD8A7-56DA-4D77-8D5D-27971952F819}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C2CD8A7-56DA-4D77-8D5D-27971952F819}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C2CD8A7-56DA-4D77-8D5D-27971952F819}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

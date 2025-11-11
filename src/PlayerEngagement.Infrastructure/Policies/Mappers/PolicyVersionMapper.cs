@@ -89,14 +89,14 @@ internal static class PolicyVersionMapper {
         return new StreakModelDefinition(type, parameters);
     }
 
-    private static IReadOnlyDictionary<string, object?> ParseParameters(string json) {
+    private static Dictionary<string, object?> ParseParameters(string json) {
         if (string.IsNullOrWhiteSpace(json))
-            return new Dictionary<string, object?>();
+            return [];
 
         try {
             using var doc = JsonDocument.Parse(json);
             if (doc.RootElement.ValueKind != JsonValueKind.Object)
-                return new Dictionary<string, object?>();
+                return [];
 
             Dictionary<string, object?> result = new(StringComparer.OrdinalIgnoreCase);
             foreach (JsonProperty property in doc.RootElement.EnumerateObject())
@@ -104,7 +104,7 @@ internal static class PolicyVersionMapper {
 
             return result;
         } catch (JsonException) {
-            return new Dictionary<string, object?>();
+            return [];
         }
     }
 
@@ -112,7 +112,7 @@ internal static class PolicyVersionMapper {
         JsonValueKind.Null => null,
         JsonValueKind.True => true,
         JsonValueKind.False => false,
-        JsonValueKind.Number => element.TryGetInt64(out long l) ? l : element.GetDouble(),
+        JsonValueKind.Number => element.TryGetInt64(out long l) ? l : element.GetDecimal(),
         JsonValueKind.String => element.GetString(),
         JsonValueKind.Array => ConvertArray(element),
         JsonValueKind.Object => ConvertObject(element),

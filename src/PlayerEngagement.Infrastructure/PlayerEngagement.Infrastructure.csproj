@@ -12,4 +12,8 @@
     <ProjectReference Include="../PlayerEngagement.Domain/PlayerEngagement.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="PlayerEngagement.Infrastructure.Tests" />
+  </ItemGroup>
+
 </Project>

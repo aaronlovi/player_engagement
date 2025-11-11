@@ -83,10 +83,10 @@ limit 1;
     protected override void ClearResults() => ActivePolicy = ActivePolicyDTO.Empty;
 
     protected override IReadOnlyCollection<NpgsqlParameter> GetBoundParameters() =>
-        new[] {
+        [
             new NpgsqlParameter("policy_key", _policyKey),
             new NpgsqlParameter("now_utc", _nowUtc)
-        };
+        ];
 
     protected override void BeforeRowProcessing(DbDataReader reader) {
         base.BeforeRowProcessing(reader);

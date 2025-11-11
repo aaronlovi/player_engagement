@@ -43,6 +43,9 @@ Adopt default .NET formatting: four-space indentation, file-scoped namespaces wh
 ## Testing Guidelines
 Target xUnit for new tests, mirroring project structure (e.g., `src/PlayerEngagement.Domain.Tests`). Name test classes `<TypeUnderTest>Tests` and methods `Method_Scenario_ExpectedOutcome`. Guard external dependencies with fakes or use the compose stack for integration coverage. Run `dotnet test` locally and watch for flaky behavior by rerunning critical suites with `--filter`.
 
+- **Assertion libraries:** Do not use `FluentAssertions` in C# test projects; stick with xUnit’s built-in `Assert` APIs (or MSTest/NUnit equivalents if ever introduced) to keep diagnostics consistent across suites.
+- **Database unit tests:** Keep unit tests focused on business logic. Skip direct tests of Postgres statements (anything under `src/PlayerEngagement.Infrastructure/Persistence/Statements`). Exercise persistence behaviors through `IPlayerEngagementDbmService` and especially `PlayerEngagementDbmInMemoryService`, which provides a safe test double. Reserve the actual Postgres-backed `PlayerEngagementDbmService` for future integration tests that run against a live database.
+
 ## Commit & Pull Request Guidelines
 Follow the existing history: imperative, capitalized subjects (`Add`, `Refactor`, `Update`) limited to ~72 characters. Squash incidental work before pushing. Each PR should describe the change, outline testing performed, link relevant design docs or issues, and include screenshots or API traces when behavior changes. Update `docs/` or configuration notes alongside code so reviewers can trace the impact.
 - Do not create commits or push changes until the repository owner reviews the diff; share staged work for approval first.
