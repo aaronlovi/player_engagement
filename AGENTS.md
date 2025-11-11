@@ -36,6 +36,7 @@ Refer back to this checklist before finalizing any task.
 ## Coding Style & Naming Conventions
 Adopt default .NET formatting: four-space indentation, file-scoped namespaces when practical, PascalCase for classes and public members, camelCase for locals, and suffix asynchronous methods with `Async`. Keep `internal` types inside their domain project and prefer small, focused files. Run `dotnet format` before submitting changes to ensure consistent spacing, ordering, and usings.
 - Keep functions short and cohesive; break out repeated or complex logic into helpers to stay DRY and leave `Program.Main` as a thin orchestration layer.
+- Prefer injecting `ILoggerFactory` and creating typed loggers from it; avoid injecting concrete `ILogger<T>` directly.
 - Place each type in its own file; enums normally live in an `Enums.cs` file within the appropriate namespace.
 - Provide XML documentation comments for every type (classes, records, enums) and each member or enum value when introducing new code.
 
