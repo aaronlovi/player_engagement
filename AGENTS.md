@@ -39,6 +39,7 @@ Adopt default .NET formatting: four-space indentation, file-scoped namespaces wh
 - Prefer injecting `ILoggerFactory` and creating typed loggers from it; avoid injecting concrete `ILogger<T>` directly.
 - Place each type in its own file; enums normally live in an `Enums.cs` file within the appropriate namespace.
 - Provide XML documentation comments for every type (classes, records, enums) and each member or enum value when introducing new code.
+- Do not enable implicit usings or rely on global `using` directives in C# projects; include explicit usings at the top of each file so dependencies remain obvious and localized.
 
 ## Testing Guidelines
 Target xUnit for new tests, mirroring project structure (e.g., `src/PlayerEngagement.Domain.Tests`). Name test classes `<TypeUnderTest>Tests` and methods `Method_Scenario_ExpectedOutcome`. Guard external dependencies with fakes or use the compose stack for integration coverage. Run `dotnet test` locally and watch for flaky behavior by rerunning critical suites with `--filter`.

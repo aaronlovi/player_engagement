@@ -62,4 +62,41 @@ public sealed class PlayerEngagementDbmInMemoryServiceTests {
         Assert.False(result.IsFailure);
         _ = Assert.Single(result.Value!, o => o.TargetPolicyVersion == 5);
     }
+
+    [Fact]
+    public async Task GetPolicyStreakCurveAsync_ReturnsDeepCopy() {
+        string policyKey = Guid.NewGuid().ToString();
+        int version = 7;
+        List<PolicyStreakCurveEntryDTO> entries = [
+            new(1, policyKey, version, 1, 1.1m, 10, false)
+        ];
+        PlayerEngagementDbmInMemoryData.SetStreakCurve(policyKey, version, entries);
+
+        Result<List<PolicyStreakCurveEntryDTO>> result = await _service.GetPolicyStreakCurveAsync(policyKey, version, CancellationToken.None);
+
+        Assert.False(result.IsFailure);
+        Assert.Equal(1, result.Value![0].DayIndex);
+
+        // mutate source - should not affect snapshot
+        entries[0] = new PolicyStreakCurveEntryDTO(2, policyKey, version, 2, 2.0m, 20, true);
+        Assert.Equal(1, result.Value![0].DayIndex);
+    }
+
+    [Fact]
+    public async Task GetPolicySeasonalBoostsAsync_ReturnsDeepCopy() {
+        string policyKey = Guid.NewGuid().ToString();
+        int version = 4;
+        List<PolicySeasonalBoostDTO> boosts = [
+            new(1, policyKey, version, "spring", 1.5m, DateTime.UtcNow, DateTime.UtcNow.AddDays(1))
+        ];
+        PlayerEngagementDbmInMemoryData.SetSeasonalBoosts(policyKey, version, boosts);
+
+        Result<List<PolicySeasonalBoostDTO>> result = await _service.GetPolicySeasonalBoostsAsync(policyKey, version, CancellationToken.None);
+
+        Assert.False(result.IsFailure);
+        Assert.Equal("spring", result.Value![0].Label);
+
+        boosts[0] = new PolicySeasonalBoostDTO(2, policyKey, version, "summer", 2.0m, DateTime.UtcNow, DateTime.UtcNow.AddDays(2));
+        Assert.Equal("spring", result.Value![0].Label);
+    }
 }
