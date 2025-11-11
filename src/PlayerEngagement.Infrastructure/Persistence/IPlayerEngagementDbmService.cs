@@ -7,8 +7,7 @@ using PlayerEngagement.Infrastructure.Persistence.DTOs.XpPolicyDTOs;
 
 namespace PlayerEngagement.Infrastructure.Persistence;
 
-public interface IPlayerEngagementDbmService
-{
+public interface IPlayerEngagementDbmService {
     Task<Result> HealthCheckAsync(CancellationToken ct);
 
     Task<Result<ActivePolicyDTO>> GetCurrentPolicyAsync(string policyKey, DateTime utcNow, CancellationToken ct);

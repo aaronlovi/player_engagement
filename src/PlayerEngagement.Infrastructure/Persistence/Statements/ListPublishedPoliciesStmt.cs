@@ -70,7 +70,10 @@ where v.status = 'Published'
     internal List<PolicyVersionDTO> Policies { get; } = new();
 
     internal ListPublishedPoliciesStmt(string schemaName, DateTime nowUtc)
-        : base(GetSql(schemaName), nameof(ListPublishedPoliciesStmt)) => _nowUtc = nowUtc;
+        : base(GetSql(schemaName), nameof(ListPublishedPoliciesStmt)) {
+        _nowUtc = nowUtc;
+    }
+
 
     protected override void ClearResults() => Policies.Clear();
 

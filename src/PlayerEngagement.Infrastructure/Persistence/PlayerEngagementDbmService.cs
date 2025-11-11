@@ -12,16 +12,14 @@ using PlayerEngagement.Infrastructure.Persistence.Statements;
 
 namespace PlayerEngagement.Infrastructure.Persistence;
 
-public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDbmService
-{
+public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDbmService {
     private readonly ILogger<PlayerEngagementDbmService> _logger;
 
     public PlayerEngagementDbmService(
         ILoggerFactory loggerFactory,
         PostgresExecutor executor,
         DatabaseOptions options,
-        DbMigrations migrations) : base(loggerFactory, executor, options, migrations)
-    {
+        DbMigrations migrations) : base(loggerFactory, executor, options, migrations) {
         _logger = loggerFactory.CreateLogger<PlayerEngagementDbmService>();
     }
 

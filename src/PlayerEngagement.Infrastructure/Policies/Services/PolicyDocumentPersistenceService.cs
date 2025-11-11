@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using InnoAndLogic.Shared;
 using Microsoft.Extensions.Logging;
 using PlayerEngagement.Domain.Policies;
-using PlayerEngagement.Infrastructure.Policies.Mappers;
 using PlayerEngagement.Infrastructure.Persistence;
 using PlayerEngagement.Infrastructure.Persistence.DTOs.XpPolicyDTOs;
+using PlayerEngagement.Infrastructure.Policies.Mappers;
 
 namespace PlayerEngagement.Infrastructure.Policies.Services;
 

@@ -30,10 +30,13 @@ where policy_key = @policy_key;
 
     private readonly string _policyKey;
 
-    internal List<PolicySegmentOverrideDTO> Overrides { get; } = new();
+    internal List<PolicySegmentOverrideDTO> Overrides { get; } = [];
 
     internal GetPolicySegmentOverridesStmt(string schemaName, string policyKey)
-        : base(GetSql(schemaName), nameof(GetPolicySegmentOverridesStmt)) => _policyKey = policyKey;
+        : base(GetSql(schemaName), nameof(GetPolicySegmentOverridesStmt)) {
+        _policyKey = policyKey;
+    }
+
 
     protected override void ClearResults() => Overrides.Clear();
 
