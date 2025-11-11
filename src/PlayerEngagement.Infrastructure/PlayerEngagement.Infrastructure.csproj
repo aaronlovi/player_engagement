@@ -8,4 +8,8 @@
     <PackageReference Include="InnoAndLogic.Persistence" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="../PlayerEngagement.Domain/PlayerEngagement.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

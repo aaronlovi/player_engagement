@@ -12,7 +12,8 @@ When modeling back-end behavior, favor Orleans grains as the primary caching bou
 For database design, avoid using the Dapper library; rely on hand-written data access aligned with project conventions. Tables should typically include an identity `BIGINT` primary key unless a compelling reason dictates a different strategy. Default to non-nullable columns—store empty strings instead of null for text fields, and only allow nullable timestamps when semantically required (e.g., `obsoleted_at`).
 
 Avoid LINQ in production C# code paths; favor explicit loops and conditionals for clarity and performance. LINQ is acceptable in unit tests where brevity outweighs allocation costs.
-Persist timestamps as UTC `DateTime` values; avoid `DateTimeOffset` in DTOs unless a specific offset is required.
+Persist timestamps as UTC `DateTime` values; avoid `DateTimeOffset` in the code unless a specific offset is required.
+Provide an `Invalid` member with explicit value 0 for enum types unless there is a strong reason not to.
 
 Keep C# namespaces aligned with folder structure (e.g., file `Policies/Mappers/Foo.cs` uses namespace `PlayerEngagement.Infrastructure.Policies.Mappers`).
 
@@ -35,6 +36,8 @@ Refer back to this checklist before finalizing any task.
 ## Coding Style & Naming Conventions
 Adopt default .NET formatting: four-space indentation, file-scoped namespaces when practical, PascalCase for classes and public members, camelCase for locals, and suffix asynchronous methods with `Async`. Keep `internal` types inside their domain project and prefer small, focused files. Run `dotnet format` before submitting changes to ensure consistent spacing, ordering, and usings.
 - Keep functions short and cohesive; break out repeated or complex logic into helpers to stay DRY and leave `Program.Main` as a thin orchestration layer.
+- Place each type in its own file; enums normally live in an `Enums.cs` file within the appropriate namespace.
+- Provide XML documentation comments for every type (classes, records, enums) and each member or enum value when introducing new code.
 
 ## Testing Guidelines
 Target xUnit for new tests, mirroring project structure (e.g., `src/PlayerEngagement.Domain.Tests`). Name test classes `<TypeUnderTest>Tests` and methods `Method_Scenario_ExpectedOutcome`. Guard external dependencies with fakes or use the compose stack for integration coverage. Run `dotnet test` locally and watch for flaky behavior by rerunning critical suites with `--filter`.
