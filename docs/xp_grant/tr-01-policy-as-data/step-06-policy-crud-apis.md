@@ -10,16 +10,16 @@ Expose versioned policy management endpoints that enable operators and tooling t
 - Admin workflow requirements in `docs/xp_grant/xp_grant_business_requirements.md` (BR-13) and technical requirements (TR-01, TR-10, TR-22).
 
 ## Tasks
-| Step | Status | Focus | Key Work Items |
-| --- | --- | --- | --- |
-| 6.1 | [ ] | **Host Wiring** | Add `MapControllers()`/required middleware to `PlayerEngagement.Host`, ensure REST endpoints resolve dependencies (dbm services, persistence). |
-| 6.2a | [ ] | **Endpoint Inventory** | Enumerate CRUD operations (create draft, publish w/ future effective, fetch version/history, retire) and define request/response fields + status codes. |
-| 6.2b | [ ] | **Controller & Routing Layout** | Choose controller structure (e.g., `PoliciesController` under `/xp/policies`) and identify service dependencies to be injected. |
-| 6.2c | [ ] | **Validation & Contract Docs** | Outline API-level validation rules and specify OpenAPI/Swagger updates so consumers (Angular UI) understand payloads/errors. |
-| 6.3 | [ ] | **Application Services** | Implement orchestrators/services that call `IPlayerEngagementDbmService`/`PolicyDocumentPersistenceService`, enforce immutability, and schedule future-effective publishes. |
-| 6.4 | [ ] | **Validation Layer** | Configure FluentValidation/manual validators for enums, claim windows, seasonal multipliers, streak parameters, ensuring errors surface via consistent problem details. |
-| 6.5 | [ ] | **OpenAPI Documentation** | Update generated swagger/OpenAPI (e.g., Swashbuckle) with policy endpoints including sample payloads and retire-only semantics. |
-| 6.6 | [ ] | **Testing** | Unit tests for controllers/services (happy path, validation errors, immutability), integration smoke tests covering publish + future-effective activation via in-memory DBM. |
+| Step | Status | Focus | Key Work Items | Test Strategy |
+| --- | --- | --- | --- | --- |
+| 6.1 | [x] | **Host Wiring** | Add `MapControllers()`/required middleware to `PlayerEngagement.Host`, ensure REST endpoints resolve dependencies (dbm services, persistence). | Manual: run host and hit stub controller (`/xp/policies/ping`). |
+| 6.2a | [ ] | **Endpoint Inventory** | Enumerate CRUD operations (create draft, publish w/ future effective, fetch version/history, retire) and define request/response fields + status codes. | Document review; ensure OpenAPI draft matches Step 2 specs. |
+| 6.2b | [ ] | **Controller & Routing Layout** | Choose controller structure (e.g., `PoliciesController` under `/xp/policies`) and identify service dependencies to be injected. | Manual verification via stub routes + unit tests once implemented. |
+| 6.2c | [ ] | **Validation & Contract Docs** | Outline API-level validation rules and specify OpenAPI/Swagger updates so consumers (Angular UI) understand payloads/errors. | Unit tests for model validation + OpenAPI schema review. |
+| 6.3 | [ ] | **Application Services** | Implement orchestrators/services that call `IPlayerEngagementDbmService`/`PolicyDocumentPersistenceService`, enforce immutability, and schedule future-effective publishes. | Unit tests (service layer) + integration tests using in-memory DBM. |
+| 6.4 | [ ] | **Validation Layer** | Configure FluentValidation/manual validators for enums, claim windows, seasonal multipliers, streak parameters, ensuring errors surface via consistent problem details. | Unit tests for validators (including boundary/error cases). |
+| 6.5 | [ ] | **OpenAPI Documentation** | Update generated swagger/OpenAPI (e.g., Swashbuckle) with policy endpoints including sample payloads and retire-only semantics. | Manual review of generated Swagger UI/spec. |
+| 6.6 | [ ] | **Testing** | Unit tests for controllers/services (happy path, validation errors, immutability), integration smoke tests covering publish + future-effective activation via in-memory DBM. | `dotnet test` (unit) + targeted integration smoke tests. |
 
 ## Deliverables
 - Policy API implementation with tests.

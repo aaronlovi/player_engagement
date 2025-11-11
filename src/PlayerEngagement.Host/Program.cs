@@ -115,6 +115,7 @@ internal static class Program {
     }
 
     private static void MapEndpoints(WebApplication app) {
+        _ = app.MapControllers();
         MapHealthEndpoints(app);
         MapXpEndpoints(app);
     }
