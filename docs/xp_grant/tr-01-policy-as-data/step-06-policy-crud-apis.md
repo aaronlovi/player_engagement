@@ -16,9 +16,10 @@ Expose versioned policy management endpoints that enable operators and tooling t
 | 6.2a | [x] | **Endpoint Inventory** | Enumerate CRUD operations (create draft, publish w/ future effective, fetch version/history, retire) and define request/response fields + status codes. | Document review; ensure OpenAPI draft matches Step 2 specs. |
 | 6.2b | [x] | **Controller & Routing Layout** | Added concrete `PoliciesController` routes for every CRUD/segment endpoint with typed request payloads wired under `/xp/policies`. Controllers log each call and currently return `501` until Step 6.3 provides implementations. | Manual verification via stub routes + unit tests once implemented. |
 | 6.2c | [x] | **Validation & Contract Docs** | Added `PolicyRequestValidator` enforcing key rules (policy key regex, streak curves sequential, seasonal boost overlap detection, publish window tolerance, segment override guardrails). Controllers call it and return RFC7807 validation responses; request DTO XML docs describe payloads. | `PlayerEngagement.Host.Tests` project exercises validator happy/negative paths. |
-| 6.3a | [ ] | **Write Statements** | Add Postgres statements for draft creation, version publish (with optional future effective), version retire, streak/seasonal persistence, and segment override upserts. Mirror the pattern used in `Identity.Infrastructure` statements such as `AddUserStmt` and `UpdateUserProfileStmt` (parameter binding, optimistic concurrency, returning IDs). | Statement unit tests under `PlayerEngagement.Infrastructure.Tests` using in-memory DBM. |
-| 6.3b | [ ] | **DBM Surface** | Extend `IPlayerEngagementDbmService` plus `PlayerEngagementDbmService`/`PlayerEngagementDbmInMemoryService` with async methods that execute the new statements (create draft, publish, retire, upsert overrides, replace streak curve + seasonal boosts). Ensure in-memory store mirrors SQL behavior for tests. | Service tests exercising success/conflict paths. |
-| 6.3c | [ ] | **Host Orchestration** | Introduce a thin command orchestrator (or controller logic) that invokes the new DBM methods via `PolicyDocumentPersistenceService`, enforces immutability checks, and updates controllers so POST routes return real results instead of `501`. | Unit tests for orchestrator + controller integration tests once statements exist. |
+| 6.3a | [ ] | **DBM In-Memory First** | For each missing write API, add it to `IPlayerEngagementDbmService`, implement it fully inside `PlayerEngagementDbmInMemoryService`/`PlayerEngagementDbmInMemoryData`, and add unit tests. Stub the Postgres implementation with `NotSupportedException` until statements exist. | Infrastructure unit tests (in-memory DBM). |
+| 6.3b | [ ] | **Postgres Statements** | After an in-memory method works, create the matching Postgres statement (one insert/update per class) using the Identity statement pattern. Ensure all identifier columns (`policy_version`, `boost_id`, etc.) are `BIGINT` and values come from `DbmService.GetNextId64()`. | Statement-focused tests or targeted integration checks. |
+| 6.3c | [ ] | **DbmService Wiring** | Replace the stubs in `PlayerEngagementDbmService` so each method executes its statement(s), mirrors in-memory behavior, and returns the proper `Result`. Keep tests covering both implementations. | Service tests exercising success/conflict paths. |
+| 6.3d | [ ] | **Controller Enablement** | Once all write APIs are in place, update the controller POST routes to call them (via the slim persistence service) and return real responses instead of `501`. | Controller/integration tests. |
 | 6.4 | [ ] | **Validation Layer** | Configure FluentValidation/manual validators for enums, claim windows, seasonal multipliers, streak parameters, ensuring errors surface via consistent problem details. | Unit tests for validators (including boundary/error cases). |
 | 6.5 | [ ] | **OpenAPI Documentation** | Update generated swagger/OpenAPI (e.g., Swashbuckle) with policy endpoints including sample payloads and retire-only semantics. | Manual review of generated Swagger UI/spec. |
 | 6.6 | [ ] | **Testing** | Unit tests for controllers/services (happy path, validation errors, immutability), integration smoke tests covering publish + future-effective activation via in-memory DBM. | `dotnet test` (unit) + targeted integration smoke tests. |
@@ -40,10 +41,46 @@ Expose versioned policy management endpoints that enable operators and tooling t
 
 ### Step 6.3 Execution Plan (DB Write Path)
 
-1. **Statement Layer** – Implement `CreatePolicyDraftStmt`, `PublishPolicyVersionStmt`, `RetirePolicyVersionStmt`, `UpsertPolicySegmentOverridesStmt`, plus helper statements for streak curve and seasonal boost bulk inserts. Follow the same style as `Identity.Infrastructure` statements (e.g., `AddUserStmt`, `UpdateUserProfileStmt`, `UpdateUserStatusStmt`) by inheriting from the appropriate `Postgres*DbStmtBase`, binding parameters via `NpgsqlParameter`, and returning affected rows/IDs for optimistic concurrency feedback.
-2. **DBM Integration** – Extend `IPlayerEngagementDbmService` and both the Postgres and in-memory implementations with asynchronous methods that execute the new statements. Guard against duplicate drafts, enforce publish status transitions, and make sure the in-memory backing store mirrors SQL semantics so existing tests can exercise write paths without Postgres.
-3. **Application Orchestration** – Once DBM writes exist, introduce/update a thin command service that: (a) validates inputs (reusing `PolicyRequestValidator` where applicable), (b) calls the DBM write APIs, (c) reloads the resulting `PolicyDocument` via `PolicyDocumentPersistenceService`, and (d) surfaces those results through the controller POST endpoints. This will retire the current `501` placeholders for create/publish/retire/segment override routes.
-4. **Testing** – Add statement-level tests (similar to existing reader tests) plus new orchestration tests to cover success and failure cases (duplicate drafts, publish conflicts, invalid retire timestamps). Ensure `dotnet test` exercises both infrastructure and host layers.
+1. **DBM In-Memory First** – For every missing write API, add the signature to `IPlayerEngagementDbmService`, implement it entirely inside `PlayerEngagementDbmInMemoryService`/`PlayerEngagementDbmInMemoryData`, and cover it with unit tests. Stub the same method in `PlayerEngagementDbmService` using `NotSupportedException` so the compiler enforces the later work.
+2. **Postgres Statements** – After an in-memory method works, create the corresponding Postgres statement class (one insert/update per file) using the Identity repository pattern (explicit SQL template, `NpgsqlParameter` bindings, clear result handling). All identifier columns—including `policy_version`, `boost_id`, and any future surrogate keys—must be `BIGINT`, so update `V002__policy_as_data.sql` (and DTOs) wherever `int` is still used.
+3. **DbmService Wiring** – Replace the Postgres stubs with real implementations that execute the statements created in step 2, call `DbmService.GetNextId64()` for every identifier, and mirror the validation logic from the in-memory path. Add/extend tests to exercise both implementations.
+4. **Controller Enablement** – Once the write APIs exist, update the controller POST routes to call them (via the slim persistence service) and return real responses instead of `501`.
+5. **Testing** – After each sub-step, run `dotnet test` to keep regressions out. Statement and DBM tests must cover success/failure cases (duplicate drafts, invalid state transitions, timestamp guards).
+
+#### 6.3 Function-by-Function Plan (apply steps 6.3a → 6.3c per method)
+
+1. **CreatePolicyDraftAsync (`Result<long>`)**
+   - *6.3a*: Add method to the interface. In memory, ensure the policy shell exists, generate a new `long` `policy_version` via `GetNextId64()`, insert the draft version, and replace streak/seasonal data. Unit-test happy path and duplicate drafts.
+   - *6.3b*: Add statements `EnsurePolicyShellStmt`, `InsertPolicyVersionStmt`, `ReplacePolicyStreakCurveStmt`, and `ReplacePolicySeasonalBoostsStmt`. All IDs are `BIGINT`.
+   - *6.3c*: Implement the Postgres method to run these statements within a transaction and return the generated version.
+
+2. **PublishPolicyVersionAsync**
+   - *6.3a*: In memory, allow `Draft/Archived → Published`, set `effective_at`/`published_at`, archive any prior published version (`superseded_at`), and apply segment overrides.
+   - *6.3b*: Create `PublishPolicyVersionStmt`, `ArchiveCurrentPublishedStmt`, and `ReplacePolicySegmentOverridesStmt`.
+   - *6.3c*: Wire up the Postgres method to run the statements with optimistic concurrency checks.
+
+3. **RetirePolicyVersionAsync**
+   - *6.3a*: In memory, ensure the version is Published and set `status='Archived'` plus `superseded_at=retiredAt`.
+   - *6.3b*: Create `RetirePolicyVersionStmt`.
+   - *6.3c*: Implement the Postgres method and map `rowsAffected` to success/conflict results.
+
+4. **ReplacePolicyStreakCurveAsync / ReplacePolicySeasonalBoostsAsync**
+   - *6.3a*: Replace the in-memory dictionaries. For seasonal boosts, assign new `boost_id` values via `GetNextId64()` whenever entries are recreated.
+   - *6.3b*: Create `ReplacePolicyStreakCurveStmt` and `ReplacePolicySeasonalBoostsStmt` (delete + multi-row insert, binding `BIGINT` IDs).
+   - *6.3c*: Implement the Postgres methods that run delete + insert within one transaction.
+
+5. **UpsertPolicySegmentOverridesAsync**
+   - *6.3a*: Replace the in-memory overrides dictionary.
+   - *6.3b*: Create `ReplacePolicySegmentOverridesStmt` (delete + insert).
+   - *6.3c*: Execute the statement and propagate errors.
+
+6. **(Optional) Additional writes** – Revisit list/history APIs once write flows exist to ensure draft/published metadata surfaces correctly.
+
+**Implementation notes**
+- Always use `DbmService.GetNextId64()` for surrogate identifiers (`policy_version`, `boost_id`, etc.) and ensure the schema defines those columns as `BIGINT`. Since the database can be recreated, updating `V002__policy_as_data.sql` is acceptable.
+- Statements must follow the Identity pattern (single responsibility, clear parameter binding, explicit result handling).
+- Extend `PlayerEngagementDbmInMemoryData` with helper methods such as `EnsurePolicy`, `InsertVersion`, `MarkPublished`, `ReplaceStreakCurve`, `ReplaceSeasonalBoosts`, and `ReplaceSegmentOverrides` so in-memory behavior stays aligned with SQL.
+- Controllers will continue to reload documents through `PolicyDocumentPersistenceService` once the write APIs return real results.
 
 | Endpoint | Purpose | Request Body (key fields) | Response | Status Codes |
 | --- | --- | --- | --- | --- |
