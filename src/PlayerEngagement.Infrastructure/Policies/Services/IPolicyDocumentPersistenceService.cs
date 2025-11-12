@@ -17,7 +17,7 @@ internal interface IPolicyDocumentPersistenceService {
     /// <param name="utcNow">UTC timestamp used to resolve the currently active policy version.</param>
     /// <param name="ct">Cancellation token that aborts the database call when triggered.</param>
     /// <returns>The active <see cref="PolicyDocument"/> or <c>null</c> when none exist.</returns>
-    Task<PolicyDocument?> GetCurrentPolicyAsync(string policyKey, DateTimeOffset utcNow, CancellationToken ct);
+    Task<PolicyDocument?> GetCurrentPolicyAsync(string policyKey, DateTime utcNow, CancellationToken ct);
 
     /// <summary>
     /// Retrieves a specific policy version by key and version number regardless of current effectiveness.
@@ -34,7 +34,7 @@ internal interface IPolicyDocumentPersistenceService {
     /// <param name="utcNow">UTC timestamp filter to determine which versions are considered published.</param>
     /// <param name="ct">Cancellation token for the loaded query.</param>
     /// <returns>A read-only list of published policy documents.</returns>
-    Task<IReadOnlyList<PolicyDocument>> ListPublishedPoliciesAsync(DateTimeOffset utcNow, CancellationToken ct);
+    Task<IReadOnlyList<PolicyDocument>> ListPublishedPoliciesAsync(DateTime utcNow, CancellationToken ct);
 
     /// <summary>
     /// Retrieves the policy version overrides defined for each player segment under the provided policy key.

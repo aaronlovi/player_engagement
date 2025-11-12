@@ -39,7 +39,7 @@ public sealed class PolicyDocumentPersistenceServiceTests : IDisposable {
         _ = _dbmMock.Setup(dbm => dbm.GetPolicySeasonalBoostsAsync(active.PolicyKey, active.PolicyVersion, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<List<PolicySeasonalBoostDTO>>.Success(boosts));
 
-        PolicyDocument? document = await _service.GetCurrentPolicyAsync(active.PolicyKey, DateTimeOffset.UtcNow, CancellationToken.None);
+        PolicyDocument? document = await _service.GetCurrentPolicyAsync(active.PolicyKey, DateTime.UtcNow, CancellationToken.None);
 
         Assert.NotNull(document);
         Assert.Equal(2, document!.Version.PolicyVersion);
@@ -53,7 +53,7 @@ public sealed class PolicyDocumentPersistenceServiceTests : IDisposable {
         _ = _dbmMock.Setup(dbm => dbm.GetCurrentPolicyAsync(policyKey, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<ActivePolicyDTO>.Success(ActivePolicyDTO.Empty));
 
-        PolicyDocument? document = await _service.GetCurrentPolicyAsync(policyKey, DateTimeOffset.UtcNow, CancellationToken.None);
+        PolicyDocument? document = await _service.GetCurrentPolicyAsync(policyKey, DateTime.UtcNow, CancellationToken.None);
 
         Assert.Null(document);
     }
@@ -75,7 +75,7 @@ public sealed class PolicyDocumentPersistenceServiceTests : IDisposable {
         _ = _dbmMock.Setup(dbm => dbm.GetPolicySeasonalBoostsAsync("daily-login", 2, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<List<PolicySeasonalBoostDTO>>.Success(new List<PolicySeasonalBoostDTO>()));
 
-        IReadOnlyList<PolicyDocument> documents = await _service.ListPublishedPoliciesAsync(DateTimeOffset.UtcNow, CancellationToken.None);
+        IReadOnlyList<PolicyDocument> documents = await _service.ListPublishedPoliciesAsync(DateTime.UtcNow, CancellationToken.None);
 
         Assert.Equal(2, documents.Count);
     }

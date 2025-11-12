@@ -29,8 +29,8 @@ internal sealed class PolicyDocumentPersistenceService : IPolicyDocumentPersiste
     }
 
     /// <inheritdoc />
-    public async Task<PolicyDocument?> GetCurrentPolicyAsync(string policyKey, DateTimeOffset utcNow, CancellationToken ct) {
-        Result<ActivePolicyDTO> policyResult = await _dbm.GetCurrentPolicyAsync(policyKey, utcNow.UtcDateTime, ct);
+    public async Task<PolicyDocument?> GetCurrentPolicyAsync(string policyKey, DateTime utcNow, CancellationToken ct) {
+        Result<ActivePolicyDTO> policyResult = await _dbm.GetCurrentPolicyAsync(policyKey, utcNow, ct);
         if (policyResult.IsFailure || policyResult.Value is null || policyResult.Value.IsEmpty)
             return null;
 
@@ -53,8 +53,8 @@ internal sealed class PolicyDocumentPersistenceService : IPolicyDocumentPersiste
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<PolicyDocument>> ListPublishedPoliciesAsync(DateTimeOffset utcNow, CancellationToken ct) {
-        Result<List<PolicyVersionDTO>> result = await _dbm.ListPublishedPoliciesAsync(utcNow.UtcDateTime, ct);
+    public async Task<IReadOnlyList<PolicyDocument>> ListPublishedPoliciesAsync(DateTime utcNow, CancellationToken ct) {
+        Result<List<PolicyVersionDTO>> result = await _dbm.ListPublishedPoliciesAsync(utcNow, ct);
         if (result.IsFailure || result.Value is null)
             return Array.Empty<PolicyDocument>();
 

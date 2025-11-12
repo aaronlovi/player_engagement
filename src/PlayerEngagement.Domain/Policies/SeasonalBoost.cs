@@ -12,5 +12,5 @@ public sealed record SeasonalBoost(
     long BoostId,
     string Label,
     decimal Multiplier,
-    DateTimeOffset StartUtc,
-    DateTimeOffset EndUtc);
+    DateTime StartUtc,
+    DateTime EndUtc);
