@@ -9,7 +9,7 @@ namespace PlayerEngagement.Infrastructure.Policies.Services;
 /// <summary>
 /// Provides access to policy documents and related metadata directly from persistence.
 /// </summary>
-internal interface IPolicyDocumentPersistenceService {
+public interface IPolicyDocumentPersistenceService {
     /// <summary>
     /// Retrieves the policy that is effective for the specified key at the supplied UTC instant.
     /// </summary>

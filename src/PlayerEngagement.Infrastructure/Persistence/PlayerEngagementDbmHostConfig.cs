@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using PlayerEngagement.Infrastructure.Policies.Services;
 
 namespace PlayerEngagement.Infrastructure.Persistence;
 
@@ -42,11 +43,14 @@ public static class PlayerEngagementDbmHostConfig {
 
         DatabaseOptions databaseOptions = optionsSection.Get<DatabaseOptions>() ?? new DatabaseOptions();
 
-        return databaseOptions.Provider switch {
+        IServiceCollection configured = databaseOptions.Provider switch {
             DatabaseProvider.InMemory => ConfigureInMemoryServices(services),
             DatabaseProvider.Postgres => ConfigurePostgresServices(services, externalMigrationAssemblies),
             _ => throw new InvalidOperationException($"Unsupported database provider: {databaseOptions.Provider}")
         };
+
+        _ = configured.AddScoped<IPolicyDocumentPersistenceService, PolicyDocumentPersistenceService>();
+        return configured;
     }
 
     private static IServiceCollection ConfigureInMemoryServices(IServiceCollection services) {

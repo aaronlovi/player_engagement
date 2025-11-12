@@ -14,7 +14,7 @@ namespace PlayerEngagement.Infrastructure.Policies.Services;
 /// <summary>
 /// Persistence-facing service that assembles domain <see cref="PolicyDocument"/> instances from DTOs.
 /// </summary>
-internal sealed class PolicyDocumentPersistenceService : IPolicyDocumentPersistenceService {
+public sealed class PolicyDocumentPersistenceService : IPolicyDocumentPersistenceService {
     private readonly IPlayerEngagementDbmService _dbm;
     private readonly ILogger<PolicyDocumentPersistenceService> _logger;
 

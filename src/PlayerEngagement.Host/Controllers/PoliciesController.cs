@@ -5,8 +5,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using PlayerEngagement.Domain.Policies;
 using PlayerEngagement.Host.Contracts.Policies;
 using PlayerEngagement.Host.Validation;
+using PlayerEngagement.Infrastructure.Policies.Services;
 
 namespace PlayerEngagement.Host.Controllers;
 
@@ -15,9 +17,13 @@ namespace PlayerEngagement.Host.Controllers;
 [Produces("application/json")]
 public sealed class PoliciesController : ControllerBase {
     private readonly ILogger<PoliciesController> _logger;
+    private readonly IPolicyDocumentPersistenceService _policyPersistence;
 
-    public PoliciesController(ILogger<PoliciesController> logger) {
+    public PoliciesController(
+        ILogger<PoliciesController> logger,
+        IPolicyDocumentPersistenceService policyPersistence) {
         _logger = logger;
+        _policyPersistence = policyPersistence ?? throw new ArgumentNullException(nameof(policyPersistence));
     }
 
     [HttpGet("ping")]
@@ -65,16 +71,20 @@ public sealed class PoliciesController : ControllerBase {
     }
 
     [HttpGet("{policyKey}/versions/{policyVersion:int}")]
-    public Task<IActionResult> GetPolicyVersionAsync(
+    public async Task<IActionResult> GetPolicyVersionAsync(
         string policyKey,
         int policyVersion,
         CancellationToken ct) {
 
         if (!PolicyRequestValidator.TryValidateVersionLookup(policyKey, policyVersion, out IDictionary<string, string[]>? errors))
-            return Task.FromResult<IActionResult>(ValidationProblem(CreateValidationProblem(errors!)));
+            return ValidationProblem(CreateValidationProblem(errors!));
 
-        _logger.LogInformation("GetPolicyVersion called for {PolicyKey} v{PolicyVersion}", policyKey, policyVersion);
-        return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status501NotImplemented));
+        PolicyDocument? document = await _policyPersistence.GetPolicyVersionAsync(policyKey, policyVersion, ct);
+        if (document is null)
+            return NotFound(new { message = $"Policy {policyKey} version {policyVersion} was not found." });
+
+        _logger.LogInformation("GetPolicyVersion returned {PolicyKey} v{PolicyVersion}", policyKey, policyVersion);
+        return Ok(document);
     }
 
     [HttpGet("{policyKey}/versions")]
@@ -99,25 +109,30 @@ public sealed class PoliciesController : ControllerBase {
     }
 
     [HttpGet("active")]
-    public Task<IActionResult> GetActivePolicyAsync(
+    public async Task<IActionResult> GetActivePolicyAsync(
         [FromQuery] string policyKey,
         [FromQuery] string? segment,
         CancellationToken ct) {
 
         if (!PolicyRequestValidator.TryValidateActiveQuery(policyKey, segment, out IDictionary<string, string[]>? errors))
-            return Task.FromResult<IActionResult>(ValidationProblem(CreateValidationProblem(errors!)));
+            return ValidationProblem(CreateValidationProblem(errors!));
+
+        PolicyDocument? document = await _policyPersistence.GetCurrentPolicyAsync(policyKey, DateTime.UtcNow, ct);
+        if (document is null)
+            return NotFound(new { message = $"Active policy for key '{policyKey}' was not found." });
 
         _logger.LogInformation("GetActivePolicy called for {PolicyKey} (segment={Segment})", policyKey, segment);
-        return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status501NotImplemented));
+        return Ok(document);
     }
 
     [HttpGet("{policyKey}/segments")]
-    public Task<IActionResult> GetSegmentOverridesAsync(string policyKey, CancellationToken ct) {
+    public async Task<IActionResult> GetSegmentOverridesAsync(string policyKey, CancellationToken ct) {
         if (!PolicyRequestValidator.TryValidateSegmentOverrides(policyKey, out IDictionary<string, string[]>? errors))
-            return Task.FromResult<IActionResult>(ValidationProblem(CreateValidationProblem(errors!)));
+            return ValidationProblem(CreateValidationProblem(errors!));
 
+        IReadOnlyDictionary<string, int> overrides = await _policyPersistence.GetSegmentOverridesAsync(policyKey, ct);
         _logger.LogInformation("GetSegmentOverrides called for {PolicyKey}", policyKey);
-        return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status501NotImplemented));
+        return Ok(overrides);
     }
 
     [HttpPut("{policyKey}/segments")]
