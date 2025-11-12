@@ -26,7 +26,7 @@ public interface IPolicyDocumentPersistenceService {
     /// <param name="policyVersion">Version number that uniquely identifies the saved policy document.</param>
     /// <param name="ct">Cancellation token for the underlying database operation.</param>
     /// <returns>The requested <see cref="PolicyDocument"/> or <c>null</c> if the version cannot be found.</returns>
-    Task<PolicyDocument?> GetPolicyVersionAsync(string policyKey, int policyVersion, CancellationToken ct);
+    Task<PolicyDocument?> GetPolicyVersionAsync(string policyKey, long policyVersion, CancellationToken ct);
 
     /// <summary>
     /// Lists all published policy versions that are effective on or before the supplied UTC instant.
@@ -42,5 +42,5 @@ public interface IPolicyDocumentPersistenceService {
     /// <param name="policyKey">Logical identifier for the policy family that owns the overrides.</param>
     /// <param name="ct">Cancellation token for the retrieval request.</param>
     /// <returns>A read-only dictionary keyed by segment identifier with policy version values.</returns>
-    Task<IReadOnlyDictionary<string, int>> GetSegmentOverridesAsync(string policyKey, CancellationToken ct);
+    Task<IReadOnlyDictionary<string, long>> GetSegmentOverridesAsync(string policyKey, CancellationToken ct);
 }

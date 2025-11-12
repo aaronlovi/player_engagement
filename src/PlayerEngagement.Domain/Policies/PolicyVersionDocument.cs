@@ -19,7 +19,7 @@ namespace PlayerEngagement.Domain.Policies;
 /// <param name="CreatedBy">Identity that created the version.</param>
 /// <param name="PublishedAt">When the version was published (if applicable).</param>
 public sealed record PolicyVersionDocument(
-    int PolicyVersion,
+    long PolicyVersion,
     PolicyVersionStatus Status,
     int BaseXpAmount,
     string Currency,

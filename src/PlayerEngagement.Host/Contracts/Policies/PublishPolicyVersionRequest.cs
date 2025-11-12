@@ -8,5 +8,5 @@ namespace PlayerEngagement.Host.Contracts.Policies;
 /// </summary>
 public sealed record PublishPolicyVersionRequest {
     public DateTime? EffectiveAt { get; init; }
-    public Dictionary<string, int>? SegmentOverrides { get; init; }
+    public Dictionary<string, long>? SegmentOverrides { get; init; }
 }

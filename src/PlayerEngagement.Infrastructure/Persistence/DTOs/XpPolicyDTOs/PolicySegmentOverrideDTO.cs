@@ -9,7 +9,7 @@ public sealed record PolicySegmentOverrideDTO(
     long OverrideId,
     string SegmentKey,
     string PolicyKey,
-    int TargetPolicyVersion,
+    long TargetPolicyVersion,
     DateTime CreatedAt,
     string CreatedBy) {
     public static readonly PolicySegmentOverrideDTO Empty = new(

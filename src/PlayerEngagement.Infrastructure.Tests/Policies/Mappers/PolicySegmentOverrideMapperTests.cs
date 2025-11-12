@@ -12,7 +12,7 @@ public sealed class PolicySegmentOverrideMapperTests {
         PolicySegmentOverrideDTO empty = PolicySegmentOverrideDTO.Empty;
         PolicySegmentOverrideDTO valid = new(1, "vip", "daily-login", 3, DateTime.UtcNow, "agent");
 
-        IReadOnlyDictionary<string, int> result = PolicySegmentOverrideMapper.ToDictionary(new[] { empty, valid });
+        IReadOnlyDictionary<string, long> result = PolicySegmentOverrideMapper.ToDictionary(new[] { empty, valid });
 
         _ = Assert.Single(result);
         Assert.Equal(3, result["VIP"]);

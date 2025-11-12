@@ -55,7 +55,7 @@ internal static partial class PolicyRequestValidator {
 
     internal static bool TryValidatePublish(
         string policyKey,
-        int policyVersion,
+        long policyVersion,
         PublishPolicyVersionRequest? request,
         out IDictionary<string, string[]>? errors) {
 
@@ -74,7 +74,7 @@ internal static partial class PolicyRequestValidator {
 
     internal static bool TryValidateRetire(
         string policyKey,
-        int policyVersion,
+        long policyVersion,
         RetirePolicyVersionRequest? request,
         out IDictionary<string, string[]>? errors) {
 
@@ -90,7 +90,7 @@ internal static partial class PolicyRequestValidator {
 
     internal static bool TryValidateVersionLookup(
         string policyKey,
-        int policyVersion,
+        long policyVersion,
         out IDictionary<string, string[]>? errors) {
 
         Dictionary<string, List<string>> bag = CreateBag();
@@ -291,10 +291,10 @@ internal static partial class PolicyRequestValidator {
     }
 
     private static void ValidateSegmentOverrides(
-        IReadOnlyDictionary<string, int> overrides,
+        IReadOnlyDictionary<string, long> overrides,
         Dictionary<string, List<string>> bag) {
 
-        foreach ((string segment, int version) in overrides) {
+        foreach ((string segment, long version) in overrides) {
             if (!SegmentKeyRegex.IsMatch(segment))
                 AddError(bag, $"overrides.{segment}", "Segment keys must be alphanumeric/underscore up to 32 characters.");
             if (version <= 0)
@@ -309,7 +309,7 @@ internal static partial class PolicyRequestValidator {
             AddError(bag, "policyKey", "policyKey must be lowercase letters, digits, '-' or '_', length 3-64.");
     }
 
-    private static void ValidatePositiveVersion(int policyVersion, Dictionary<string, List<string>> bag) {
+    private static void ValidatePositiveVersion(long policyVersion, Dictionary<string, List<string>> bag) {
         if (policyVersion <= 0)
             AddError(bag, "policyVersion", "policyVersion must be positive.");
     }

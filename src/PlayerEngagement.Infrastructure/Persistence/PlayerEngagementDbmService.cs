@@ -28,6 +28,13 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
         return Task.FromResult(Result.Success);
     }
 
+    public Task<Result<long>> CreatePolicyDraftAsync(
+        PolicyVersionWriteDto dto,
+        IReadOnlyList<PolicyStreakCurveEntryDTO> streak,
+        IReadOnlyList<PolicySeasonalBoostDTO> boosts,
+        CancellationToken ct) =>
+        throw new NotSupportedException("CreatePolicyDraftAsync is not implemented for Postgres yet (step 6.3b).");
+
     public async Task<Result<ActivePolicyDTO>> GetCurrentPolicyAsync(string policyKey, DateTime utcNow, CancellationToken ct) {
         var stmt = new GetActivePolicyStmt(SchemaName, policyKey, utcNow);
         Result exec = await Executor.ExecuteQueryWithRetry(stmt, ct);
@@ -41,7 +48,7 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
         return Result<ActivePolicyDTO>.Success(stmt.ActivePolicy);
     }
 
-    public async Task<Result<PolicyVersionDTO>> GetPolicyVersionAsync(string policyKey, int policyVersion, CancellationToken ct) {
+    public async Task<Result<PolicyVersionDTO>> GetPolicyVersionAsync(string policyKey, long policyVersion, CancellationToken ct) {
         var stmt = new GetPolicyVersionStmt(SchemaName, policyKey, policyVersion);
         Result exec = await Executor.ExecuteQueryWithRetry(stmt, ct);
 
@@ -66,7 +73,7 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
         return Result<List<PolicyVersionDTO>>.Success(copy);
     }
 
-    public async Task<Result<List<PolicyStreakCurveEntryDTO>>> GetPolicyStreakCurveAsync(string policyKey, int policyVersion, CancellationToken ct) {
+    public async Task<Result<List<PolicyStreakCurveEntryDTO>>> GetPolicyStreakCurveAsync(string policyKey, long policyVersion, CancellationToken ct) {
         var stmt = new GetPolicyStreakCurveStmt(SchemaName, policyKey, policyVersion);
         Result exec = await Executor.ExecuteQueryWithRetry(stmt, ct);
 
@@ -78,7 +85,7 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
         return Result<List<PolicyStreakCurveEntryDTO>>.Success(copy);
     }
 
-    public async Task<Result<List<PolicySeasonalBoostDTO>>> GetPolicySeasonalBoostsAsync(string policyKey, int policyVersion, CancellationToken ct) {
+    public async Task<Result<List<PolicySeasonalBoostDTO>>> GetPolicySeasonalBoostsAsync(string policyKey, long policyVersion, CancellationToken ct) {
         var stmt = new GetPolicySeasonalBoostsStmt(SchemaName, policyKey, policyVersion);
         Result exec = await Executor.ExecuteQueryWithRetry(stmt, ct);
 

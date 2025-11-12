@@ -6,7 +6,7 @@ namespace PlayerEngagement.Infrastructure.Persistence.DTOs.XpPolicyDTOs;
 public sealed record PolicyStreakCurveEntryDTO(
     long StreakCurveId,
     string PolicyKey,
-    int PolicyVersion,
+    long PolicyVersion,
     int DayIndex,
     decimal Multiplier,
     int AdditiveBonusXp,

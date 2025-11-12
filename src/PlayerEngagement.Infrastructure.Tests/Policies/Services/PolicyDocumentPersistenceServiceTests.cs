@@ -85,7 +85,7 @@ public sealed class PolicyDocumentPersistenceServiceTests : IDisposable {
         _ = _dbmMock.Setup(dbm => dbm.GetPolicySegmentOverridesAsync("daily-login", It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<List<PolicySegmentOverrideDTO>>.Success(null!));
 
-        IReadOnlyDictionary<string, int> overrides = await _service.GetSegmentOverridesAsync("daily-login", CancellationToken.None);
+        IReadOnlyDictionary<string, long> overrides = await _service.GetSegmentOverridesAsync("daily-login", CancellationToken.None);
 
         Assert.Empty(overrides);
     }

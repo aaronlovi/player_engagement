@@ -10,7 +10,7 @@ public sealed record PolicyVersionDTO(
     string PolicyKey,
     string DisplayName,
     string Description,
-    int PolicyVersion,
+    long PolicyVersion,
     string Status,
     int BaseXpAmount,
     string Currency,

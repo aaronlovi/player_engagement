@@ -42,10 +42,10 @@ public sealed class PoliciesController : ControllerBase {
         return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status501NotImplemented));
     }
 
-    [HttpPost("{policyKey}/versions/{policyVersion:int}/publish")]
+    [HttpPost("{policyKey}/versions/{policyVersion:long}/publish")]
     public Task<IActionResult> PublishPolicyVersionAsync(
         string policyKey,
-        int policyVersion,
+        long policyVersion,
         [FromBody] PublishPolicyVersionRequest request,
         CancellationToken ct) {
 
@@ -56,10 +56,10 @@ public sealed class PoliciesController : ControllerBase {
         return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status501NotImplemented));
     }
 
-    [HttpPost("{policyKey}/versions/{policyVersion:int}/retire")]
+    [HttpPost("{policyKey}/versions/{policyVersion:long}/retire")]
     public Task<IActionResult> RetirePolicyVersionAsync(
         string policyKey,
-        int policyVersion,
+        long policyVersion,
         [FromBody] RetirePolicyVersionRequest request,
         CancellationToken ct) {
 
@@ -70,10 +70,10 @@ public sealed class PoliciesController : ControllerBase {
         return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status501NotImplemented));
     }
 
-    [HttpGet("{policyKey}/versions/{policyVersion:int}")]
+    [HttpGet("{policyKey}/versions/{policyVersion:long}")]
     public async Task<IActionResult> GetPolicyVersionAsync(
         string policyKey,
-        int policyVersion,
+        long policyVersion,
         CancellationToken ct) {
 
         if (!PolicyRequestValidator.TryValidateVersionLookup(policyKey, policyVersion, out IDictionary<string, string[]>? errors))
@@ -130,7 +130,7 @@ public sealed class PoliciesController : ControllerBase {
         if (!PolicyRequestValidator.TryValidateSegmentOverrides(policyKey, out IDictionary<string, string[]>? errors))
             return ValidationProblem(CreateValidationProblem(errors!));
 
-        IReadOnlyDictionary<string, int> overrides = await _policyPersistence.GetSegmentOverridesAsync(policyKey, ct);
+        IReadOnlyDictionary<string, long> overrides = await _policyPersistence.GetSegmentOverridesAsync(policyKey, ct);
         _logger.LogInformation("GetSegmentOverrides called for {PolicyKey}", policyKey);
         return Ok(overrides);
     }

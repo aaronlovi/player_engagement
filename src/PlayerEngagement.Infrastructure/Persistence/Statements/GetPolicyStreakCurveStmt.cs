@@ -33,11 +33,11 @@ order by day_index asc;
     private static int _capIndex = -1;
 
     private readonly string _policyKey;
-    private readonly int _policyVersion;
+    private readonly long _policyVersion;
 
     internal List<PolicyStreakCurveEntryDTO> Entries { get; } = new();
 
-    internal GetPolicyStreakCurveStmt(string schemaName, string policyKey, int policyVersion)
+    internal GetPolicyStreakCurveStmt(string schemaName, string policyKey, long policyVersion)
         : base(GetSql(schemaName), nameof(GetPolicyStreakCurveStmt)) {
         _policyKey = policyKey;
         _policyVersion = policyVersion;

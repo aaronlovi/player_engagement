@@ -41,7 +41,7 @@ public sealed class PolicyDocumentPersistenceService : IPolicyDocumentPersistenc
     }
 
     /// <inheritdoc />
-    public async Task<PolicyDocument?> GetPolicyVersionAsync(string policyKey, int policyVersion, CancellationToken ct) {
+    public async Task<PolicyDocument?> GetPolicyVersionAsync(string policyKey, long policyVersion, CancellationToken ct) {
         Result<PolicyVersionDTO> policyResult = await _dbm.GetPolicyVersionAsync(policyKey, policyVersion, ct);
         if (policyResult.IsFailure || policyResult.Value is null || policyResult.Value.IsEmpty)
             return null;
@@ -69,10 +69,10 @@ public sealed class PolicyDocumentPersistenceService : IPolicyDocumentPersistenc
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyDictionary<string, int>> GetSegmentOverridesAsync(string policyKey, CancellationToken ct) {
+    public async Task<IReadOnlyDictionary<string, long>> GetSegmentOverridesAsync(string policyKey, CancellationToken ct) {
         Result<List<PolicySegmentOverrideDTO>> result = await _dbm.GetPolicySegmentOverridesAsync(policyKey, ct);
         if (result.IsFailure || result.Value is null)
-            return new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            return new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
 
         return PolicySegmentOverrideMapper.ToDictionary(result.Value);
     }
@@ -86,7 +86,7 @@ public sealed class PolicyDocumentPersistenceService : IPolicyDocumentPersistenc
     /// <param name="policyVersion">Version number to evaluate.</param>
     /// <param name="ct">Cancellation token tied to the database read.</param>
     /// <returns>Collection of streak curve DTO rows, or an empty list when none exist.</returns>
-    private async Task<List<PolicyStreakCurveEntryDTO>> FetchStreakCurveAsync(string policyKey, int policyVersion, CancellationToken ct) {
+    private async Task<List<PolicyStreakCurveEntryDTO>> FetchStreakCurveAsync(string policyKey, long policyVersion, CancellationToken ct) {
         Result<List<PolicyStreakCurveEntryDTO>> result = await _dbm.GetPolicyStreakCurveAsync(policyKey, policyVersion, ct);
         if (result.IsFailure || result.Value is null)
             return [];
@@ -101,7 +101,7 @@ public sealed class PolicyDocumentPersistenceService : IPolicyDocumentPersistenc
     /// <param name="policyVersion">Version number to evaluate.</param>
     /// <param name="ct">Cancellation token tied to the database read.</param>
     /// <returns>Collection of seasonal boost DTO rows, or an empty list when none exist.</returns>
-    private async Task<List<PolicySeasonalBoostDTO>> FetchSeasonalBoostsAsync(string policyKey, int policyVersion, CancellationToken ct) {
+    private async Task<List<PolicySeasonalBoostDTO>> FetchSeasonalBoostsAsync(string policyKey, long policyVersion, CancellationToken ct) {
         Result<List<PolicySeasonalBoostDTO>> result = await _dbm.GetPolicySeasonalBoostsAsync(policyKey, policyVersion, ct);
         if (result.IsFailure || result.Value is null)
             return [];

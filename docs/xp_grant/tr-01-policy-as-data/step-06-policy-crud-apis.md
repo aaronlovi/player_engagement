@@ -51,6 +51,7 @@ Expose versioned policy management endpoints that enable operators and tooling t
 
 1. **CreatePolicyDraftAsync (`Result<long>`)**
    - *6.3a*: Add method to the interface. In memory, ensure the policy shell exists, generate a new `long` `policy_version` via `GetNextId64()`, insert the draft version, and replace streak/seasonal data. Unit-test happy path and duplicate drafts.
+      - ✅ Implemented in `PlayerEngagementDbmInMemoryService`/`PlayerEngagementDbmInMemoryData` with coverage in `PlayerEngagementDbmInMemoryServiceTests`. Postgres support (6.3b/6.3c) still pending.
    - *6.3b*: Add statements `EnsurePolicyShellStmt`, `InsertPolicyVersionStmt`, `ReplacePolicyStreakCurveStmt`, and `ReplacePolicySeasonalBoostsStmt`. All IDs are `BIGINT`.
    - *6.3c*: Implement the Postgres method to run these statements within a transaction and return the generated version.
 

@@ -4,6 +4,7 @@
 
 create table ${schema}.xp_policies (
     policy_key text primary key,
+    policy_id bigint not null,
     display_name text not null,
     description text null,
     created_at timestamptz not null default ${schema}.now_utc(),
@@ -12,16 +13,19 @@ create table ${schema}.xp_policies (
 
 comment on table ${schema}.xp_policies is 'Registry of policy identifiers (e.g., daily-login-xp) managed via Policy-as-Data.';
 comment on column ${schema}.xp_policies.policy_key is 'Stable slug identifier for the policy.';
+comment on column ${schema}.xp_policies.policy_id is 'Surrogate identifier supplied by DbmService.GetNextId64().';
 comment on column ${schema}.xp_policies.display_name is 'Operator-facing display name.';
 comment on column ${schema}.xp_policies.description is 'Optional description of the policy purpose.';
 comment on column ${schema}.xp_policies.created_at is 'Timestamp when the policy shell was created.';
 comment on column ${schema}.xp_policies.created_by is 'Operator or system that created the policy shell.';
 
+create unique index xp_policies_policy_id_uidx on ${schema}.xp_policies (policy_id);
+
 -------------------------------------------------------------------------------
 
 create table ${schema}.xp_policy_versions (
     policy_key text not null,
-    policy_version int not null,
+    policy_version bigint not null,
     status text not null check (status in ('Draft', 'Published', 'Archived')),
     base_xp_amount int not null check (base_xp_amount > 0),
     currency text not null check (currency = 'XP'),
@@ -74,7 +78,7 @@ comment on column ${schema}.xp_policy_versions.published_at is 'Timestamp when t
 
 create table ${schema}.xp_policy_streak_curve (
     policy_key text not null,
-    policy_version int not null,
+    policy_version bigint not null,
     day_index int not null check (day_index >= 0),
     multiplier numeric(8,4) not null check (multiplier >= 0),
     additive_bonus_xp int not null check (additive_bonus_xp >= 0),
@@ -98,8 +102,8 @@ create extension if not exists btree_gist;
 
 create table ${schema}.xp_policy_seasonal_boosts (
     policy_key text not null,
-    policy_version int not null,
-    boost_id bigserial primary key,
+    policy_version bigint not null,
+    boost_id bigint not null primary key,
     label text not null,
     multiplier numeric(8,4) not null check (multiplier >= 1),
     start_utc timestamptz not null,
@@ -136,7 +140,7 @@ comment on column ${schema}.xp_policy_seasonal_boosts.end_utc is 'UTC end timest
 create table ${schema}.xp_policy_segment_overrides (
     segment_key text not null,
     policy_key text not null,
-    target_policy_version int not null,
+    target_policy_version bigint not null,
     created_at timestamptz not null default ${schema}.now_utc(),
     created_by text not null,
     constraint xp_policy_segment_overrides_pk primary key (segment_key, policy_key),

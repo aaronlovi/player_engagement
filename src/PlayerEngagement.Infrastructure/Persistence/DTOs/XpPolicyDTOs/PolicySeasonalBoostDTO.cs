@@ -8,7 +8,7 @@ namespace PlayerEngagement.Infrastructure.Persistence.DTOs.XpPolicyDTOs;
 public sealed record PolicySeasonalBoostDTO(
     long BoostId,
     string PolicyKey,
-    int PolicyVersion,
+    long PolicyVersion,
     string Label,
     decimal Multiplier,
     DateTime StartUtc,

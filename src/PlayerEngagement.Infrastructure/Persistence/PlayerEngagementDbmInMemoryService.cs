@@ -23,6 +23,20 @@ public sealed class PlayerEngagementDbmInMemoryService : DbmInMemoryService, IPl
         return Task.FromResult(Result.Success);
     }
 
+    public Task<Result<long>> CreatePolicyDraftAsync(
+        PolicyVersionWriteDto dto,
+        IReadOnlyList<PolicyStreakCurveEntryDTO> streak,
+        IReadOnlyList<PolicySeasonalBoostDTO> boosts,
+        CancellationToken ct) {
+
+        ArgumentNullException.ThrowIfNull(dto);
+        ArgumentNullException.ThrowIfNull(streak);
+        ArgumentNullException.ThrowIfNull(boosts);
+
+        Result<long> result = PlayerEngagementDbmInMemoryData.CreatePolicyDraft(dto, streak, boosts);
+        return Task.FromResult(result);
+    }
+
     public Task<Result<ActivePolicyDTO>> GetCurrentPolicyAsync(string policyKey, DateTime utcNow, CancellationToken ct) {
         lock (Locker) {
             if (!PlayerEngagementDbmInMemoryData.TryGetActivePolicy(policyKey, utcNow, out ActivePolicyDTO dto))
@@ -32,7 +46,7 @@ public sealed class PlayerEngagementDbmInMemoryService : DbmInMemoryService, IPl
         }
     }
 
-    public Task<Result<PolicyVersionDTO>> GetPolicyVersionAsync(string policyKey, int policyVersion, CancellationToken ct) {
+    public Task<Result<PolicyVersionDTO>> GetPolicyVersionAsync(string policyKey, long policyVersion, CancellationToken ct) {
         lock (Locker) {
             if (!PlayerEngagementDbmInMemoryData.TryGetPolicyVersion(policyKey, policyVersion, out PolicyVersionDTO dto))
                 return Task.FromResult(Result<PolicyVersionDTO>.Failure(ErrorCodes.NotFound, $"Policy '{policyKey}' version '{policyVersion}' not found."));
@@ -48,14 +62,14 @@ public sealed class PlayerEngagementDbmInMemoryService : DbmInMemoryService, IPl
         }
     }
 
-    public Task<Result<List<PolicyStreakCurveEntryDTO>>> GetPolicyStreakCurveAsync(string policyKey, int policyVersion, CancellationToken ct) {
+    public Task<Result<List<PolicyStreakCurveEntryDTO>>> GetPolicyStreakCurveAsync(string policyKey, long policyVersion, CancellationToken ct) {
         lock (Locker) {
             List<PolicyStreakCurveEntryDTO> entries = PlayerEngagementDbmInMemoryData.GetStreakCurve(policyKey, policyVersion);
             return Task.FromResult(Result<List<PolicyStreakCurveEntryDTO>>.Success(entries));
         }
     }
 
-    public Task<Result<List<PolicySeasonalBoostDTO>>> GetPolicySeasonalBoostsAsync(string policyKey, int policyVersion, CancellationToken ct) {
+    public Task<Result<List<PolicySeasonalBoostDTO>>> GetPolicySeasonalBoostsAsync(string policyKey, long policyVersion, CancellationToken ct) {
         lock (Locker) {
             List<PolicySeasonalBoostDTO> boosts = PlayerEngagementDbmInMemoryData.GetSeasonalBoosts(policyKey, policyVersion);
             return Task.FromResult(Result<List<PolicySeasonalBoostDTO>>.Success(boosts));

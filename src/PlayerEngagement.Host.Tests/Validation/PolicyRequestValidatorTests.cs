@@ -61,7 +61,7 @@ public sealed class PolicyRequestValidatorTests {
     [Fact]
     public void TryValidateUpdateSegmentOverrides_WithInvalidSegmentKey_ReturnsError() {
         UpdateSegmentOverridesRequest request = new() {
-            Overrides = new Dictionary<string, int> {
+            Overrides = new Dictionary<string, long> {
                 ["invalid-segment!"] = 2
             }
         };

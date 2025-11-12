@@ -6,10 +6,10 @@ namespace PlayerEngagement.Infrastructure.Tests.TestUtilities;
 internal static class PolicyDtoFactory {
     internal static ActivePolicyDTO CreateActive(
         string policyKey,
-        int version = 1,
+        long version = 1,
         DateTime? effectiveAt = null) =>
         new(
-            10,
+            10L,
             policyKey,
             $"{policyKey}-display",
             "desc",
@@ -35,11 +35,11 @@ internal static class PolicyDtoFactory {
 
     internal static PolicyVersionDTO CreateVersion(
         string policyKey,
-        int version = 1,
+        long version = 1,
         string status = "Published",
         DateTime? effectiveAt = null) =>
         new(
-            10,
+            10L,
             policyKey,
             $"{policyKey}-display",
             "desc",

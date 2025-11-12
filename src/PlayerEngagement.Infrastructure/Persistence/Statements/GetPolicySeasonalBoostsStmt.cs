@@ -34,11 +34,11 @@ order by start_utc asc;
     private static int _endIndex = -1;
 
     private readonly string _policyKey;
-    private readonly int _policyVersion;
+    private readonly long _policyVersion;
 
     internal List<PolicySeasonalBoostDTO> Boosts { get; } = new();
 
-    internal GetPolicySeasonalBoostsStmt(string schemaName, string policyKey, int policyVersion)
+    internal GetPolicySeasonalBoostsStmt(string schemaName, string policyKey, long policyVersion)
         : base(GetSql(schemaName), nameof(GetPolicySeasonalBoostsStmt)) {
         _policyKey = policyKey;
         _policyVersion = policyVersion;

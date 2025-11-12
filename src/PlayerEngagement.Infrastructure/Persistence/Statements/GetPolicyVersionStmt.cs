@@ -67,11 +67,11 @@ limit 1;
     private static int _publishedAtIndex = -1;
 
     private readonly string _policyKey;
-    private readonly int _policyVersion;
+    private readonly long _policyVersion;
 
     internal PolicyVersionDTO PolicyVersion { get; private set; } = PolicyVersionDTO.Empty;
 
-    internal GetPolicyVersionStmt(string schemaName, string policyKey, int policyVersion)
+    internal GetPolicyVersionStmt(string schemaName, string policyKey, long policyVersion)
         : base(GetSql(schemaName), nameof(GetPolicyVersionStmt)) {
         _policyKey = policyKey;
         _policyVersion = policyVersion;
