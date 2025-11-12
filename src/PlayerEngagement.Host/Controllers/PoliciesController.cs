@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using PlayerEngagement.Host.Contracts.Policies;
+using PlayerEngagement.Host.Validation;
 
 namespace PlayerEngagement.Host.Controllers;
 
@@ -27,6 +29,9 @@ public sealed class PoliciesController : ControllerBase {
         [FromBody] CreatePolicyVersionRequest request,
         CancellationToken ct) {
 
+        if (!PolicyRequestValidator.TryValidateCreate(policyKey, request, out IDictionary<string, string[]>? errors))
+            return Task.FromResult<IActionResult>(ValidationProblem(CreateValidationProblem(errors!)));
+
         _logger.LogInformation("CreatePolicyVersion called for {PolicyKey}", policyKey);
         return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status501NotImplemented));
     }
@@ -37,6 +42,9 @@ public sealed class PoliciesController : ControllerBase {
         int policyVersion,
         [FromBody] PublishPolicyVersionRequest request,
         CancellationToken ct) {
+
+        if (!PolicyRequestValidator.TryValidatePublish(policyKey, policyVersion, request, out IDictionary<string, string[]>? errors))
+            return Task.FromResult<IActionResult>(ValidationProblem(CreateValidationProblem(errors!)));
 
         _logger.LogInformation("PublishPolicyVersion called for {PolicyKey} v{PolicyVersion}", policyKey, policyVersion);
         return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status501NotImplemented));
@@ -49,6 +57,9 @@ public sealed class PoliciesController : ControllerBase {
         [FromBody] RetirePolicyVersionRequest request,
         CancellationToken ct) {
 
+        if (!PolicyRequestValidator.TryValidateRetire(policyKey, policyVersion, request, out IDictionary<string, string[]>? errors))
+            return Task.FromResult<IActionResult>(ValidationProblem(CreateValidationProblem(errors!)));
+
         _logger.LogInformation("RetirePolicyVersion called for {PolicyKey} v{PolicyVersion}", policyKey, policyVersion);
         return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status501NotImplemented));
     }
@@ -58,6 +69,9 @@ public sealed class PoliciesController : ControllerBase {
         string policyKey,
         int policyVersion,
         CancellationToken ct) {
+
+        if (!PolicyRequestValidator.TryValidateVersionLookup(policyKey, policyVersion, out IDictionary<string, string[]>? errors))
+            return Task.FromResult<IActionResult>(ValidationProblem(CreateValidationProblem(errors!)));
 
         _logger.LogInformation("GetPolicyVersion called for {PolicyKey} v{PolicyVersion}", policyKey, policyVersion);
         return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status501NotImplemented));
@@ -70,6 +84,9 @@ public sealed class PoliciesController : ControllerBase {
         [FromQuery] DateTime? effectiveBefore,
         [FromQuery] int? limit,
         CancellationToken ct) {
+
+        if (!PolicyRequestValidator.TryValidateListQuery(policyKey, status, effectiveBefore, limit, out IDictionary<string, string[]>? errors))
+            return Task.FromResult<IActionResult>(ValidationProblem(CreateValidationProblem(errors!)));
 
         _logger.LogInformation(
             "ListPolicyVersions called for {PolicyKey} (status={Status}, effectiveBefore={EffectiveBefore}, limit={Limit})",
@@ -87,12 +104,18 @@ public sealed class PoliciesController : ControllerBase {
         [FromQuery] string? segment,
         CancellationToken ct) {
 
+        if (!PolicyRequestValidator.TryValidateActiveQuery(policyKey, segment, out IDictionary<string, string[]>? errors))
+            return Task.FromResult<IActionResult>(ValidationProblem(CreateValidationProblem(errors!)));
+
         _logger.LogInformation("GetActivePolicy called for {PolicyKey} (segment={Segment})", policyKey, segment);
         return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status501NotImplemented));
     }
 
     [HttpGet("{policyKey}/segments")]
     public Task<IActionResult> GetSegmentOverridesAsync(string policyKey, CancellationToken ct) {
+        if (!PolicyRequestValidator.TryValidateSegmentOverrides(policyKey, out IDictionary<string, string[]>? errors))
+            return Task.FromResult<IActionResult>(ValidationProblem(CreateValidationProblem(errors!)));
+
         _logger.LogInformation("GetSegmentOverrides called for {PolicyKey}", policyKey);
         return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status501NotImplemented));
     }
@@ -103,7 +126,16 @@ public sealed class PoliciesController : ControllerBase {
         [FromBody] UpdateSegmentOverridesRequest request,
         CancellationToken ct) {
 
+        if (!PolicyRequestValidator.TryValidateSegmentOverrideUpdate(policyKey, request, out IDictionary<string, string[]>? errors))
+            return Task.FromResult<IActionResult>(ValidationProblem(CreateValidationProblem(errors!)));
+
         _logger.LogInformation("UpdateSegmentOverrides called for {PolicyKey}", policyKey);
         return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status501NotImplemented));
     }
+
+    private static ValidationProblemDetails CreateValidationProblem(IDictionary<string, string[]> errors) =>
+        new(errors) {
+            Status = StatusCodes.Status400BadRequest,
+            Title = "Request validation failed."
+        };
 }
