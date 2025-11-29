@@ -49,6 +49,7 @@ Adopt default .NET formatting: four-space indentation, file-scoped namespaces wh
 - Provide XML documentation comments for every type (classes, records, enums) and each member or enum value when introducing new code.
 - Do not enable implicit usings or rely on global `using` directives in C# projects; include explicit usings at the top of each file so dependencies remain obvious and localized.
 - Before adding a private utility/helper, decide if it should live in `PlayerEngagement.Shared` (and be generalized for reuse) instead of staying local—opt for shared, well-scoped helpers when they benefit multiple projects.
+- When handling numeric input from the admin UI, bind integer fields to `int/long` and multipliers/percentages to `decimal`; reject non-integers for integral fields in validation. If numeric strings must be accepted, enable `JsonNumberHandling.AllowReadingFromString` on the relevant DTOs and still enforce the same range checks.
 
 ## Testing Guidelines
 Target xUnit for new tests, mirroring project structure (e.g., `src/PlayerEngagement.Domain.Tests`). Name test classes `<TypeUnderTest>Tests` and methods `Method_Scenario_ExpectedOutcome`. Guard external dependencies with fakes or use the compose stack for integration coverage. Run `dotnet test` locally and watch for flaky behavior by rerunning critical suites with `--filter`.

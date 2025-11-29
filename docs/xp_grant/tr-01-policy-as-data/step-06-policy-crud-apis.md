@@ -1,15 +1,18 @@
 # Step 6 — Policy CRUD APIs
 
 ## Objective
+
 Expose versioned policy management endpoints that enable operators and tooling to create, review, and publish policy documents while preserving immutability.
 
 ## Inputs
+
 - Domain model and validation rules from Step 2.
 - Repository interfaces from Step 5.
 - API conventions in `PlayerEngagement.Host` and related infrastructure.
 - Admin workflow requirements in `docs/xp_grant/xp_grant_business_requirements.md` (BR-13) and technical requirements (TR-01, TR-10, TR-22).
 
 ## Tasks
+
 | Step | Status | Focus | Key Work Items | Test Strategy |
 | --- | --- | --- | --- | --- |
 | 6.1 | [x] | **Host Wiring** | Add `MapControllers()`/required middleware to `PlayerEngagement.Host`, ensure REST endpoints resolve dependencies (dbm services, persistence). | Manual: run host and hit stub controller (`/xp/policies/ping`). |
@@ -25,14 +28,17 @@ Expose versioned policy management endpoints that enable operators and tooling t
 | 6.6 | [ ] | **Testing** | Unit tests for controllers/services (happy path, validation errors, immutability), integration smoke tests covering publish + future-effective activation via in-memory DBM. | `dotnet test` (unit) + targeted integration smoke tests. |
 
 ## Deliverables
+
 - Policy API implementation with tests.
 - Updated API documentation/specification in repo or shared docs site.
 
 ## References
+
 - `AGENTS.md` for coding standards and testing expectations.
 - `docs/xp_grant/xp_grant_high_level_design.md` (Policy Service component interactions).
 
 ## Decisions & Open Questions
+
 - **Lifecycle semantics**: Retire-only (no soft delete). Implement policy states via statuses/effective windows.
 - **RBAC**: Deferred while a single operator uses the system; track follow-up in TODO.md for future enforcement.
 - **API style**: Use REST endpoints in `PlayerEngagement.Host`. We still need to add the HTTP routing/mvc configuration since only health stubs exist today. (Optional: evaluate gRPC later for service-to-service calls.)
@@ -78,6 +84,7 @@ Expose versioned policy management endpoints that enable operators and tooling t
 6. **(Optional) Additional writes** – Revisit list/history APIs once write flows exist to ensure draft/published metadata surfaces correctly.
 
 **Implementation notes**
+
 - Always use `DbmService.GetNextId64()` for surrogate identifiers (`policy_version`, `boost_id`, etc.) and ensure the schema defines those columns as `BIGINT`. Since the database can be recreated, updating `V002__policy_as_data.sql` is acceptable.
 - Statements must follow the Identity pattern (single responsibility, clear parameter binding, explicit result handling).
 - Extend `PlayerEngagementDbmInMemoryData` with helper methods such as `EnsurePolicy`, `InsertVersion`, `MarkPublished`, `ReplaceStreakCurve`, `ReplaceSeasonalBoosts`, and `ReplaceSegmentOverrides` so in-memory behavior stays aligned with SQL.
