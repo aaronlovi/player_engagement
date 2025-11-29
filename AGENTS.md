@@ -25,11 +25,19 @@ Keep C# namespaces aligned with folder structure (e.g., file `Policies/Mappers/F
 - `docker compose -f infra/docker-compose.yml up -d` – start Postgres/pgAdmin dependencies.
 
 ## Workflow Checklist
-1. **Build before you call it done** – run `dotnet build` (or the equivalent for the task) after each plan step and do not mark work complete until it succeeds.
-2. **Run tests whenever they exist** – execute existing unit or integration suites before declaring success; if coverage is missing, log the gap and plan to add it.
-3. **Keep tasks atomic** – scope changes to the current task or plan step and resolve build/test issues immediately instead of carrying them forward.
-4. **Favor application-layer logic** – keep domain rules, projections, and invariants in C# services; use database triggers or functions only with a documented operational need.
-5. **Document deviations** – when a task cannot meet these standards (e.g., blocked by an external dependency), record the reason and next steps in the relevant planning doc.
+**Critical collaboration flow (must follow for every task):**
+1. I do the coding work.
+2. You (repo owner) perform the final code review.
+3. You run the compile step.
+4. You run the unit tests.
+5. You report the compile/test results back to me.
+6. If everything passes, I create the commit.
+- Only the repo owner runs compile/tests to avoid polluting this assistant’s context; I will not execute those commands.
+
+**Supporting guardrails:**
+- Keep tasks atomic—scope changes to the current task and resolve blockers immediately.
+- Favor application-layer logic—keep domain rules in C# services; use DB triggers/functions only with a documented need.
+- Document deviations—when a task cannot meet these standards, record the reason and next steps in the relevant planning doc.
 
 Refer back to this checklist before finalizing any task.
 
