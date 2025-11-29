@@ -5,7 +5,7 @@ This plan extends `Step 3 — Data Modeling` to replace the loose `StreakModelDe
 | # | Status | Task | Notes / Deliverable |
 | --- | --- | --- | --- |
 | 1 | [x] | PlateauCap model: domain type + validation + mapper/test updates. | Record with `PlateauDay`, `PlateauMultiplier`; add parser tests and Host validator coverage for this model. |
-| 2 | [ ] | WeeklyCycleReset model: domain type + validation + mapper/test updates. | Record with `CycleLength`; add parser tests and Host validator coverage for this model. |
+| 2 | [x] | WeeklyCycleReset model: domain type + validation + mapper/test updates. | Fixed 7-day cycle; no parameters required. Add parser tests and Host validator coverage for this model. |
 | 3 | [ ] | DecayCurve model: domain type + validation + mapper/test updates. | Record with `DecayPercent`, `GraceDay`; add parser tests and Host validator coverage for this model. |
 | 4 | [ ] | TieredSeasonalReset model: domain type + validation + mapper/test updates. | Record with tier collection `{startDay,endDay,bonusMultiplier}` and overlap checks; parser/validator tests. |
 | 5 | [ ] | MilestoneMetaReward model: domain type + validation + mapper/test updates. | Record with milestones `{day,rewardType,rewardValue}`; parser/validator tests. |
@@ -26,7 +26,7 @@ This plan extends `Step 3 — Data Modeling` to replace the loose `StreakModelDe
 ## Model Invariants (by streak model)
 
 - PlateauCap: `PlateauDay >= 1`; `PlateauMultiplier > 0`; day indices must be integers.
-- WeeklyCycleReset: `CycleLength >= 1`; integer day/count semantics.
+- WeeklyCycleReset: fixed 7-day cycle; integer day/count semantics; resets on reward-day boundaries; no parameters accepted.
 - DecayCurve: `DecayPercent` within `[0,1]`; `GraceDay >= 0`; integer day/count semantics.
 - TieredSeasonalReset: tiers require `StartDay >= 1`, `EndDay >= StartDay`, `BonusMultiplier > 0`; tiers must not overlap; gaps are allowed; integer day/count semantics. Treat ranges as inclusive for both start/end when evaluating days.
 - MilestoneMetaReward: each milestone `Day >= 1`; `RewardType` and `RewardValue` non-empty; integer day semantics. Future integration with inventory may refine reward validation.

@@ -68,7 +68,19 @@ public sealed class PolicyVersionMapperTests {
             modelType: "PLATEAU_CAP",
             modelParameters: "{\"plateauMultiplier\":1.5}");
 
-        Assert.Throws<InvalidOperationException>(() => PolicyVersionMapper.ToDomain(dto));
+        _ = Assert.Throws<InvalidOperationException>(() => PolicyVersionMapper.ToDomain(dto));
+    }
+
+    [Fact]
+    public void ToDomain_WeeklyCycleReset_MapsTypedDefinition() {
+        PolicyVersionDTO dto = CreateVersionDto(
+            modelType: "WEEKLY_CYCLE_RESET",
+            modelParameters: "{}");
+
+        PolicyVersionDocument result = PolicyVersionMapper.ToDomain(dto);
+
+        _ = Assert.IsType<WeeklyCycleResetStreakModel>(result.StreakModel);
+        Assert.Equal(WeeklyCycleResetStreakModel.CycleLength, WeeklyCycleResetStreakModel.CycleLength);
     }
 
     private static PolicyVersionDTO CreateVersionDto(

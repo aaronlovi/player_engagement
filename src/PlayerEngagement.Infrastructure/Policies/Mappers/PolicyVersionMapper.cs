@@ -90,6 +90,7 @@ internal static class PolicyVersionMapper {
 
         return type switch {
             StreakModelType.PlateauCap => MapPlateauCap(parameters),
+            StreakModelType.WeeklyCycleReset => new WeeklyCycleResetStreakModel(),
             _ => new RawStreakModelDefinition(type, parameters)
         };
     }
