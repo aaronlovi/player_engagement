@@ -4,7 +4,7 @@ This plan extends `Step 3 — Data Modeling` to replace the loose `StreakModelDe
 
 | # | Status | Task | Notes / Deliverable |
 | --- | --- | --- | --- |
-| 1 | [ ] | PlateauCap model: domain type + validation + mapper/test updates. | Record with `PlateauDay`, `PlateauMultiplier`; add parser tests and Host validator coverage for this model. |
+| 1 | [x] | PlateauCap model: domain type + validation + mapper/test updates. | Record with `PlateauDay`, `PlateauMultiplier`; add parser tests and Host validator coverage for this model. |
 | 2 | [ ] | WeeklyCycleReset model: domain type + validation + mapper/test updates. | Record with `CycleLength`; add parser tests and Host validator coverage for this model. |
 | 3 | [ ] | DecayCurve model: domain type + validation + mapper/test updates. | Record with `DecayPercent`, `GraceDay`; add parser tests and Host validator coverage for this model. |
 | 4 | [ ] | TieredSeasonalReset model: domain type + validation + mapper/test updates. | Record with tier collection `{startDay,endDay,bonusMultiplier}` and overlap checks; parser/validator tests. |

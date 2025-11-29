@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using PlayerEngagement.Domain.Policies;
 using PlayerEngagement.Infrastructure.Persistence.DTOs.XpPolicyDTOs;
 using PlayerEngagement.Shared.Json;
+using PlayerEngagement.Shared.Validation;
 
 namespace PlayerEngagement.Infrastructure.Policies.Mappers;
 
@@ -86,6 +87,16 @@ internal static class PolicyVersionMapper {
         };
 
         IReadOnlyDictionary<string, object?> parameters = JsonObjectParser.ParseObject(parametersJson);
-        return new StreakModelDefinition(type, parameters);
+
+        return type switch {
+            StreakModelType.PlateauCap => MapPlateauCap(parameters),
+            _ => new RawStreakModelDefinition(type, parameters)
+        };
+    }
+
+    private static PlateauCapStreakModel MapPlateauCap(IReadOnlyDictionary<string, object?> parameters) {
+        int plateauDay = ParameterReader.RequireInt(parameters, "plateauDay", "plateau_day");
+        decimal plateauMultiplier = ParameterReader.RequireDecimal(parameters, "plateauMultiplier", "plateau_multiplier");
+        return new PlateauCapStreakModel(plateauDay, plateauMultiplier);
     }
 }

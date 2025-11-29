@@ -22,18 +22,21 @@ public sealed class PolicyVersionMapperTests {
         Assert.Equal(AnchorStrategy.FixedUtc, result.AnchorStrategy);
         Assert.Equal("default", result.Preview.DefaultSegment);
         Assert.Equal(dto.EffectiveAt, result.EffectiveAt);
+        RawStreakModelDefinition rawModel = Assert.IsType<RawStreakModelDefinition>(result.StreakModel);
+        Assert.Equal(StreakModelType.MilestoneMetaReward, rawModel.Type);
     }
 
     [Fact]
     public void ToDomain_FromActiveDto_ProvidesPreviewDefaults() {
-        ActivePolicyDTO dto = CreateActiveDto(previewSegment: "");
+        ActivePolicyDTO dto = CreateActiveDto(previewSegment: "", modelType: "DECAY_CURVE");
 
         PolicyVersionDocument result = PolicyVersionMapper.ToDomain(dto);
 
         Assert.Null(result.Preview.DefaultSegment);
-        Assert.Equal(StreakModelType.DecayCurve, result.StreakModel.Type);
-        Assert.Contains("decay_rate", result.StreakModel.Parameters.Keys);
-        Assert.Equal(0.2m, result.StreakModel.Parameters["decay_rate"]);
+        RawStreakModelDefinition rawModel = Assert.IsType<RawStreakModelDefinition>(result.StreakModel);
+        Assert.Equal(StreakModelType.DecayCurve, rawModel.Type);
+        Assert.Contains("decay_rate", rawModel.Parameters.Keys);
+        Assert.Equal(0.2m, rawModel.Parameters["decay_rate"]);
     }
 
     [Fact]
@@ -46,11 +49,35 @@ public sealed class PolicyVersionMapperTests {
         Assert.Equal(5, result.GracePolicy.WindowDays);
     }
 
+    [Fact]
+    public void ToDomain_PlateauCapStreakModel_MapsTypedDefinition() {
+        PolicyVersionDTO dto = CreateVersionDto(
+            modelType: "PLATEAU_CAP",
+            modelParameters: "{\"plateauDay\":5,\"plateauMultiplier\":1.5}");
+
+        PolicyVersionDocument result = PolicyVersionMapper.ToDomain(dto);
+
+        PlateauCapStreakModel model = Assert.IsType<PlateauCapStreakModel>(result.StreakModel);
+        Assert.Equal(5, model.PlateauDay);
+        Assert.Equal(1.5m, model.PlateauMultiplier);
+    }
+
+    [Fact]
+    public void ToDomain_PlateauCapMissingFields_Throws() {
+        PolicyVersionDTO dto = CreateVersionDto(
+            modelType: "PLATEAU_CAP",
+            modelParameters: "{\"plateauMultiplier\":1.5}");
+
+        Assert.Throws<InvalidOperationException>(() => PolicyVersionMapper.ToDomain(dto));
+    }
+
     private static PolicyVersionDTO CreateVersionDto(
         string status = "Published",
         string anchorStrategy = "ANCHOR_TIMEZONE",
         int graceAllowed = 1,
-        int graceWindow = 3) =>
+        int graceWindow = 3,
+        string modelType = "MILESTONE_META_REWARD",
+        string modelParameters = "{\"milestones\":[{\"day\":7,\"bonus\":100}],\"decay_rate\":0.2}") =>
         new(
             1,
             "daily-login",
@@ -65,8 +92,8 @@ public sealed class PolicyVersionMapperTests {
             anchorStrategy,
             graceAllowed,
             graceWindow,
-            "MILESTONE_META_REWARD",
-            "{\"milestones\":[{\"day\":7,\"bonus\":100}],\"decay_rate\":0.2}",
+            modelType,
+            modelParameters,
             10,
             "default",
             "{}",
@@ -76,7 +103,7 @@ public sealed class PolicyVersionMapperTests {
             "agent",
             DateTime.UtcNow.AddDays(-1));
 
-    private static ActivePolicyDTO CreateActiveDto(string previewSegment) =>
+    private static ActivePolicyDTO CreateActiveDto(string previewSegment, string modelType) =>
         new(
             1,
             "daily-login",
@@ -91,7 +118,7 @@ public sealed class PolicyVersionMapperTests {
             "SERVER_LOCAL",
             1,
             2,
-            "DECAY_CURVE",
+            modelType,
             "{\"decay_rate\":0.2}",
             5,
             previewSegment,
