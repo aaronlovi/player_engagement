@@ -22,8 +22,8 @@ public sealed class PolicyVersionMapperTests {
         Assert.Equal(AnchorStrategy.FixedUtc, result.AnchorStrategy);
         Assert.Equal("default", result.Preview.DefaultSegment);
         Assert.Equal(dto.EffectiveAt, result.EffectiveAt);
-        RawStreakModelDefinition rawModel = Assert.IsType<RawStreakModelDefinition>(result.StreakModel);
-        Assert.Equal(StreakModelType.MilestoneMetaReward, rawModel.Type);
+        MilestoneMetaRewardStreakModel milestoneModel = Assert.IsType<MilestoneMetaRewardStreakModel>(result.StreakModel);
+        Assert.NotEmpty(milestoneModel.Milestones);
     }
 
     [Fact]
@@ -33,10 +33,9 @@ public sealed class PolicyVersionMapperTests {
         PolicyVersionDocument result = PolicyVersionMapper.ToDomain(dto);
 
         Assert.Null(result.Preview.DefaultSegment);
-        RawStreakModelDefinition rawModel = Assert.IsType<RawStreakModelDefinition>(result.StreakModel);
-        Assert.Equal(StreakModelType.DecayCurve, rawModel.Type);
-        Assert.Contains("decay_rate", rawModel.Parameters.Keys);
-        Assert.Equal(0.2m, rawModel.Parameters["decay_rate"]);
+        DecayCurveStreakModel model = Assert.IsType<DecayCurveStreakModel>(result.StreakModel);
+        Assert.Equal(0.2m, model.DecayPercent);
+        Assert.Equal(1, model.GraceDay);
     }
 
     [Fact]
@@ -83,13 +82,55 @@ public sealed class PolicyVersionMapperTests {
         Assert.Equal(WeeklyCycleResetStreakModel.CycleLength, WeeklyCycleResetStreakModel.CycleLength);
     }
 
+    [Fact]
+    public void ToDomain_DecayCurve_MapsTypedDefinition() {
+        PolicyVersionDTO dto = CreateVersionDto(
+            modelType: "DECAY_CURVE",
+            modelParameters: "{\"decayPercent\":0.3,\"graceDay\":2}");
+
+        PolicyVersionDocument result = PolicyVersionMapper.ToDomain(dto);
+
+        DecayCurveStreakModel model = Assert.IsType<DecayCurveStreakModel>(result.StreakModel);
+        Assert.Equal(0.3m, model.DecayPercent);
+        Assert.Equal(2, model.GraceDay);
+    }
+
+    [Fact]
+    public void ToDomain_TieredSeasonalReset_MapsTypedDefinition() {
+        PolicyVersionDTO dto = CreateVersionDto(
+            modelType: "TIERED_SEASONAL_RESET",
+            modelParameters: "{\"tiers\":[{\"startDay\":1,\"endDay\":3,\"bonusMultiplier\":1.1},{\"startDay\":5,\"endDay\":7,\"bonusMultiplier\":1.2}]}");
+
+        PolicyVersionDocument result = PolicyVersionMapper.ToDomain(dto);
+
+        TieredSeasonalResetStreakModel model = Assert.IsType<TieredSeasonalResetStreakModel>(result.StreakModel);
+        Assert.Equal(2, model.Tiers.Count);
+        Assert.Equal(1, model.Tiers[0].StartDay);
+        Assert.Equal(7, model.Tiers[1].EndDay);
+    }
+
+    [Fact]
+    public void ToDomain_MilestoneMetaReward_MapsTypedDefinition() {
+        PolicyVersionDTO dto = CreateVersionDto(
+            modelType: "MILESTONE_META_REWARD",
+            modelParameters: "{\"milestones\":[{\"day\":3,\"rewardType\":\"badge\",\"rewardValue\":\"bronze\"}]}");
+
+        PolicyVersionDocument result = PolicyVersionMapper.ToDomain(dto);
+
+        MilestoneMetaRewardStreakModel model = Assert.IsType<MilestoneMetaRewardStreakModel>(result.StreakModel);
+        Assert.Single(model.Milestones);
+        Assert.Equal(3, model.Milestones[0].Day);
+        Assert.Equal("badge", model.Milestones[0].RewardType);
+        Assert.Equal("bronze", model.Milestones[0].RewardValue);
+    }
+
     private static PolicyVersionDTO CreateVersionDto(
         string status = "Published",
         string anchorStrategy = "ANCHOR_TIMEZONE",
         int graceAllowed = 1,
         int graceWindow = 3,
         string modelType = "MILESTONE_META_REWARD",
-        string modelParameters = "{\"milestones\":[{\"day\":7,\"bonus\":100}],\"decay_rate\":0.2}") =>
+        string modelParameters = "{\"milestones\":[{\"day\":7,\"rewardType\":\"badge\",\"rewardValue\":\"bronze\"}]}") =>
         new(
             1,
             "daily-login",
@@ -131,7 +172,7 @@ public sealed class PolicyVersionMapperTests {
             1,
             2,
             modelType,
-            "{\"decay_rate\":0.2}",
+            "{\"decay_rate\":0.2,\"grace_day\":1}",
             5,
             previewSegment,
             "{}",

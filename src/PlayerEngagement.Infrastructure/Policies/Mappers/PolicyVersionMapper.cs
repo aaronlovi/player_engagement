@@ -91,6 +91,9 @@ internal static class PolicyVersionMapper {
         return type switch {
             StreakModelType.PlateauCap => MapPlateauCap(parameters),
             StreakModelType.WeeklyCycleReset => new WeeklyCycleResetStreakModel(),
+            StreakModelType.DecayCurve => MapDecayCurve(parameters),
+            StreakModelType.TieredSeasonalReset => MapTieredSeasonalReset(parameters),
+            StreakModelType.MilestoneMetaReward => MapMilestoneMetaReward(parameters),
             _ => new RawStreakModelDefinition(type, parameters)
         };
     }
@@ -99,5 +102,41 @@ internal static class PolicyVersionMapper {
         int plateauDay = ParameterReader.RequireInt(parameters, "plateauDay", "plateau_day");
         decimal plateauMultiplier = ParameterReader.RequireDecimal(parameters, "plateauMultiplier", "plateau_multiplier");
         return new PlateauCapStreakModel(plateauDay, plateauMultiplier);
+    }
+
+    private static DecayCurveStreakModel MapDecayCurve(IReadOnlyDictionary<string, object?> parameters) {
+        decimal decayPercent = ParameterReader.RequireDecimal(parameters, "decayPercent", "decay_percent", "decayRate", "decay_rate");
+        int graceDay = ParameterReader.RequireInt(parameters, "graceDay", "grace_day");
+        return new DecayCurveStreakModel(decayPercent, graceDay);
+    }
+
+    private static TieredSeasonalResetStreakModel MapTieredSeasonalReset(IReadOnlyDictionary<string, object?> parameters) {
+        IReadOnlyList<object?> tiers = ParameterReader.RequireList(parameters, "tiers");
+        List<TieredSeasonalResetTierDefinition> parsed = new(tiers.Count);
+
+        foreach (object? tierObj in tiers) {
+            IReadOnlyDictionary<string, object?> tierDict = ParameterReader.RequireDictionary(tierObj, "tiers[]");
+            int startDay = ParameterReader.RequireInt(tierDict, "startDay", "start_day");
+            int endDay = ParameterReader.RequireInt(tierDict, "endDay", "end_day");
+            decimal bonusMultiplier = ParameterReader.RequireDecimal(tierDict, "bonusMultiplier", "bonus_multiplier");
+            parsed.Add(new TieredSeasonalResetTierDefinition(startDay, endDay, bonusMultiplier));
+        }
+
+        return new TieredSeasonalResetStreakModel(parsed);
+    }
+
+    private static MilestoneMetaRewardStreakModel MapMilestoneMetaReward(IReadOnlyDictionary<string, object?> parameters) {
+        IReadOnlyList<object?> milestones = ParameterReader.RequireList(parameters, "milestones");
+        List<MilestoneMetaRewardMilestone> parsed = new(milestones.Count);
+
+        foreach (object? milestoneObj in milestones) {
+            IReadOnlyDictionary<string, object?> milestoneDict = ParameterReader.RequireDictionary(milestoneObj, "milestones[]");
+            int day = ParameterReader.RequireInt(milestoneDict, "day");
+            string rewardType = ParameterReader.RequireString(milestoneDict, "rewardType", "reward_type");
+            string rewardValue = ParameterReader.RequireString(milestoneDict, "rewardValue", "reward_value");
+            parsed.Add(new MilestoneMetaRewardMilestone(day, rewardType, rewardValue));
+        }
+
+        return new MilestoneMetaRewardStreakModel(parsed);
     }
 }

@@ -6,9 +6,9 @@ This plan extends `Step 3 — Data Modeling` to replace the loose `StreakModelDe
 | --- | --- | --- | --- |
 | 1 | [x] | PlateauCap model: domain type + validation + mapper/test updates. | Record with `PlateauDay`, `PlateauMultiplier`; add parser tests and Host validator coverage for this model. |
 | 2 | [x] | WeeklyCycleReset model: domain type + validation + mapper/test updates. | Fixed 7-day cycle; no parameters required. Add parser tests and Host validator coverage for this model. |
-| 3 | [ ] | DecayCurve model: domain type + validation + mapper/test updates. | Record with `DecayPercent`, `GraceDay`; add parser tests and Host validator coverage for this model. |
-| 4 | [ ] | TieredSeasonalReset model: domain type + validation + mapper/test updates. | Record with tier collection `{startDay,endDay,bonusMultiplier}` and overlap checks; parser/validator tests. |
-| 5 | [ ] | MilestoneMetaReward model: domain type + validation + mapper/test updates. | Record with milestones `{day,rewardType,rewardValue}`; parser/validator tests. |
+| 3 | [x] | DecayCurve model: domain type + validation + mapper/test updates. | Record with `DecayPercent`, `GraceDay`; add parser tests and Host validator coverage for this model. |
+| 4 | [x] | TieredSeasonalReset model: domain type + validation + mapper/test updates. | Record with tier collection `{startDay,endDay,bonusMultiplier}` and overlap checks; parser/validator tests. |
+| 5 | [x] | MilestoneMetaReward model: domain type + validation + mapper/test updates. | Record with milestones `{day,rewardType,rewardValue}`; parser/validator tests. |
 | 6 | [ ] | Update `StreakModelDefinition` to wrap typed variants (discriminated union). | Keep backward compatibility helpers if needed; document serialization expectations. |
 | 7 | [ ] | Shared validation utilities for ranges/overlaps as needed. | Place in `PlayerEngagement.Shared` with unit tests. |
 | 8 | [ ] | Update DTO mapping/tests to reflect typed models (no DB schema change). | Adjust Infrastructure tests to assert typed model instances and properties. |

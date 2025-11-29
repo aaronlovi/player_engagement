@@ -41,4 +41,38 @@ public sealed class ParameterReaderTests {
 
         Assert.Equal(1L, result);
     }
+
+    [Fact]
+    public void RequireList_ReturnsList() {
+        List<object?> items = [1, 2, 3];
+        Dictionary<string, object?> parameters = new(StringComparer.OrdinalIgnoreCase) {
+            ["arr"] = items
+        };
+
+        IReadOnlyList<object?> result = ParameterReader.RequireList(parameters, "arr");
+
+        Assert.Same(items, result);
+    }
+
+    [Fact]
+    public void RequireDictionary_ReturnsDictionary() {
+        Dictionary<string, object?> dict = new(StringComparer.OrdinalIgnoreCase) {
+            ["a"] = 1
+        };
+
+        IReadOnlyDictionary<string, object?> result = ParameterReader.RequireDictionary(dict, "dict");
+
+        Assert.Same(dict, result);
+    }
+
+    [Fact]
+    public void RequireString_Valid() {
+        Dictionary<string, object?> parameters = new(StringComparer.OrdinalIgnoreCase) {
+            ["name"] = "foo"
+        };
+
+        string result = ParameterReader.RequireString(parameters, "name");
+
+        Assert.Equal("foo", result);
+    }
 }
