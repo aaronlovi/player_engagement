@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Text.Json;
 using PlayerEngagement.Domain.Policies;
 using PlayerEngagement.Infrastructure.Persistence.DTOs.XpPolicyDTOs;
+using PlayerEngagement.Shared.Json;
 
 namespace PlayerEngagement.Infrastructure.Policies.Mappers;
 
@@ -85,51 +85,7 @@ internal static class PolicyVersionMapper {
             _ => StreakModelType.PlateauCap
         };
 
-        IReadOnlyDictionary<string, object?> parameters = ParseParameters(parametersJson);
+        IReadOnlyDictionary<string, object?> parameters = JsonObjectParser.ParseObject(parametersJson);
         return new StreakModelDefinition(type, parameters);
-    }
-
-    private static Dictionary<string, object?> ParseParameters(string json) {
-        if (string.IsNullOrWhiteSpace(json))
-            return [];
-
-        try {
-            using var doc = JsonDocument.Parse(json);
-            if (doc.RootElement.ValueKind != JsonValueKind.Object)
-                return [];
-
-            Dictionary<string, object?> result = new(StringComparer.OrdinalIgnoreCase);
-            foreach (JsonProperty property in doc.RootElement.EnumerateObject())
-                result[property.Name] = ConvertElement(property.Value);
-
-            return result;
-        } catch (JsonException) {
-            return [];
-        }
-    }
-
-    private static object? ConvertElement(JsonElement element) => element.ValueKind switch {
-        JsonValueKind.Null => null,
-        JsonValueKind.True => true,
-        JsonValueKind.False => false,
-        JsonValueKind.Number => element.TryGetInt64(out long l) ? l : element.GetDecimal(),
-        JsonValueKind.String => element.GetString(),
-        JsonValueKind.Array => ConvertArray(element),
-        JsonValueKind.Object => ConvertObject(element),
-        _ => null
-    };
-
-    private static List<object?> ConvertArray(JsonElement element) {
-        List<object?> items = new(element.GetArrayLength());
-        foreach (JsonElement child in element.EnumerateArray())
-            items.Add(ConvertElement(child));
-        return items;
-    }
-
-    private static Dictionary<string, object?> ConvertObject(JsonElement element) {
-        Dictionary<string, object?> nested = new(StringComparer.OrdinalIgnoreCase);
-        foreach (JsonProperty property in element.EnumerateObject())
-            nested[property.Name] = ConvertElement(property.Value);
-        return nested;
     }
 }

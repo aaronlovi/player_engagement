@@ -9,6 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../PlayerEngagement.Shared/PlayerEngagement.Shared.csproj" />
     <ProjectReference Include="../PlayerEngagement.Domain/PlayerEngagement.Domain.csproj" />
   </ItemGroup>
 
