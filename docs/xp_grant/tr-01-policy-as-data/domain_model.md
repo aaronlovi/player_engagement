@@ -2,7 +2,7 @@
 
 ## Aggregate Overview
 
-```
+```text
 PolicyAggregate
 └── PolicyDescriptor (policyKey, displayName, description)
 └── PolicyVersion (version, status, createdAt, createdBy)
@@ -43,11 +43,13 @@ PolicyAggregate
 ## Entities and Value Objects
 
 ### PolicyDescriptor
+
 - `policyKey` (string, slug) — shared identifier across versions.
 - `displayName` (string) — operator-facing name.
 - `description` (string) — optional summary of usage.
 
 ### PolicyVersion
+
 - `version` (int, auto-increment per policyKey).
 - `status` (`Draft`, `Published`, `Archived`).
 - `createdAt`, `createdBy` (metadata).
@@ -56,20 +58,24 @@ PolicyAggregate
 - `definition` (see sub-components below).
 
 ### BaseAward
+
 - `amountXp` (int > 0).
 - `currency` (enum: `XP`). Future proofing for coins.
 
 ### StreakCurveEntry
+
 - `dayIndex` (int ≥ 0).
 - `multiplier` (decimal ≥ 0). Applied to base XP.
 - `additiveBonusXp` (int ≥ 0). Adds to multiplier output.
 - `capNextDay` (optional bool) to cap growth at threshold (for Plateau/Cap model).
 
 ### GracePolicy
+
 - `allowedMisses` (int ≥ 0).
 - `windowDays` (int ≥ `allowedMisses`). Defines look-back span for grace.
 
 ### ClaimWindow
+
 - `startLocalTime` (ISO `HH:mm`).
 - `durationHours` (int between 1 and 24; default 24).
 - `anchorStrategy`:
@@ -78,7 +84,9 @@ PolicyAggregate
   - `ServerLocal` (fallback when timezone missing).
 
 ### StreakModel
+
 `type` enumerates supported requirement models:
+
 - `PlateauCap`
 - `WeeklyCycleReset`
 - `DecayCurve`
@@ -86,26 +94,39 @@ PolicyAggregate
 - `MilestoneMetaReward`
 
 `parameters` are typed objects per model. Examples:
+
 - `PlateauCap`: `{ plateauDay:int, plateauMultiplier:decimal }`
 - `WeeklyCycleReset`: `{ cycleLength:int }`
 - `DecayCurve`: `{ decayPercent:decimal, graceDay:int }`
 - `TieredSeasonalReset`: `{ tiers:[{ startDay:int, endDay:int, bonusMultiplier:decimal }] }`
 - `MilestoneMetaReward`: `{ milestones:[{ day:int, rewardType:string, rewardValue:string }] }`
 
+### Typed Streak Model Shapes (API/Persistence contract)
+
+- **PlateauCap**: `{ plateauDay:int >=1, plateauMultiplier:decimal >0 }`
+- **WeeklyCycleReset**: no parameters; fixed 7-day cycle.
+- **DecayCurve**: `{ decayPercent:decimal 0–1, graceDay:int >=0 }`
+- **TieredSeasonalReset**: `{ tiers:[{ startDay:int >=1, endDay:int >= startDay, bonusMultiplier:decimal >0 }...] }` (non-overlapping; gaps allowed)
+- **MilestoneMetaReward**: `{ milestones:[{ day:int >=1, rewardType:string, rewardValue:string }...] }`
+
 ### SeasonalBoost
+
 - `label` (string).
 - `multiplier` (decimal ≥ 1).
 - `startUtc`, `endUtc` (timestamp).
 
 ### SegmentOverride
+
 - `segmentKey` (string identifier).
 - `policyVersionRef` (int). Points to another `PolicyVersion` for that segment. Defaults to the current version.
 
 ### PreviewSettings
+
 - `sampleWindowDays` (int) — default horizon for UI preview graphs.
 - `defaultUserSegment` — optional segment key used when simulating.
 
 ## Aggregation Rules
+
 - `PolicyAggregate` enforces that only one `Published` version exists at a time.
 - Publishing a draft increments version and archives previous published version.
 - Segment overrides must reference versions with `status = Published`.
@@ -113,6 +134,7 @@ PolicyAggregate
 - Claim window plus anchor strategy must cover 24 hours collectively for fairness; enforce `durationHours <= 24`.
 
 ## State Transitions
+
 1. **Draft Creation**  
    Operators create drafts. Status = `Draft`; version assigned but hidden from claim services.
 2. **Validation**  
@@ -123,6 +145,7 @@ PolicyAggregate
    Optional: mark `Published` version as `Archived` without replacement (used when disabling feature).
 
 ## Validation Rules
+
 - `amountXp > 0`.
 - `multiplier >= 0`. Combined base * multiplier + additive must remain within configured XP cap (configurable constant, default 5000 XP).
 - `dayIndex` entries must start at 0 and increase by 1 without gaps.
@@ -132,16 +155,19 @@ PolicyAggregate
 - `segmentKey` must exist in segment catalog (to be defined in Step 7).
 
 ## Serialization Considerations
+
 - Policy definitions are stored as JSON (`xp_rules.definition`) for flexibility.
 - Use System.Text.Json with explicit `JsonSchema` for validation.
 - For local dev, persistence type is Postgres with JSONB columns.
 
 ## Integration Points
+
 - **Policy Service** loads `PolicyVersion` by key/version for API responses.
 - **Daily Login Service** requests the current `Published` version (and segment override, if applicable) to compute claims.
 - **Admin UI** consumes domain DTOs for policy editing and preview simulation.
 - **Telemetry** attaches `policyKey`, `policyVersion` to claim events for analytics.
 
 ## Open Questions
+
 - Do milestones require separate inventory integration (cosmetics, currency)? (Track for later requirement.)
 - Should `SegmentOverride` allow nested overrides (segment + seasonal)? For now, single-level mapping suffices.

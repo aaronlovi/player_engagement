@@ -1,6 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
+
 All solution code lives under `src`. The `PlayerEngagement.sln` ties together `PlayerEngagement.Domain` for business rules, `PlayerEngagement.Infrastructure` for persistence and Orleans wiring, and `PlayerEngagement.Host` for the ASP.NET/Orleans host. SQL migrations live in `src/PlayerEngagement.Infrastructure/Persistence/Migrations`. Product and design context stays in `docs/` (see the engagement mechanic references). Workflow and coding guidelines live in this `AGENTS.md` file so there is a single source of truth.
 
 The front-end/admin interface sits in `ui/player-engagement-config-ui`, built with Angular. Run `ng serve` from that directory for local development (optionally with `--proxy-config proxy.conf.json` to forward `/xp/*` calls to the host) to manage engagement configuration through the browser.
@@ -18,6 +19,7 @@ Provide an `Invalid` member with explicit value 0 for enum types unless there is
 Keep C# namespaces aligned with folder structure (e.g., file `Policies/Mappers/Foo.cs` uses namespace `PlayerEngagement.Infrastructure.Policies.Mappers`).
 
 ## Build, Test, and Development Commands
+
 - `dotnet restore src/PlayerEngagement.sln` – hydrate external packages.
 - `dotnet build src/PlayerEngagement.sln` – compile all projects with warnings treated as actionable.
 - `dotnet run --project src/PlayerEngagement.Host` – launch the Orleans silo and health endpoints on localhost.
@@ -25,16 +27,21 @@ Keep C# namespaces aligned with folder structure (e.g., file `Policies/Mappers/F
 - `docker compose -f infra/docker-compose.yml up -d` – start Postgres/pgAdmin dependencies.
 
 ## Workflow Checklist
+
 **Critical collaboration flow (must follow for every task):**
+
 1. I do the coding work.
 2. You (repo owner) perform the final code review.
 3. You run the compile step.
 4. You run the unit tests.
 5. You report the compile/test results back to me.
 6. If everything passes, I create the commit.
+
 - Only the repo owner runs compile/tests to avoid polluting this assistant’s context; I will not execute those commands.
+- Never update the implementation plan, stage changes, or create a commit until you have completed your review and shared compile/test results per steps 2–5 above.
 
 **Supporting guardrails:**
+
 - Keep tasks atomic—scope changes to the current task and resolve blockers immediately.
 - Favor application-layer logic—keep domain rules in C# services; use DB triggers/functions only with a documented need.
 - Document deviations—when a task cannot meet these standards, record the reason and next steps in the relevant planning doc.
@@ -42,7 +49,9 @@ Keep C# namespaces aligned with folder structure (e.g., file `Policies/Mappers/F
 Refer back to this checklist before finalizing any task.
 
 ## Coding Style & Naming Conventions
+
 Adopt default .NET formatting: four-space indentation, file-scoped namespaces when practical, PascalCase for classes and public members, camelCase for locals, and suffix asynchronous methods with `Async`. Keep `internal` types inside their domain project and prefer small, focused files. Run `dotnet format` before submitting changes to ensure consistent spacing, ordering, and usings.
+
 - Keep functions short and cohesive; break out repeated or complex logic into helpers to stay DRY and leave `Program.Main` as a thin orchestration layer.
 - Prefer injecting `ILoggerFactory` and creating typed loggers from it; avoid injecting concrete `ILogger<T>` directly.
 - Place each type in its own file; enums normally live in an `Enums.cs` file within the appropriate namespace.
@@ -56,14 +65,18 @@ Adopt default .NET formatting: four-space indentation, file-scoped namespaces wh
 - Provide XML documentation for all public types and members (classes, records, methods, properties, fields) to keep contracts explicit.
 
 ## Testing Guidelines
+
 Target xUnit for new tests, mirroring project structure (e.g., `src/PlayerEngagement.Domain.Tests`). Name test classes `<TypeUnderTest>Tests` and methods `Method_Scenario_ExpectedOutcome`. Guard external dependencies with fakes or use the compose stack for integration coverage. Run `dotnet test` locally and watch for flaky behavior by rerunning critical suites with `--filter`.
 
 - **Assertion libraries:** Do not use `FluentAssertions` in C# test projects; stick with xUnit’s built-in `Assert` APIs (or MSTest/NUnit equivalents if ever introduced) to keep diagnostics consistent across suites.
 - **Database unit tests:** Keep unit tests focused on business logic. Skip direct tests of Postgres statements (anything under `src/PlayerEngagement.Infrastructure/Persistence/Statements`). Exercise persistence behaviors through `IPlayerEngagementDbmService` and especially `PlayerEngagementDbmInMemoryService`, which provides a safe test double. Reserve the actual Postgres-backed `PlayerEngagementDbmService` for future integration tests that run against a live database.
 
 ## Commit & Pull Request Guidelines
+
 Follow the existing history: imperative, capitalized subjects (`Add`, `Refactor`, `Update`) limited to ~72 characters. Squash incidental work before pushing. Each PR should describe the change, outline testing performed, link relevant design docs or issues, and include screenshots or API traces when behavior changes. Update `docs/` or configuration notes alongside code so reviewers can trace the impact.
+
 - Do not create commits or push changes until the repository owner reviews the diff; share staged work for approval first.
 
 ## Security & Configuration Tips
+
 Never commit secrets; keep `.env` files local and document required variables in PRs. Align `appsettings.Development.json` with the compose values, and prefer environment variables for production secrets. When introducing new services, extend `infra/docker-compose.yml` and document port usage to avoid collisions.
