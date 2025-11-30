@@ -25,6 +25,7 @@ public sealed class PolicyDocumentMapperTests {
         Assert.Equal(dto.PolicyKey, document.PolicyKey);
         Assert.Equal(dto.DisplayName, document.DisplayName);
         Assert.Equal(dto.PolicyVersion, document.Version.PolicyVersion);
+        _ = Assert.IsType<MilestoneMetaRewardStreakModel>(document.Version.StreakModel);
         Assert.Equal(2, document.StreakCurve.Count);
         _ = Assert.Single(document.SeasonalBoosts, b => b.Label == "Spring Boost");
     }
@@ -39,5 +40,42 @@ public sealed class PolicyDocumentMapperTests {
         Assert.Equal(dto.DisplayName, document.DisplayName);
         Assert.Empty(document.StreakCurve);
         Assert.Empty(document.SeasonalBoosts);
+        _ = Assert.IsType<DecayCurveStreakModel>(document.Version.StreakModel);
+    }
+
+    [Fact]
+    public void ToDomain_WithPlateauModel_MapsStreakModel() {
+        PolicyVersionDTO dto = PolicyDtoFactory.CreateVersion(
+            "daily-login",
+            modelType: "PLATEAU_CAP",
+            modelParameters: "{\"plateauDay\":3,\"plateauMultiplier\":2.0}");
+
+        PolicyDocument document = PolicyDocumentMapper.ToDomain(dto, [], []);
+
+        _ = Assert.IsType<PlateauCapStreakModel>(document.Version.StreakModel);
+    }
+
+    [Fact]
+    public void ToDomain_WithWeeklyCycleResetModel_MapsStreakModel() {
+        PolicyVersionDTO dto = PolicyDtoFactory.CreateVersion(
+            "daily-login",
+            modelType: "WEEKLY_CYCLE_RESET",
+            modelParameters: "{}");
+
+        PolicyDocument document = PolicyDocumentMapper.ToDomain(dto, [], []);
+
+        _ = Assert.IsType<WeeklyCycleResetStreakModel>(document.Version.StreakModel);
+    }
+
+    [Fact]
+    public void ToDomain_WithTieredSeasonalResetModel_MapsStreakModel() {
+        PolicyVersionDTO dto = PolicyDtoFactory.CreateVersion(
+            "daily-login",
+            modelType: "TIERED_SEASONAL_RESET",
+            modelParameters: "{\"tiers\":[{\"startDay\":1,\"endDay\":3,\"bonusMultiplier\":1.1},{\"startDay\":5,\"endDay\":7,\"bonusMultiplier\":1.2}]}");
+
+        PolicyDocument document = PolicyDocumentMapper.ToDomain(dto, [], []);
+
+        _ = Assert.IsType<TieredSeasonalResetStreakModel>(document.Version.StreakModel);
     }
 }
