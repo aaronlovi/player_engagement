@@ -83,7 +83,7 @@ internal static class PolicyVersionMapper {
             string s when string.Equals(s, "DECAY_CURVE", StringComparison.OrdinalIgnoreCase) => StreakModelType.DecayCurve,
             string s when string.Equals(s, "TIERED_SEASONAL_RESET", StringComparison.OrdinalIgnoreCase) => StreakModelType.TieredSeasonalReset,
             string s when string.Equals(s, "MILESTONE_META_REWARD", StringComparison.OrdinalIgnoreCase) => StreakModelType.MilestoneMetaReward,
-            _ => StreakModelType.PlateauCap
+            _ => throw new InvalidOperationException($"Unknown streak model type '{modelType}'.")
         };
 
         IReadOnlyDictionary<string, object?> parameters = JsonObjectParser.ParseObject(parametersJson);
@@ -94,7 +94,7 @@ internal static class PolicyVersionMapper {
             StreakModelType.DecayCurve => MapDecayCurve(parameters),
             StreakModelType.TieredSeasonalReset => MapTieredSeasonalReset(parameters),
             StreakModelType.MilestoneMetaReward => MapMilestoneMetaReward(parameters),
-            _ => new RawStreakModelDefinition(type, parameters)
+            _ => throw new InvalidOperationException($"Unknown streak model type '{type}'.")
         };
     }
 
