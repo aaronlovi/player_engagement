@@ -77,18 +77,21 @@ comment on column ${schema}.xp_policy_versions.published_at is 'Timestamp when t
 -------------------------------------------------------------------------------
 
 create table ${schema}.xp_policy_streak_curve (
+    streak_curve_id bigint not null,
     policy_key text not null,
     policy_version bigint not null,
     day_index int not null check (day_index >= 0),
     multiplier numeric(8,4) not null check (multiplier >= 0),
     additive_bonus_xp int not null check (additive_bonus_xp >= 0),
     cap_next_day boolean not null default false,
-    constraint xp_policy_streak_curve_pk primary key (policy_key, policy_version, day_index),
+    constraint xp_policy_streak_curve_pk primary key (streak_curve_id),
+    constraint xp_policy_streak_curve_key_idx unique (policy_key, policy_version, day_index),
     constraint xp_policy_streak_curve_version_fk foreign key (policy_key, policy_version)
         references ${schema}.xp_policy_versions (policy_key, policy_version) on delete cascade
 );
 
 comment on table ${schema}.xp_policy_streak_curve is 'Streak curve entries defining multipliers and bonuses per day index.';
+comment on column ${schema}.xp_policy_streak_curve.streak_curve_id is 'Surrogate identifier supplied by DbmService.GetNextId64().';
 comment on column ${schema}.xp_policy_streak_curve.policy_key is 'Foreign key to xp_policy_versions.';
 comment on column ${schema}.xp_policy_streak_curve.policy_version is 'Policy version the streak entry belongs to.';
 comment on column ${schema}.xp_policy_streak_curve.day_index is 'Zero-based streak day index.';
@@ -138,18 +141,21 @@ comment on column ${schema}.xp_policy_seasonal_boosts.end_utc is 'UTC end timest
 -------------------------------------------------------------------------------
 
 create table ${schema}.xp_policy_segment_overrides (
+    override_id bigint not null,
     segment_key text not null,
     policy_key text not null,
     target_policy_version bigint not null,
     created_at timestamptz not null default ${schema}.now_utc(),
     created_by text not null,
-    constraint xp_policy_segment_overrides_pk primary key (segment_key, policy_key),
+    constraint xp_policy_segment_overrides_pk primary key (override_id),
+    constraint xp_policy_segment_overrides_segment_version_uidx unique (segment_key, policy_key),
     constraint xp_policy_segment_overrides_policy_fk foreign key (policy_key) references ${schema}.xp_policies (policy_key) on delete cascade,
     constraint xp_policy_segment_overrides_version_fk foreign key (policy_key, target_policy_version)
         references ${schema}.xp_policy_versions (policy_key, policy_version) on delete cascade
 );
 
 comment on table ${schema}.xp_policy_segment_overrides is 'Maps player segments to alternate policy versions.';
+comment on column ${schema}.xp_policy_segment_overrides.override_id is 'Surrogate identifier supplied by DbmService.GetNextId64().';
 comment on column ${schema}.xp_policy_segment_overrides.segment_key is 'Segment identifier resolved at claim time.';
 comment on column ${schema}.xp_policy_segment_overrides.policy_key is 'Policy key associated with the override.';
 comment on column ${schema}.xp_policy_segment_overrides.target_policy_version is 'Policy version applied to the segment.';

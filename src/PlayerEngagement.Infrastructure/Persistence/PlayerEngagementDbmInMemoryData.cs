@@ -22,6 +22,7 @@ internal class PlayerEngagementDbmInMemoryData {
         lock (Sync) {
             if (ActivePolicies.TryGetValue(policyKey, out ActivePolicyDTO? stored) &&
                 !stored.IsEmpty &&
+                string.Equals(stored.Status, "Published", StringComparison.OrdinalIgnoreCase) &&
                 (!stored.EffectiveAt.HasValue || stored.EffectiveAt.Value <= utcNow)) {
                 dto = stored;
                 return true;
@@ -183,6 +184,156 @@ internal class PlayerEngagementDbmInMemoryData {
             return Result<long>.Success(dto.PolicyVersion);
         }
     }
+
+    internal static Result<PolicyVersionDTO> PublishPolicyVersion(
+        string policyKey,
+        long policyVersion,
+        DateTime publishedAt,
+        DateTime? effectiveAt,
+        IReadOnlyList<PolicySegmentOverrideDTO> overrides) {
+
+        lock (Sync) {
+            if (!PolicyVersions.TryGetValue((policyKey, policyVersion), out PolicyVersionDTO? existing) || existing.IsEmpty)
+                return Result<PolicyVersionDTO>.Failure(ErrorCodes.NotFound, $"Policy '{policyKey}' version '{policyVersion}' not found.");
+
+            if (string.Equals(existing.Status, "Published", StringComparison.OrdinalIgnoreCase))
+                return Result<PolicyVersionDTO>.Failure(ErrorCodes.Duplicate, $"Policy '{policyKey}' version '{policyVersion}' is already published.");
+
+            ArchiveCurrentPublished(policyKey, effectiveAt ?? existing.EffectiveAt ?? publishedAt);
+
+            PolicyVersionDTO published = existing with {
+                Status = "Published",
+                EffectiveAt = effectiveAt ?? existing.EffectiveAt ?? publishedAt,
+                SupersededAt = null,
+                PublishedAt = publishedAt
+            };
+
+            PolicyVersions[(policyKey, policyVersion)] = published;
+            ActivePolicies[policyKey] = ToActive(published);
+
+            if (overrides.Count > 0)
+                SegmentOverrides[policyKey] = [.. overrides];
+
+            return Result<PolicyVersionDTO>.Success(published);
+        }
+    }
+
+    internal static Result<PolicyVersionDTO> RetirePolicyVersion(string policyKey, long policyVersion, DateTime retiredAt) {
+        lock (Sync) {
+            if (!PolicyVersions.TryGetValue((policyKey, policyVersion), out PolicyVersionDTO? existing) || existing.IsEmpty)
+                return Result<PolicyVersionDTO>.Failure(ErrorCodes.NotFound, $"Policy '{policyKey}' version '{policyVersion}' not found.");
+
+            if (!string.Equals(existing.Status, "Published", StringComparison.OrdinalIgnoreCase))
+                return Result<PolicyVersionDTO>.Failure(ErrorCodes.Duplicate, $"Policy '{policyKey}' version '{policyVersion}' is not published.");
+
+            PolicyVersionDTO retired = existing with {
+                Status = "Archived",
+                SupersededAt = retiredAt
+            };
+
+            PolicyVersions[(policyKey, policyVersion)] = retired;
+            _ = ActivePolicies.Remove(policyKey);
+            return Result<PolicyVersionDTO>.Success(retired);
+        }
+    }
+
+    internal static Result ReplaceStreakCurve(string policyKey, long policyVersion, IReadOnlyList<PolicyStreakCurveEntryDTO> entries) {
+        lock (Sync) {
+            StreakCurves[(policyKey, policyVersion)] = NormalizeStreakEntries(policyKey, policyVersion, entries);
+            return Result.Success;
+        }
+    }
+
+    internal static Result ReplaceSeasonalBoosts(string policyKey, long policyVersion, IReadOnlyList<PolicySeasonalBoostDTO> boosts) {
+        lock (Sync) {
+            SeasonalBoosts[(policyKey, policyVersion)] = NormalizeSeasonalBoosts(policyKey, policyVersion, boosts);
+            return Result.Success;
+        }
+    }
+
+    internal static Result UpsertSegmentOverrides(string policyKey, IReadOnlyList<PolicySegmentOverrideDTO> overrides) {
+        lock (Sync) {
+            SegmentOverrides[policyKey] = [.. overrides];
+            return Result.Success;
+        }
+    }
+
+    internal static List<PolicyVersionDTO> ListPolicyVersions(string policyKey, string? status, DateTime? effectiveBefore, int? limit) {
+        lock (Sync) {
+            List<PolicyVersionDTO> versions = [];
+            foreach (KeyValuePair<(string PolicyKey, long PolicyVersion), PolicyVersionDTO> pair in PolicyVersions) {
+                if (pair.Value.IsEmpty)
+                    continue;
+
+                if (!string.Equals(pair.Key.PolicyKey, policyKey, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                if (!string.IsNullOrWhiteSpace(status) &&
+                    !string.Equals(pair.Value.Status, status!, StringComparison.OrdinalIgnoreCase)) {
+                    continue;
+                }
+
+                if (effectiveBefore.HasValue &&
+                    pair.Value.EffectiveAt.HasValue &&
+                    pair.Value.EffectiveAt.Value > effectiveBefore.Value) {
+                    continue;
+                }
+
+                versions.Add(pair.Value);
+            }
+
+            versions.Sort(static (a, b) => b.PolicyVersion.CompareTo(a.PolicyVersion));
+
+            if (limit.HasValue && limit.Value > 0 && versions.Count > limit.Value) {
+                while (versions.Count > limit.Value)
+                    versions.RemoveAt(versions.Count - 1);
+            }
+
+            return versions;
+        }
+    }
+
+    private static void ArchiveCurrentPublished(string policyKey, DateTime? supersededAt) {
+        foreach (KeyValuePair<(string PolicyKey, long PolicyVersion), PolicyVersionDTO> pair in PolicyVersions) {
+            if (!string.Equals(pair.Key.PolicyKey, policyKey, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (!string.Equals(pair.Value.Status, "Published", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            PolicyVersionDTO archived = pair.Value with {
+                Status = "Archived",
+                SupersededAt = supersededAt ?? pair.Value.SupersededAt
+            };
+
+            PolicyVersions[pair.Key] = archived;
+        }
+    }
+
+    private static ActivePolicyDTO ToActive(PolicyVersionDTO source) => new(
+        source.PolicyId,
+        source.PolicyKey,
+        source.DisplayName,
+        source.Description,
+        source.PolicyVersion,
+        source.Status,
+        source.BaseXpAmount,
+        source.Currency,
+        source.ClaimWindowStartMinutes,
+        source.ClaimWindowDurationHours,
+        source.AnchorStrategy,
+        source.GraceAllowedMisses,
+        source.GraceWindowDays,
+        source.StreakModelType,
+        source.StreakModelParameters,
+        source.PreviewSampleWindowDays,
+        source.PreviewDefaultSegment,
+        source.SeasonalMetadata,
+        source.EffectiveAt,
+        source.SupersededAt,
+        source.CreatedAt,
+        source.CreatedBy,
+        source.PublishedAt);
 
     private static List<PolicyStreakCurveEntryDTO> NormalizeStreakEntries(string policyKey, long policyVersion, IReadOnlyList<PolicyStreakCurveEntryDTO> entries) {
         if (entries.Count == 0)

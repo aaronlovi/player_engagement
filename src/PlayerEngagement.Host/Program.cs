@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using InnoAndLogic.Shared;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -97,6 +99,18 @@ internal static class Program {
 
     private static void ConfigureCoreServices(WebApplicationBuilder builder) {
         _ = builder.Services.AddControllers();
+        _ = builder.Services.AddEndpointsApiExplorer();
+        _ = builder.Services.AddSwaggerGen(options => {
+            options.SwaggerDoc("v1", new OpenApiInfo {
+                Title = "Player Engagement API",
+                Version = "v1",
+                Description = "Policy CRUD endpoints for XP grant configuration."
+            });
+            string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            if (File.Exists(xmlPath))
+                options.IncludeXmlComments(xmlPath);
+        });
 
         Assembly[] migrationAssemblies = [
             typeof(PlayerEngagementDbmService).Assembly
@@ -109,6 +123,10 @@ internal static class Program {
     }
 
     private static void ConfigureMiddleware(WebApplication app) {
+        _ = app.UseSwagger();
+        _ = app.UseSwaggerUI(c => {
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "Player Engagement API v1");
+        });
         _ = app.UseRouting();
         _ = app.UseCors(CorsPolicyName);
         _ = app.UseRequestPipelineLogging();

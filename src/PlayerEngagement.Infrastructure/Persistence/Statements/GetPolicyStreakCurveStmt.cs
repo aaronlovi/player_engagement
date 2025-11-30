@@ -70,7 +70,7 @@ order by day_index asc;
         PolicyStreakCurveEntryDTO dto = new(
             reader.GetInt64(_idIndex),
             reader.GetString(_policyKeyIndex),
-            reader.GetInt32(_policyVersionIndex),
+            reader.GetInt64(_policyVersionIndex),
             reader.GetInt32(_dayIndex),
             reader.GetDecimal(_multiplierIndex),
             reader.GetInt32(_bonusIndex),

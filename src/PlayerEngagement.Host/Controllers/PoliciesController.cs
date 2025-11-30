@@ -1,13 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using InnoAndLogic.Shared;
+using InnoAndLogic.Shared.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using PlayerEngagement.Domain.Policies;
 using PlayerEngagement.Host.Contracts.Policies;
 using PlayerEngagement.Host.Validation;
+using PlayerEngagement.Infrastructure.Persistence.DTOs.XpPolicyDTOs;
 using PlayerEngagement.Infrastructure.Policies.Services;
 
 namespace PlayerEngagement.Host.Controllers;
@@ -16,6 +20,8 @@ namespace PlayerEngagement.Host.Controllers;
 [Route("xp/policies")]
 [Produces("application/json")]
 public sealed class PoliciesController : ControllerBase {
+    private const string DefaultCreatedBy = "api";
+
     private readonly ILogger<PoliciesController> _logger;
     private readonly IPolicyDocumentPersistenceService _policyPersistence;
 
@@ -39,7 +45,12 @@ public sealed class PoliciesController : ControllerBase {
             return Task.FromResult<IActionResult>(ValidationProblem(CreateValidationProblem(errors!)));
 
         _logger.LogInformation("CreatePolicyVersion called for {PolicyKey}", policyKey);
-        return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status501NotImplemented));
+
+        PolicyVersionWriteDto dto = BuildPolicyWriteDto(policyKey, request);
+        List<PolicyStreakCurveEntryDTO> streakDtos = BuildStreakCurveDtos(policyKey, request.StreakCurve);
+        List<PolicySeasonalBoostDTO> boostDtos = BuildSeasonalBoostDtos(policyKey, request.SeasonalBoosts);
+
+        return CreateDraftInternalAsync(dto, streakDtos, boostDtos, ct);
     }
 
     [HttpPost("{policyKey}/versions/{policyVersion:long}/publish")]
@@ -53,7 +64,13 @@ public sealed class PoliciesController : ControllerBase {
             return Task.FromResult<IActionResult>(ValidationProblem(CreateValidationProblem(errors!)));
 
         _logger.LogInformation("PublishPolicyVersion called for {PolicyKey} v{PolicyVersion}", policyKey, policyVersion);
-        return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status501NotImplemented));
+
+        List<PolicySegmentOverrideDTO> overrides = BuildSegmentOverrideDtos(
+            policyKey,
+            request.SegmentOverrides ?? new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase),
+            request.EffectiveAt ?? DateTime.UtcNow);
+
+        return PublishInternalAsync(policyKey, policyVersion, request.EffectiveAt, overrides, ct);
     }
 
     [HttpPost("{policyKey}/versions/{policyVersion:long}/retire")]
@@ -67,7 +84,7 @@ public sealed class PoliciesController : ControllerBase {
             return Task.FromResult<IActionResult>(ValidationProblem(CreateValidationProblem(errors!)));
 
         _logger.LogInformation("RetirePolicyVersion called for {PolicyKey} v{PolicyVersion}", policyKey, policyVersion);
-        return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status501NotImplemented));
+        return RetireInternalAsync(policyKey, policyVersion, request.RetiredAt ?? DateTime.UtcNow, ct);
     }
 
     [HttpGet("{policyKey}/versions/{policyVersion:long}")]
@@ -105,7 +122,7 @@ public sealed class PoliciesController : ControllerBase {
             effectiveBefore,
             limit);
 
-        return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status501NotImplemented));
+        return ListVersionsInternalAsync(policyKey, status, effectiveBefore, limit, ct);
     }
 
     [HttpGet("active")]
@@ -145,7 +162,8 @@ public sealed class PoliciesController : ControllerBase {
             return Task.FromResult<IActionResult>(ValidationProblem(CreateValidationProblem(errors!)));
 
         _logger.LogInformation("UpdateSegmentOverrides called for {PolicyKey}", policyKey);
-        return Task.FromResult<IActionResult>(StatusCode(StatusCodes.Status501NotImplemented));
+        List<PolicySegmentOverrideDTO> overrides = BuildSegmentOverrideDtos(policyKey, request.Overrides, DateTime.UtcNow);
+        return UpdateSegmentOverridesInternalAsync(policyKey, overrides, ct);
     }
 
     private static ValidationProblemDetails CreateValidationProblem(IDictionary<string, string[]> errors) =>
@@ -153,4 +171,147 @@ public sealed class PoliciesController : ControllerBase {
             Status = StatusCodes.Status400BadRequest,
             Title = "Request validation failed."
         };
+
+    private static PolicyVersionWriteDto BuildPolicyWriteDto(string policyKey, CreatePolicyVersionRequest request) {
+        string streakParameters = JsonSerializer.Serialize(request.StreakModelParameters);
+
+        return new PolicyVersionWriteDto(
+            policyKey,
+            request.DisplayName,
+            request.Description,
+            request.BaseXpAmount,
+            request.Currency,
+            request.ClaimWindowStartMinutes,
+            request.ClaimWindowDurationHours,
+            request.AnchorStrategy,
+            request.GraceAllowedMisses,
+            request.GraceWindowDays,
+            request.StreakModelType,
+            streakParameters,
+            request.PreviewSampleWindowDays,
+            request.PreviewDefaultSegment,
+            "{}",
+            request.EffectiveAt,
+            DateTime.UtcNow,
+            DefaultCreatedBy,
+            0,
+            null);
+    }
+
+    private static List<PolicyStreakCurveEntryDTO> BuildStreakCurveDtos(string policyKey, IReadOnlyList<StreakCurveEntry> streakCurve) {
+        List<PolicyStreakCurveEntryDTO> dtos = new(streakCurve.Count);
+        foreach (StreakCurveEntry entry in streakCurve) {
+            dtos.Add(new PolicyStreakCurveEntryDTO(
+                0,
+                policyKey,
+                0,
+                entry.DayIndex,
+                entry.Multiplier,
+                entry.AdditiveBonusXp,
+                entry.CapNextDay));
+        }
+
+        return dtos;
+    }
+
+    private static List<PolicySeasonalBoostDTO> BuildSeasonalBoostDtos(string policyKey, IReadOnlyList<SeasonalBoost> boosts) {
+        List<PolicySeasonalBoostDTO> dtos = new(boosts.Count);
+        foreach (SeasonalBoost boost in boosts) {
+            dtos.Add(new PolicySeasonalBoostDTO(
+                0,
+                policyKey,
+                0,
+                boost.Label,
+                boost.Multiplier,
+                boost.StartUtc,
+                boost.EndUtc));
+        }
+
+        return dtos;
+    }
+
+    private static List<PolicySegmentOverrideDTO> BuildSegmentOverrideDtos(
+        string policyKey,
+        IReadOnlyDictionary<string, long> overrides,
+        DateTime createdAt) {
+
+        List<PolicySegmentOverrideDTO> dtos = new(overrides.Count);
+        foreach (KeyValuePair<string, long> pair in overrides)
+            dtos.Add(new PolicySegmentOverrideDTO(0, pair.Key, policyKey, pair.Value, createdAt, DefaultCreatedBy));
+
+        return dtos;
+    }
+
+    private IActionResult MapFailure(InnoAndLogic.Shared.IResult result, string defaultMessage) {
+        int status = result.ErrorCode switch {
+            ErrorCodes.NotFound => StatusCodes.Status404NotFound,
+            ErrorCodes.Duplicate => StatusCodes.Status409Conflict,
+            ErrorCodes.ValidationError => StatusCodes.Status400BadRequest,
+            _ => StatusCodes.Status500InternalServerError
+        };
+
+        string message = !string.IsNullOrWhiteSpace(result.ErrorMessage) ? result.ErrorMessage! : defaultMessage;
+        return Problem(statusCode: status, detail: message);
+    }
+
+    private async Task<IActionResult> CreateDraftInternalAsync(
+        PolicyVersionWriteDto dto,
+        IReadOnlyList<PolicyStreakCurveEntryDTO> streak,
+        IReadOnlyList<PolicySeasonalBoostDTO> boosts,
+        CancellationToken ct) {
+
+        Result<PolicyDocument> result = await _policyPersistence.CreatePolicyDraftAsync(dto, streak, boosts, ct);
+        if (result.IsFailure || result.Value is null)
+            return MapFailure(result, "Failed to create policy draft.");
+
+        string location = Url.ActionLink(nameof(GetPolicyVersionAsync), values: new { policyKey = dto.PolicyKey, policyVersion = result.Value.Version.PolicyVersion }) ?? string.Empty;
+        return Created(location, result.Value);
+    }
+
+    private async Task<IActionResult> PublishInternalAsync(
+        string policyKey,
+        long policyVersion,
+        DateTime? effectiveAt,
+        IReadOnlyList<PolicySegmentOverrideDTO> overrides,
+        CancellationToken ct) {
+
+        Result<PolicyDocument> result = await _policyPersistence.PublishPolicyVersionAsync(
+            policyKey,
+            policyVersion,
+            DateTime.UtcNow,
+            effectiveAt,
+            overrides,
+            ct);
+
+        if (result.IsFailure || result.Value is null)
+            return MapFailure(result, "Failed to publish policy version.");
+
+        string location = Url.ActionLink(nameof(GetPolicyVersionAsync), values: new { policyKey, policyVersion }) ?? string.Empty;
+        return Accepted(location, result.Value);
+    }
+
+    private async Task<IActionResult> RetireInternalAsync(string policyKey, long policyVersion, DateTime retiredAt, CancellationToken ct) {
+        Result<PolicyVersionDocument> result = await _policyPersistence.RetirePolicyVersionAsync(policyKey, policyVersion, retiredAt, ct);
+        if (result.IsFailure || result.Value is null)
+            return MapFailure(result, "Failed to retire policy version.");
+
+        return Ok(result.Value);
+    }
+
+    private async Task<IActionResult> ListVersionsInternalAsync(string policyKey, string? status, DateTime? effectiveBefore, int? limit, CancellationToken ct) {
+        IReadOnlyList<PolicyVersionDocument> versions = await _policyPersistence.ListPolicyVersionsAsync(policyKey, status, effectiveBefore, limit, ct);
+        return Ok(versions);
+    }
+
+    private async Task<IActionResult> UpdateSegmentOverridesInternalAsync(
+        string policyKey,
+        IReadOnlyList<PolicySegmentOverrideDTO> overrides,
+        CancellationToken ct) {
+
+        Result<IReadOnlyDictionary<string, long>> result = await _policyPersistence.UpdateSegmentOverridesAsync(policyKey, overrides, ct);
+        if (result.IsFailure || result.Value is null)
+            return MapFailure(result, "Failed to update segment overrides.");
+
+        return Ok(result.Value);
+    }
 }

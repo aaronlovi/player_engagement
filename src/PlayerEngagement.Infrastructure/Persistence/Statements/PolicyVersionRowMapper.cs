@@ -73,7 +73,7 @@ internal static class PolicyVersionRowMapper {
             reader.GetString(_policyKeyIndex),
             reader.GetString(_displayNameIndex),
             reader.GetString(_descriptionIndex),
-            reader.GetInt32(_policyVersionIndex),
+            reader.GetInt64(_policyVersionIndex),
             reader.GetString(_statusIndex),
             reader.GetInt32(_baseXpIndex),
             reader.GetString(_currencyIndex),

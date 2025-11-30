@@ -174,4 +174,73 @@ public sealed class PlayerEngagementDbmInMemoryServiceTests {
 
         Assert.True(result.IsFailure);
     }
+
+    [Fact]
+    public async Task PublishPolicyVersionAsync_ArchivesExistingPublished() {
+        string policyKey = Guid.NewGuid().ToString();
+        PlayerEngagementDbmInMemoryData.UpsertPolicyVersion(PolicyDtoFactory.CreateVersion(policyKey, version: 1, status: "Published"));
+        PlayerEngagementDbmInMemoryData.UpsertPolicyVersion(PolicyDtoFactory.CreateVersion(policyKey, version: 2, status: "Draft"));
+
+        Result<PolicyVersionDTO> result = await _service.PublishPolicyVersionAsync(
+            policyKey,
+            2,
+            DateTime.UtcNow,
+            DateTime.UtcNow,
+            Array.Empty<PolicySegmentOverrideDTO>(),
+            CancellationToken.None);
+
+        Assert.False(result.IsFailure);
+
+        Result<PolicyVersionDTO> published = await _service.GetPolicyVersionAsync(policyKey, 2, CancellationToken.None);
+        Result<PolicyVersionDTO> archived = await _service.GetPolicyVersionAsync(policyKey, 1, CancellationToken.None);
+
+        Assert.Equal("Published", published.Value!.Status);
+        Assert.Equal("Archived", archived.Value!.Status);
+    }
+
+    [Fact]
+    public async Task RetirePolicyVersionAsync_SetsArchivedStatus() {
+        string policyKey = Guid.NewGuid().ToString();
+        PlayerEngagementDbmInMemoryData.UpsertPolicyVersion(PolicyDtoFactory.CreateVersion(policyKey, version: 5, status: "Published"));
+
+        Result<PolicyVersionDTO> result = await _service.RetirePolicyVersionAsync(policyKey, 5, DateTime.UtcNow, CancellationToken.None);
+
+        Assert.False(result.IsFailure);
+        Assert.Equal("Archived", result.Value!.Status);
+    }
+
+    [Fact]
+    public async Task ListPolicyVersionsAsync_FiltersByStatus() {
+        string policyKey = Guid.NewGuid().ToString();
+        PlayerEngagementDbmInMemoryData.UpsertPolicyVersion(PolicyDtoFactory.CreateVersion(policyKey, version: 1, status: "Draft"));
+        PlayerEngagementDbmInMemoryData.UpsertPolicyVersion(PolicyDtoFactory.CreateVersion(policyKey, version: 2, status: "Published"));
+        PlayerEngagementDbmInMemoryData.UpsertPolicyVersion(PolicyDtoFactory.CreateVersion(policyKey, version: 3, status: "Archived"));
+
+        Result<List<PolicyVersionDTO>> result = await _service.ListPolicyVersionsAsync(policyKey, "Published", null, null, CancellationToken.None);
+
+        Assert.False(result.IsFailure);
+        Assert.Single(result.Value!);
+        Assert.Equal(2, result.Value![0].PolicyVersion);
+    }
+
+    [Fact]
+    public async Task UpsertPolicySegmentOverridesAsync_ReplacesExisting() {
+        string policyKey = Guid.NewGuid().ToString();
+        List<PolicySegmentOverrideDTO> initial = [
+            new(0, "vip", policyKey, 5, DateTime.UtcNow.AddMinutes(-5), "initial")
+        ];
+        _ = await _service.UpsertPolicySegmentOverridesAsync(policyKey, initial, CancellationToken.None);
+
+        List<PolicySegmentOverrideDTO> replacement = [
+            new(0, "vip", policyKey, 6, DateTime.UtcNow, "updated"),
+            new(0, "standard", policyKey, 5, DateTime.UtcNow, "updated")
+        ];
+
+        _ = await _service.UpsertPolicySegmentOverridesAsync(policyKey, replacement, CancellationToken.None);
+        Result<List<PolicySegmentOverrideDTO>> overrides = await _service.GetPolicySegmentOverridesAsync(policyKey, CancellationToken.None);
+
+        Assert.False(overrides.IsFailure);
+        Assert.Equal(2, overrides.Value!.Count);
+        Assert.Contains(overrides.Value!, o => o.TargetPolicyVersion == 6 && o.SegmentKey == "vip");
+    }
 }

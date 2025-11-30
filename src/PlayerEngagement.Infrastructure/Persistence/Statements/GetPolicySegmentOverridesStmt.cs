@@ -62,7 +62,7 @@ where policy_key = @policy_key;
             reader.GetInt64(_overrideIdIndex),
             reader.GetString(_segmentKeyIndex),
             reader.GetString(_policyKeyIndex),
-            reader.GetInt32(_targetVersionIndex),
+            reader.GetInt64(_targetVersionIndex),
             reader.GetDateTime(_createdAtIndex),
             reader.GetString(_createdByIndex));
 

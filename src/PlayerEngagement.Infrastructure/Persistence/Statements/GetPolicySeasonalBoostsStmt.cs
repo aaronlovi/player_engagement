@@ -71,7 +71,7 @@ order by start_utc asc;
         PolicySeasonalBoostDTO dto = new(
             reader.GetInt64(_boostIdIndex),
             reader.GetString(_policyKeyIndex),
-            reader.GetInt32(_policyVersionIndex),
+            reader.GetInt64(_policyVersionIndex),
             reader.GetString(_labelIndex),
             reader.GetDecimal(_multiplierIndex),
             reader.GetDateTime(_startIndex),
