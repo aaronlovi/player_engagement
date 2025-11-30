@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Text.Json;
 using PlayerEngagement.Domain.Policies;
 using PlayerEngagement.Host.Contracts.Policies;
+using PlayerEngagement.Shared.Json;
+using PlayerEngagement.Shared.Validation;
 
 namespace PlayerEngagement.Host.Validation;
 
@@ -219,11 +222,38 @@ internal static partial class PolicyRequestValidator {
             !Enum.TryParse(request.StreakModelType, true, out StreakModelType model) ||
             model == StreakModelType.Invalid) {
             AddError(bag, "streakModelType", "StreakModelType must match a known value.");
+            return;
         }
 
 
-        if (request.StreakModelParameters is null)
+        if (request.StreakModelParameters is null) {
             AddError(bag, "streakModelParameters", "StreakModelParameters are required.");
+            return;
+        }
+
+        IReadOnlyDictionary<string, object?> parameters = ParseParameters(request.StreakModelParameters, bag);
+        if (parameters.Count == 0 && model != StreakModelType.WeeklyCycleReset)
+            AddError(bag, "streakModelParameters", "StreakModelParameters cannot be empty for the selected model.");
+
+        switch (model) {
+            case StreakModelType.PlateauCap:
+            ValidatePlateau(parameters, bag);
+            break;
+            case StreakModelType.WeeklyCycleReset:
+            break;
+            case StreakModelType.DecayCurve:
+            ValidateDecay(parameters, bag);
+            break;
+            case StreakModelType.TieredSeasonalReset:
+            ValidateTiers(parameters, bag);
+            break;
+            case StreakModelType.MilestoneMetaReward:
+            ValidateMilestones(parameters, bag);
+            break;
+            default:
+            AddError(bag, "streakModelType", $"Unknown streak model type '{request.StreakModelType}'.");
+            break;
+        }
     }
 
     private static void ValidatePreviewSettings(CreatePolicyVersionRequest request, Dictionary<string, List<string>> bag) {
@@ -280,6 +310,175 @@ internal static partial class PolicyRequestValidator {
             }
         }
     }
+
+    private static Dictionary<string, object?> ParseParameters(
+        Dictionary<string, object?> rawParameters,
+        Dictionary<string, List<string>> bag) {
+        try {
+            string json = JsonSerializer.Serialize(rawParameters);
+            return JsonObjectParser.ParseObject(json);
+        } catch (JsonException) {
+            AddError(bag, "streakModelParameters", "StreakModelParameters must be valid JSON.");
+            return new Dictionary<string, object?>();
+        }
+    }
+
+    private static void ValidatePlateau(IReadOnlyDictionary<string, object?> parameters, Dictionary<string, List<string>> bag) {
+        _ = TryRequireInt(parameters, bag, min: 1, keys: ["plateauDay", "plateau_day"]);
+        _ = TryRequireDecimal(parameters, bag, minInclusive: null, minExclusive: 0m, maxInclusive: null, prefix: null, keys: ["plateauMultiplier", "plateau_multiplier"]);
+    }
+
+    private static void ValidateDecay(IReadOnlyDictionary<string, object?> parameters, Dictionary<string, List<string>> bag) {
+        decimal? decay = TryRequireDecimal(parameters, bag, minInclusive: null, minExclusive: null, maxInclusive: null, prefix: null, keys: ["decayPercent", "decay_percent", "decayRate", "decay_rate"]);
+        if (decay.HasValue && (decay.Value < 0m || decay.Value > 1m))
+            AddError(bag, "streakModelParameters.decayPercent", "decayPercent must be between 0 and 1 inclusive.");
+
+        _ = TryRequireInt(parameters, bag, min: 0, keys: ["graceDay", "grace_day"]);
+    }
+
+    private static void ValidateTiers(IReadOnlyDictionary<string, object?> parameters, Dictionary<string, List<string>> bag) {
+        object? tiersValue;
+        try {
+            tiersValue = ParameterReader.FindParameter(parameters, "tiers");
+        } catch (InvalidOperationException ex) {
+            AddError(bag, "streakModelParameters.tiers", ex.Message);
+            return;
+        }
+
+        if (tiersValue is not IReadOnlyList<object?> tiersList) {
+            AddError(bag, "streakModelParameters.tiers", "tiers must be an array.");
+            return;
+        }
+
+        List<IntRange> ranges = new(tiersList.Count);
+        for (int i = 0; i < tiersList.Count; i++) {
+            string key = $"streakModelParameters.tiers[{i}]";
+            IReadOnlyDictionary<string, object?> tierDict;
+            try {
+                tierDict = ParameterReader.RequireDictionary(tiersList[i], key);
+            } catch (InvalidOperationException ex) {
+                AddError(bag, key, ex.Message);
+                continue;
+            }
+
+            int? start = TryRequireInt(tierDict, bag, min: 1, prefix: key, keys: ["startDay", "start_day"]);
+            int? end = TryRequireInt(tierDict, bag, min: 1, prefix: key, keys: ["endDay", "end_day"]);
+            _ = TryRequireDecimal(tierDict, bag, minInclusive: null, minExclusive: 0m, maxInclusive: null, prefix: key, keys: ["bonusMultiplier", "bonus_multiplier"]);
+
+            if (start.HasValue && end.HasValue && end.Value < start.Value)
+                AddError(bag, $"{key}.endDay", "endDay must be >= startDay.");
+
+            if (start.HasValue && end.HasValue)
+                ranges.Add(new IntRange(start.Value, end.Value));
+        }
+
+        try {
+            RangeValidation.EnsureNonOverlapping(ranges);
+        } catch (ArgumentOutOfRangeException ex) {
+            AddError(bag, "streakModelParameters.tiers", ex.Message);
+        }
+    }
+
+    private static void ValidateMilestones(IReadOnlyDictionary<string, object?> parameters, Dictionary<string, List<string>> bag) {
+        object? milestonesValue;
+        try {
+            milestonesValue = ParameterReader.FindParameter(parameters, "milestones");
+        } catch (InvalidOperationException ex) {
+            AddError(bag, "streakModelParameters.milestones", ex.Message);
+            return;
+        }
+
+        if (milestonesValue is not IReadOnlyList<object?> milestonesList) {
+            AddError(bag, "streakModelParameters.milestones", "milestones must be an array.");
+            return;
+        }
+
+        for (int i = 0; i < milestonesList.Count; i++) {
+            string key = $"streakModelParameters.milestones[{i}]";
+            IReadOnlyDictionary<string, object?> milestoneDict;
+            try {
+                milestoneDict = ParameterReader.RequireDictionary(milestonesList[i], key);
+            } catch (InvalidOperationException ex) {
+                AddError(bag, key, ex.Message);
+                continue;
+            }
+
+            _ = TryRequireInt(milestoneDict, bag, min: 1, prefix: key, keys: ["day"]);
+            _ = TryRequireString(milestoneDict, bag, prefix: key, keys: ["rewardType", "reward_type"]);
+            _ = TryRequireString(milestoneDict, bag, prefix: key, keys: ["rewardValue", "reward_value"]);
+        }
+    }
+
+    private static int? TryRequireInt(
+        IReadOnlyDictionary<string, object?> parameters,
+        Dictionary<string, List<string>> bag,
+        params string[] keys) =>
+        TryRequireInt(parameters, bag, min: null, max: null, prefix: null, keys: keys);
+
+    private static int? TryRequireInt(
+        IReadOnlyDictionary<string, object?> parameters,
+        Dictionary<string, List<string>> bag,
+        int? min,
+        int? max = null,
+        string? prefix = null,
+        params string[] keys) {
+        try {
+            int value = ParameterReader.RequireInt(parameters, keys);
+            if (min.HasValue && value < min.Value)
+                AddError(bag, BuildKey(prefix, keys[0]), $"Value must be >= {min.Value}.");
+            if (max.HasValue && value > max.Value)
+                AddError(bag, BuildKey(prefix, keys[0]), $"Value must be <= {max.Value}.");
+            return value;
+        } catch (InvalidOperationException ex) {
+            AddError(bag, BuildKey(prefix, keys[0]), ex.Message);
+            return null;
+        }
+    }
+
+    private static decimal? TryRequireDecimal(
+        IReadOnlyDictionary<string, object?> parameters,
+        Dictionary<string, List<string>> bag,
+        decimal? minInclusive,
+        decimal? minExclusive = null,
+        decimal? maxInclusive = null,
+        string? prefix = null,
+        params string[] keys) {
+        try {
+            decimal value = ParameterReader.RequireDecimal(parameters, keys);
+            if (minInclusive.HasValue && value < minInclusive.Value)
+                AddError(bag, BuildKey(prefix, keys[0]), $"Value must be >= {minInclusive.Value}.");
+            if (minExclusive.HasValue && value <= minExclusive.Value)
+                AddError(bag, BuildKey(prefix, keys[0]), $"Value must be > {minExclusive.Value}.");
+            if (maxInclusive.HasValue && value > maxInclusive.Value)
+                AddError(bag, BuildKey(prefix, keys[0]), $"Value must be <= {maxInclusive.Value}.");
+            return value;
+        } catch (InvalidOperationException ex) {
+            AddError(bag, BuildKey(prefix, keys[0]), ex.Message);
+            return null;
+        }
+    }
+
+    private static string? TryRequireString(
+        IReadOnlyDictionary<string, object?> parameters,
+        Dictionary<string, List<string>> bag,
+        params string[] keys) =>
+        TryRequireString(parameters, bag, prefix: null, keys: keys);
+
+    private static string? TryRequireString(
+        IReadOnlyDictionary<string, object?> parameters,
+        Dictionary<string, List<string>> bag,
+        string? prefix = null,
+        params string[] keys) {
+        try {
+            return ParameterReader.RequireString(parameters, keys);
+        } catch (InvalidOperationException ex) {
+            AddError(bag, BuildKey(prefix, keys[0]), ex.Message);
+            return null;
+        }
+    }
+
+    private static string BuildKey(string? prefix, string key) =>
+        string.IsNullOrWhiteSpace(prefix) ? key : $"{prefix}.{key}";
 
     private static void ValidateEffectiveAt(DateTime? effectiveAt, string fieldName, Dictionary<string, List<string>> bag) {
         if (!effectiveAt.HasValue)

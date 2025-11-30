@@ -72,6 +72,57 @@ public sealed class PolicyRequestValidatorTests {
         Assert.True(errors!.ContainsKey("overrides.invalid-segment!"));
     }
 
+    [Fact]
+    public void TryValidateCreate_WithDecayCurveOutOfRange_ReturnsError() {
+        CreatePolicyVersionRequest request = BuildValidCreateRequest() with {
+            StreakModelType = StreakModelType.DecayCurve.ToString(),
+            StreakModelParameters = new Dictionary<string, object?> {
+                ["decayPercent"] = 1.5m,
+                ["graceDay"] = 0
+            }
+        };
+
+        bool result = PolicyRequestValidator.TryValidateCreate("daily-login", request, out IDictionary<string, string[]>? errors);
+
+        Assert.False(result);
+        Assert.True(errors!.ContainsKey("streakModelParameters.decayPercent"));
+    }
+
+    [Fact]
+    public void TryValidateCreate_WithOverlappingTiers_ReturnsError() {
+        CreatePolicyVersionRequest request = BuildValidCreateRequest() with {
+            StreakModelType = StreakModelType.TieredSeasonalReset.ToString(),
+            StreakModelParameters = new Dictionary<string, object?> {
+                ["tiers"] = new List<object?> {
+                    new Dictionary<string, object?> { ["startDay"] = 1, ["endDay"] = 3, ["bonusMultiplier"] = 1.1m },
+                    new Dictionary<string, object?> { ["startDay"] = 3, ["endDay"] = 5, ["bonusMultiplier"] = 1.2m }
+                }
+            }
+        };
+
+        bool result = PolicyRequestValidator.TryValidateCreate("daily-login", request, out IDictionary<string, string[]>? errors);
+
+        Assert.False(result);
+        Assert.True(errors!.ContainsKey("streakModelParameters.tiers"));
+    }
+
+    [Fact]
+    public void TryValidateCreate_WithMilestoneMissingFields_ReturnsError() {
+        CreatePolicyVersionRequest request = BuildValidCreateRequest() with {
+            StreakModelType = StreakModelType.MilestoneMetaReward.ToString(),
+            StreakModelParameters = new Dictionary<string, object?> {
+                ["milestones"] = new List<object?> {
+                    new Dictionary<string, object?> { ["day"] = 2 }
+                }
+            }
+        };
+
+        bool result = PolicyRequestValidator.TryValidateCreate("daily-login", request, out IDictionary<string, string[]>? errors);
+
+        Assert.False(result);
+        Assert.True(errors!.ContainsKey("streakModelParameters.milestones[0].rewardType"));
+    }
+
     private static CreatePolicyVersionRequest BuildValidCreateRequest() {
         DateTime start = DateTime.UtcNow.AddDays(1);
 
@@ -86,7 +137,10 @@ public sealed class PolicyRequestValidatorTests {
             GraceAllowedMisses = 1,
             GraceWindowDays = 3,
             StreakModelType = StreakModelType.PlateauCap.ToString(),
-            StreakModelParameters = new Dictionary<string, object?> { ["capDays"] = 7 },
+            StreakModelParameters = new Dictionary<string, object?> {
+                ["plateauDay"] = 7,
+                ["plateauMultiplier"] = 1.2m
+            },
             PreviewSampleWindowDays = 7,
             PreviewDefaultSegment = "default_segment",
             StreakCurve = [
