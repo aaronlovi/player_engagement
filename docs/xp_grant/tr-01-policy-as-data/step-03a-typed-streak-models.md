@@ -13,7 +13,7 @@ This plan extends `Step 3 — Data Modeling` to replace the loose `StreakModelDe
 | 7 | [x] | Shared validation utilities for ranges/overlaps as needed. | Place in `PlayerEngagement.Shared` with unit tests. |
 | 8 | [x] | Update DTO mapping/tests to reflect typed models (no DB schema change). | Adjust Infrastructure tests to assert typed model instances and properties. |
 | 9 | [x] | Extend Host request DTOs/validators to enforce model-specific parameters. | Update policy CRUD inputs and add Host tests for each model’s payloads. |
-| 10 | [ ] | Ensure controller-to-persistence flow handles typed models end-to-end. | Verify serialization into DB JSON matches typed definitions; add integration-style tests for CRUD paths. |
+| 10 | [x] | Ensure controller-to-persistence flow handles typed models end-to-end. | Verify serialization into DB JSON matches typed definitions; add integration-style tests for CRUD paths. |
 | 11 | [ ] | Documentation update summarizing typed model shapes and validation rules. | Append to `step-03-data-modeling.md` or within this follow-up. |
 | 12 | [ ] | Build/test validation after changes. | Run `dotnet build` and relevant `dotnet test` suites (Domain/Infrastructure/Shared/Host). |
 

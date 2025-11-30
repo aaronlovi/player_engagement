@@ -48,6 +48,28 @@ public sealed class PolicyDocumentPersistenceServiceTests : IDisposable {
     }
 
     [Fact]
+    public async Task GetCurrentPolicyAsync_MapsTypedStreakModel() {
+        ActivePolicyDTO active = PolicyDtoFactory.CreateActive(
+            "daily-login",
+            version: 5,
+            modelType: "PLATEAU_CAP",
+            modelParameters: "{\"plateauDay\":4,\"plateauMultiplier\":1.4}");
+
+        _ = _dbmMock.Setup(dbm => dbm.GetCurrentPolicyAsync(active.PolicyKey, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<ActivePolicyDTO>.Success(active));
+        _ = _dbmMock.Setup(dbm => dbm.GetPolicyStreakCurveAsync(active.PolicyKey, active.PolicyVersion, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<List<PolicyStreakCurveEntryDTO>>.Success([]));
+        _ = _dbmMock.Setup(dbm => dbm.GetPolicySeasonalBoostsAsync(active.PolicyKey, active.PolicyVersion, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<List<PolicySeasonalBoostDTO>>.Success([]));
+
+        PolicyDocument? document = await _service.GetCurrentPolicyAsync(active.PolicyKey, DateTime.UtcNow, CancellationToken.None);
+
+        PlateauCapStreakModel model = Assert.IsType<PlateauCapStreakModel>(document!.Version.StreakModel);
+        Assert.Equal(4, model.PlateauDay);
+        Assert.Equal(1.4m, model.PlateauMultiplier);
+    }
+
+    [Fact]
     public async Task GetCurrentPolicyAsync_ReturnsNull_WhenDbmFails() {
         string policyKey = "missing";
         _ = _dbmMock.Setup(dbm => dbm.GetCurrentPolicyAsync(policyKey, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
@@ -61,23 +83,25 @@ public sealed class PolicyDocumentPersistenceServiceTests : IDisposable {
     [Fact]
     public async Task ListPublishedPoliciesAsync_MapsEachVersion() {
         List<PolicyVersionDTO> versions = [
-            PolicyDtoFactory.CreateVersion("daily-login", version: 1),
-            PolicyDtoFactory.CreateVersion("daily-login", version: 2)
+            PolicyDtoFactory.CreateVersion("daily-login", version: 1, modelType: "DECAY_CURVE", modelParameters: "{\"decayPercent\":0.2,\"graceDay\":1}"),
+            PolicyDtoFactory.CreateVersion("daily-login", version: 2, modelType: "TIERED_SEASONAL_RESET", modelParameters: "{\"tiers\":[{\"startDay\":1,\"endDay\":3,\"bonusMultiplier\":1.1},{\"startDay\":5,\"endDay\":7,\"bonusMultiplier\":1.2}]}")
         ];
         _ = _dbmMock.Setup(dbm => dbm.ListPublishedPoliciesAsync(It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result<List<PolicyVersionDTO>>.Success(versions));
         _ = _dbmMock.Setup(dbm => dbm.GetPolicyStreakCurveAsync("daily-login", 1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<List<PolicyStreakCurveEntryDTO>>.Success(new List<PolicyStreakCurveEntryDTO>()));
+            .ReturnsAsync(Result<List<PolicyStreakCurveEntryDTO>>.Success([]));
         _ = _dbmMock.Setup(dbm => dbm.GetPolicySeasonalBoostsAsync("daily-login", 1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<List<PolicySeasonalBoostDTO>>.Success(new List<PolicySeasonalBoostDTO>()));
+            .ReturnsAsync(Result<List<PolicySeasonalBoostDTO>>.Success([]));
         _ = _dbmMock.Setup(dbm => dbm.GetPolicyStreakCurveAsync("daily-login", 2, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<List<PolicyStreakCurveEntryDTO>>.Success(new List<PolicyStreakCurveEntryDTO>()));
+            .ReturnsAsync(Result<List<PolicyStreakCurveEntryDTO>>.Success([]));
         _ = _dbmMock.Setup(dbm => dbm.GetPolicySeasonalBoostsAsync("daily-login", 2, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<List<PolicySeasonalBoostDTO>>.Success(new List<PolicySeasonalBoostDTO>()));
+            .ReturnsAsync(Result<List<PolicySeasonalBoostDTO>>.Success([]));
 
         IReadOnlyList<PolicyDocument> documents = await _service.ListPublishedPoliciesAsync(DateTime.UtcNow, CancellationToken.None);
 
         Assert.Equal(2, documents.Count);
+        _ = Assert.IsType<DecayCurveStreakModel>(documents[0].Version.StreakModel);
+        _ = Assert.IsType<TieredSeasonalResetStreakModel>(documents[1].Version.StreakModel);
     }
 
     [Fact]
