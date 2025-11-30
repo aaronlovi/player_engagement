@@ -12,12 +12,20 @@ Enhance the Angular admin interface so live-ops teams can manage policy versions
 
 ## Tasks
 
-- [ ] Integrate new API endpoints for listing, creating, previewing, publishing, and retiring policies.
-- [ ] Design UI components/forms for editing policy fields, including streak curve and claim window inputs.
-- [ ] Add validation and user feedback (error toasts, success messages, preview calculations).
-- [ ] Provide policy diff/history views to visualize version changes.
-- [ ] Implement authorization checks (route guards) if operator roles vary.
-- [ ] Update UI unit/e2e tests to cover new workflows.
+| # | Done | Task |
+| --- | --- | --- |
+| 1 | [ ] | Admin API client: add service methods for list/create/publish/retire/update-overrides; wire auth headers/error handling. |
+| 2 | [ ] | Policy list view: render paged list with status/effective dates; link to detail/edit routes. |
+| 3 | [ ] | Policy create/edit shell: scaffold form layout with base fields (display name, XP, currency, claim window, anchor strategy, grace). |
+| 4 | [ ] | Streak curve editor component: grid for day/multiplier/bonus/cap; add row/reorder; client-side validation per rules. |
+| 5 | [ ] | Seasonal boosts editor: list/add/edit boost rows with date pickers and overlap validation. |
+| 6 | [ ] | Preview settings + streak model parameters UI: inputs per model type, toggle default segment, sample window. |
+| 7 | [ ] | Validation/feedback: inline field errors, submit blocking, success/error toasts; display API validation messages. |
+| 8 | [ ] | Publish/retire actions: buttons with confirm dialogs; call publish/retire endpoints and refresh state. |
+| 9 | [ ] | History/diff view: show version list for a policy and render side-by-side diff of selected versions. |
+| 10 | [ ] | Segment overrides UI: table/form to map segment → policy version; uses overrides endpoint. |
+| 11 | [ ] | Auth/guards: route guard and action-level checks for operator roles; hide disabled actions. |
+| 12 | [ ] | Testing: unit tests for services/components; e2e happy paths (create→publish, retire, edit overrides). |
 
 ## Deliverables
 
