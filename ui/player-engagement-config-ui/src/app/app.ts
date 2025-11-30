@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, computed, signal, WritableSignal } from '@angular/core';
 
 import { ApiCallResult, HealthResponse, XpApiService, XpStubResponse } from './xp-api.service';
@@ -24,7 +24,7 @@ function createInitialState<T>(): ApiState<T> {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
