@@ -14,7 +14,7 @@ This plan extends `Step 3 — Data Modeling` to replace the loose `StreakModelDe
 | 8 | [x] | Update DTO mapping/tests to reflect typed models (no DB schema change). | Adjust Infrastructure tests to assert typed model instances and properties. |
 | 9 | [x] | Extend Host request DTOs/validators to enforce model-specific parameters. | Update policy CRUD inputs and add Host tests for each model’s payloads. |
 | 10 | [x] | Ensure controller-to-persistence flow handles typed models end-to-end. | Verify serialization into DB JSON matches typed definitions; add integration-style tests for CRUD paths. |
-| 11 | [ ] | Documentation update summarizing typed model shapes and validation rules. | Append to `step-03-data-modeling.md` or within this follow-up. |
+| 11 | [x] | Documentation update summarizing typed model shapes and validation rules. | Append to `step-03-data-modeling.md` or within this follow-up. |
 | 12 | [ ] | Build/test validation after changes. | Run `dotnet build` and relevant `dotnet test` suites (Domain/Infrastructure/Shared/Host). |
 
 ## Numeric Handling Notes
@@ -30,3 +30,10 @@ This plan extends `Step 3 — Data Modeling` to replace the loose `StreakModelDe
 - DecayCurve: `DecayPercent` within `[0,1]`; `GraceDay >= 0`; integer day/count semantics.
 - TieredSeasonalReset: tiers require `StartDay >= 1`, `EndDay >= StartDay`, `BonusMultiplier > 0`; tiers must not overlap; gaps are allowed; integer day/count semantics. Treat ranges as inclusive for both start/end when evaluating days.
 - MilestoneMetaReward: each milestone `Day >= 1`; `RewardType` and `RewardValue` non-empty; integer day semantics. Future integration with inventory may refine reward validation.
+
+## Typed Streak Model Shapes (for Host/API + Persistence)
+- PlateauCap: `{ plateauDay:int >=1, plateauMultiplier:decimal >0 }`
+- WeeklyCycleReset: no parameters; 7-day fixed cycle.
+- DecayCurve: `{ decayPercent:decimal 0–1, graceDay:int >=0 }`
+- TieredSeasonalReset: `{ tiers:[{ startDay:int >=1, endDay:int >= startDay, bonusMultiplier:decimal >0 }...] }` (non-overlapping; gaps allowed)
+- MilestoneMetaReward: `{ milestones:[{ day:int >=1, rewardType:string, rewardValue:string }...] }`
