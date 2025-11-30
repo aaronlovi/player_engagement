@@ -10,7 +10,7 @@ This plan extends `Step 3 — Data Modeling` to replace the loose `StreakModelDe
 | 4 | [x] | TieredSeasonalReset model: domain type + validation + mapper/test updates. | Record with tier collection `{startDay,endDay,bonusMultiplier}` and overlap checks; parser/validator tests. |
 | 5 | [x] | MilestoneMetaReward model: domain type + validation + mapper/test updates. | Record with milestones `{day,rewardType,rewardValue}`; parser/validator tests. |
 | 6 | [x] | Update `StreakModelDefinition` to wrap typed variants (discriminated union). | Keep backward compatibility helpers if needed; document serialization expectations. |
-| 7 | [ ] | Shared validation utilities for ranges/overlaps as needed. | Place in `PlayerEngagement.Shared` with unit tests. |
+| 7 | [x] | Shared validation utilities for ranges/overlaps as needed. | Place in `PlayerEngagement.Shared` with unit tests. |
 | 8 | [ ] | Update DTO mapping/tests to reflect typed models (no DB schema change). | Adjust Infrastructure tests to assert typed model instances and properties. |
 | 9 | [ ] | Extend Host request DTOs/validators to enforce model-specific parameters. | Update policy CRUD inputs and add Host tests for each model’s payloads. |
 | 10 | [ ] | Ensure controller-to-persistence flow handles typed models end-to-end. | Verify serialization into DB JSON matches typed definitions; add integration-style tests for CRUD paths. |

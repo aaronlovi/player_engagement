@@ -4,4 +4,8 @@
     <PackageReference Include="Microsoft.Orleans.Core.Abstractions" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="../PlayerEngagement.Shared/PlayerEngagement.Shared.csproj" />
+  </ItemGroup>
+
 </Project>
