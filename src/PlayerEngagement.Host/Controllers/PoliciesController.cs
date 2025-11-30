@@ -16,6 +16,7 @@ using PlayerEngagement.Infrastructure.Policies.Services;
 
 namespace PlayerEngagement.Host.Controllers;
 
+/// <summary>HTTP API controller exposing policy CRUD endpoints.</summary>
 [ApiController]
 [Route("xp/policies")]
 [Produces("application/json")]
@@ -25,6 +26,7 @@ public sealed class PoliciesController : ControllerBase {
     private readonly ILogger<PoliciesController> _logger;
     private readonly IPolicyDocumentPersistenceService _policyPersistence;
 
+    /// <summary>Initializes a new instance of the <see cref="PoliciesController"/>.</summary>
     public PoliciesController(
         ILogger<PoliciesController> logger,
         IPolicyDocumentPersistenceService policyPersistence) {
@@ -32,9 +34,11 @@ public sealed class PoliciesController : ControllerBase {
         _policyPersistence = policyPersistence ?? throw new ArgumentNullException(nameof(policyPersistence));
     }
 
+    /// <summary>Simple liveness endpoint for the policy API.</summary>
     [HttpGet("ping")]
     public IActionResult Ping() => Ok(new { message = "Policy API ready" });
 
+    /// <summary>Create a draft policy version for the given policy key.</summary>
     [HttpPost("{policyKey}/versions")]
     public Task<IActionResult> CreatePolicyVersionAsync(
         string policyKey,
@@ -53,6 +57,7 @@ public sealed class PoliciesController : ControllerBase {
         return CreateDraftInternalAsync(dto, streakDtos, boostDtos, ct);
     }
 
+    /// <summary>Publish a draft/archived policy version and optionally schedule effectiveness.</summary>
     [HttpPost("{policyKey}/versions/{policyVersion:long}/publish")]
     public Task<IActionResult> PublishPolicyVersionAsync(
         string policyKey,
@@ -73,6 +78,7 @@ public sealed class PoliciesController : ControllerBase {
         return PublishInternalAsync(policyKey, policyVersion, request.EffectiveAt, overrides, ct);
     }
 
+    /// <summary>Retire a published policy version.</summary>
     [HttpPost("{policyKey}/versions/{policyVersion:long}/retire")]
     public Task<IActionResult> RetirePolicyVersionAsync(
         string policyKey,
@@ -87,6 +93,7 @@ public sealed class PoliciesController : ControllerBase {
         return RetireInternalAsync(policyKey, policyVersion, request.RetiredAt ?? DateTime.UtcNow, ct);
     }
 
+    /// <summary>Retrieve a specific policy version by key and version number.</summary>
     [HttpGet("{policyKey}/versions/{policyVersion:long}")]
     public async Task<IActionResult> GetPolicyVersionAsync(
         string policyKey,
@@ -104,6 +111,7 @@ public sealed class PoliciesController : ControllerBase {
         return Ok(document);
     }
 
+    /// <summary>List policy versions for a key with optional filtering.</summary>
     [HttpGet("{policyKey}/versions")]
     public Task<IActionResult> ListPolicyVersionsAsync(
         string policyKey,
@@ -125,6 +133,7 @@ public sealed class PoliciesController : ControllerBase {
         return ListVersionsInternalAsync(policyKey, status, effectiveBefore, limit, ct);
     }
 
+    /// <summary>Get the currently active policy document for a key.</summary>
     [HttpGet("active")]
     public async Task<IActionResult> GetActivePolicyAsync(
         [FromQuery] string policyKey,
@@ -142,6 +151,7 @@ public sealed class PoliciesController : ControllerBase {
         return Ok(document);
     }
 
+    /// <summary>Get segment override mappings for a policy.</summary>
     [HttpGet("{policyKey}/segments")]
     public async Task<IActionResult> GetSegmentOverridesAsync(string policyKey, CancellationToken ct) {
         if (!PolicyRequestValidator.TryValidateSegmentOverrides(policyKey, out IDictionary<string, string[]>? errors))
@@ -152,6 +162,7 @@ public sealed class PoliciesController : ControllerBase {
         return Ok(overrides);
     }
 
+    /// <summary>Replace segment override mappings for a policy.</summary>
     [HttpPut("{policyKey}/segments")]
     public Task<IActionResult> UpdateSegmentOverridesAsync(
         string policyKey,
