@@ -29,9 +29,27 @@ public sealed class PlayerEngagementDbmInMemoryService : DbmInMemoryService, IPl
         IReadOnlyList<PolicySeasonalBoostDTO> boosts,
         CancellationToken ct) {
 
-        ArgumentNullException.ThrowIfNull(dto);
-        ArgumentNullException.ThrowIfNull(streak);
-        ArgumentNullException.ThrowIfNull(boosts);
+        _logger.LogInformation(
+            "InMemory CreatePolicyDraftAsync start: policyKey={PolicyKey}, requestedVersion={RequestedVersion}, streakCount={StreakCount}, boostCount={BoostCount}",
+            dto.PolicyKey,
+            dto.PolicyVersion,
+            streak.Count,
+            boosts.Count);
+
+        if (dto is null) {
+            _logger.LogError("InMemory CreatePolicyDraftAsync failed: dto is null");
+            return Result<long>.Failure(ErrorCodes.ValidationError, "Request payload is required.");
+        }
+
+        if (streak is null) {
+            _logger.LogError("InMemory CreatePolicyDraftAsync failed: streak collection is null");
+            return Result<long>.Failure(ErrorCodes.ValidationError, "Streak entries are required.");
+        }
+
+        if (boosts is null) {
+            _logger.LogError("InMemory CreatePolicyDraftAsync failed: seasonal boosts collection is null");
+            return Result<long>.Failure(ErrorCodes.ValidationError, "Seasonal boosts collection is required.");
+        }
 
         long policyVersion = dto.PolicyVersion != 0 ? dto.PolicyVersion : (long)await GetNextId64(ct);
         long policyId = dto.PolicyId ?? (long)await GetNextId64(ct);
@@ -65,6 +83,10 @@ public sealed class PlayerEngagementDbmInMemoryService : DbmInMemoryService, IPl
         PolicyVersionWriteDto expandedDto = dto with { PolicyVersion = policyVersion, PolicyId = policyId };
 
         Result<long> result = PlayerEngagementDbmInMemoryData.CreatePolicyDraft(expandedDto, normalizedStreak, normalizedBoosts);
+        if (result.IsFailure)
+            _logger.LogError("InMemory CreatePolicyDraftAsync failed: {Error}", result.ErrorMessage);
+        else
+            _logger.LogInformation("InMemory CreatePolicyDraftAsync complete: policyKey={PolicyKey}, version={Version}", dto.PolicyKey, result.Value);
         return result;
     }
 
@@ -76,7 +98,17 @@ public sealed class PlayerEngagementDbmInMemoryService : DbmInMemoryService, IPl
         IReadOnlyList<PolicySegmentOverrideDTO> segmentOverrides,
         CancellationToken ct) {
 
-        ArgumentNullException.ThrowIfNull(segmentOverrides);
+        if (segmentOverrides is null) {
+            _logger.LogError("InMemory PublishPolicyVersionAsync failed: segmentOverrides is null for policyKey={PolicyKey}, version={Version}", policyKey, policyVersion);
+            return Result<PolicyVersionDTO>.Failure(ErrorCodes.ValidationError, "Segment overrides collection is required.");
+        }
+
+        _logger.LogInformation(
+            "InMemory PublishPolicyVersionAsync start: policyKey={PolicyKey}, version={Version}, effectiveAt={EffectiveAt}, overrides={OverrideCount}",
+            policyKey,
+            policyVersion,
+            effectiveAt,
+            segmentOverrides.Count);
 
         List<PolicySegmentOverrideDTO> overrides = new(segmentOverrides.Count);
         foreach (PolicySegmentOverrideDTO dto in segmentOverrides) {
@@ -97,6 +129,10 @@ public sealed class PlayerEngagementDbmInMemoryService : DbmInMemoryService, IPl
             effectiveAt,
             overrides);
 
+        if (result.IsFailure)
+            _logger.LogError("InMemory PublishPolicyVersionAsync failed for policyKey={PolicyKey}, version={Version}: {Error}", policyKey, policyVersion, result.ErrorMessage);
+        else
+            _logger.LogInformation("InMemory PublishPolicyVersionAsync complete: policyKey={PolicyKey}, version={Version}", policyKey, policyVersion);
         return result;
     }
 
@@ -106,7 +142,12 @@ public sealed class PlayerEngagementDbmInMemoryService : DbmInMemoryService, IPl
         DateTime retiredAt,
         CancellationToken ct) {
 
+        _logger.LogInformation("InMemory RetirePolicyVersionAsync start: policyKey={PolicyKey}, version={Version}, retiredAt={RetiredAt}", policyKey, policyVersion, retiredAt);
         Result<PolicyVersionDTO> result = PlayerEngagementDbmInMemoryData.RetirePolicyVersion(policyKey, policyVersion, retiredAt);
+        if (result.IsFailure)
+            _logger.LogError("InMemory RetirePolicyVersionAsync failed for policyKey={PolicyKey}, version={Version}: {Error}", policyKey, policyVersion, result.ErrorMessage);
+        else
+            _logger.LogInformation("InMemory RetirePolicyVersionAsync complete: policyKey={PolicyKey}, version={Version}", policyKey, policyVersion);
         return Task.FromResult(result);
     }
 
@@ -116,7 +157,11 @@ public sealed class PlayerEngagementDbmInMemoryService : DbmInMemoryService, IPl
         IReadOnlyList<PolicyStreakCurveEntryDTO> entries,
         CancellationToken ct) {
 
-        ArgumentNullException.ThrowIfNull(entries);
+        if (entries is null) {
+            _logger.LogError("InMemory ReplacePolicyStreakCurveAsync failed: entries is null for policyKey={PolicyKey}, version={Version}", policyKey, policyVersion);
+            return Result.Failure(ErrorCodes.ValidationError, "Streak entries are required.");
+        }
+        _logger.LogInformation("InMemory ReplacePolicyStreakCurveAsync start: policyKey={PolicyKey}, version={Version}, count={Count}", policyKey, policyVersion, entries.Count);
         List<PolicyStreakCurveEntryDTO> normalized = new(entries.Count);
 
         foreach (PolicyStreakCurveEntryDTO entry in entries) {
@@ -132,6 +177,10 @@ public sealed class PlayerEngagementDbmInMemoryService : DbmInMemoryService, IPl
         }
 
         Result result = PlayerEngagementDbmInMemoryData.ReplaceStreakCurve(policyKey, policyVersion, normalized);
+        if (result.IsFailure)
+            _logger.LogError("InMemory ReplacePolicyStreakCurveAsync failed for policyKey={PolicyKey}, version={Version}: {Error}", policyKey, policyVersion, result.ErrorMessage);
+        else
+            _logger.LogInformation("InMemory ReplacePolicyStreakCurveAsync complete: policyKey={PolicyKey}, version={Version}", policyKey, policyVersion);
         return result;
     }
 
@@ -141,7 +190,11 @@ public sealed class PlayerEngagementDbmInMemoryService : DbmInMemoryService, IPl
         IReadOnlyList<PolicySeasonalBoostDTO> boosts,
         CancellationToken ct) {
 
-        ArgumentNullException.ThrowIfNull(boosts);
+        if (boosts is null) {
+            _logger.LogError("InMemory ReplacePolicySeasonalBoostsAsync failed: boosts is null for policyKey={PolicyKey}, version={Version}", policyKey, policyVersion);
+            return Result.Failure(ErrorCodes.ValidationError, "Seasonal boosts collection is required.");
+        }
+        _logger.LogInformation("InMemory ReplacePolicySeasonalBoostsAsync start: policyKey={PolicyKey}, version={Version}, count={Count}", policyKey, policyVersion, boosts.Count);
         List<PolicySeasonalBoostDTO> normalized = new(boosts.Count);
 
         foreach (PolicySeasonalBoostDTO boost in boosts) {
@@ -157,6 +210,10 @@ public sealed class PlayerEngagementDbmInMemoryService : DbmInMemoryService, IPl
         }
 
         Result result = PlayerEngagementDbmInMemoryData.ReplaceSeasonalBoosts(policyKey, policyVersion, normalized);
+        if (result.IsFailure)
+            _logger.LogError("InMemory ReplacePolicySeasonalBoostsAsync failed for policyKey={PolicyKey}, version={Version}: {Error}", policyKey, policyVersion, result.ErrorMessage);
+        else
+            _logger.LogInformation("InMemory ReplacePolicySeasonalBoostsAsync complete: policyKey={PolicyKey}, version={Version}", policyKey, policyVersion);
         return result;
     }
 
@@ -165,7 +222,11 @@ public sealed class PlayerEngagementDbmInMemoryService : DbmInMemoryService, IPl
         IReadOnlyList<PolicySegmentOverrideDTO> overrides,
         CancellationToken ct) {
 
-        ArgumentNullException.ThrowIfNull(overrides);
+        if (overrides is null) {
+            _logger.LogError("InMemory UpsertPolicySegmentOverridesAsync failed: overrides is null for policyKey={PolicyKey}", policyKey);
+            return Result.Failure(ErrorCodes.ValidationError, "Overrides collection is required.");
+        }
+        _logger.LogInformation("InMemory UpsertPolicySegmentOverridesAsync start: policyKey={PolicyKey}, count={Count}", policyKey, overrides.Count);
         List<PolicySegmentOverrideDTO> normalized = new(overrides.Count);
 
         foreach (PolicySegmentOverrideDTO dto in overrides) {
@@ -180,6 +241,10 @@ public sealed class PlayerEngagementDbmInMemoryService : DbmInMemoryService, IPl
         }
 
         Result result = PlayerEngagementDbmInMemoryData.UpsertSegmentOverrides(policyKey, normalized);
+        if (result.IsFailure)
+            _logger.LogError("InMemory UpsertPolicySegmentOverridesAsync failed for policyKey={PolicyKey}: {Error}", policyKey, result.ErrorMessage);
+        else
+            _logger.LogInformation("InMemory UpsertPolicySegmentOverridesAsync complete: policyKey={PolicyKey}", policyKey);
         return result;
     }
 
