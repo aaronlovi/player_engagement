@@ -1,0 +1,137 @@
+<div class="page">
+  <header class="page__header">
+    <div>
+      <h1>Host health & XP stubs</h1>
+      <p class="page__description">
+        Quick checks to verify the backend host is reachable.
+      </p>
+    </div>
+    <div class="page__actions">
+      <button type="button" (click)="refreshAll()" [disabled]="isRefreshing()">
+        {{ isRefreshing() ? 'Refreshing…' : 'Refresh health & ledger' }}
+      </button>
+      <button type="button" class="secondary" (click)="callXpGrant()" [disabled]="isGrantPending()">
+        {{ isGrantPending() ? 'Calling grant…' : 'Call XP grant stub' }}
+      </button>
+    </div>
+  </header>
+
+  <section class="panel">
+    <h2>Health endpoints</h2>
+
+    @if (liveState(); as live) {
+      <div class="card">
+        <div class="card__heading">
+          <h3>/health/live</h3>
+          <span class="badge" [class.badge--ok]="live.success === true" [class.badge--warn]="live.success === false">
+            {{ live.loading ? 'Loading…' : live.success === true ? 'Healthy' : 'Stub' }}
+          </span>
+        </div>
+        <dl>
+          <div class="card__row">
+            <dt>Status code</dt>
+            <dd>{{ live.status ?? '—' }}</dd>
+          </div>
+          <div class="card__row">
+            <dt>Payload</dt>
+            <dd><pre>{{ toJson(live.body) }}</pre></dd>
+          </div>
+          @if (live.error) {
+            <div class="card__row">
+              <dt>Error</dt>
+              <dd>{{ live.error }}</dd>
+            </div>
+          }
+        </dl>
+      </div>
+    }
+
+    @if (readyState(); as ready) {
+      <div class="card">
+        <div class="card__heading">
+          <h3>/health/ready</h3>
+          <span class="badge" [class.badge--ok]="ready.success === true" [class.badge--warn]="ready.success === false">
+            {{ ready.loading ? 'Loading…' : ready.success === true ? 'Ready' : 'Stub' }}
+          </span>
+        </div>
+        <dl>
+          <div class="card__row">
+            <dt>Status code</dt>
+            <dd>{{ ready.status ?? '—' }}</dd>
+          </div>
+          <div class="card__row">
+            <dt>Payload</dt>
+            <dd><pre>{{ toJson(ready.body) }}</pre></dd>
+          </div>
+          @if (ready.error) {
+            <div class="card__row">
+              <dt>Error</dt>
+              <dd>{{ ready.error }}</dd>
+            </div>
+          }
+        </dl>
+      </div>
+    }
+  </section>
+
+  <section class="panel">
+    <h2>XP stubs</h2>
+
+    @if (ledgerState(); as ledger) {
+      <div class="card">
+        <div class="card__heading">
+          <h3>GET /xp/ledger</h3>
+          <span class="badge" [class.badge--ok]="ledger.success === true" [class.badge--warn]="ledger.success === false">
+            {{ ledger.loading ? 'Loading…' : ledger.success === true ? 'Sample' : 'Stub' }}
+          </span>
+        </div>
+        <dl>
+          <div class="card__row">
+            <dt>Status code</dt>
+            <dd>{{ ledger.status ?? '—' }}</dd>
+          </div>
+          <div class="card__row">
+            <dt>Payload</dt>
+            <dd><pre>{{ toJson(ledger.body) }}</pre></dd>
+          </div>
+          @if (ledger.error) {
+            <div class="card__row">
+              <dt>Error</dt>
+              <dd>{{ ledger.error }}</dd>
+            </div>
+          }
+        </dl>
+      </div>
+    }
+
+    @if (grantState(); as grant) {
+      <div class="card">
+        <div class="card__heading">
+          <h3>POST /xp/grants</h3>
+          <span class="badge" [class.badge--ok]="grant.success === true" [class.badge--warn]="grant.success === false">
+            {{ grant.loading ? 'Loading…' : grant.success === true ? 'Placeholder' : 'Stub' }}
+          </span>
+        </div>
+        <dl>
+          <div class="card__row">
+            <dt>Status code</dt>
+            <dd>{{ grant.status ?? '—' }}</dd>
+          </div>
+          <div class="card__row">
+            <dt>Payload</dt>
+            <dd><pre>{{ toJson(grant.body) }}</pre></dd>
+          </div>
+          @if (grant.error) {
+            <div class="card__row">
+              <dt>Error</dt>
+              <dd>{{ grant.error }}</dd>
+            </div>
+          }
+        </dl>
+        <p class="hint">
+          This endpoint returns <code>501</code> until XP workflows are implemented. Use it to verify CORS and logging.
+        </p>
+      </div>
+    }
+  </section>
+</div>

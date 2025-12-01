@@ -14,8 +14,8 @@ Enhance the Angular admin interface so live-ops teams can manage policy versions
 
 | # | Done | Task |
 | --- | --- | --- |
-| 1 | [ ] | Admin API client: add service methods for list/create/publish/retire/update-overrides; wire auth headers/error handling. |
-| 2 | [ ] | Policy list view: render paged list with status/effective dates; link to detail/edit routes. |
+| 1 | [x] | Admin API client: add service methods for list/create/publish/retire/update-overrides; wire auth headers/error handling. |
+| 2 | [x] | Policy list view: render paged list with status/effective dates; link to detail/edit routes. |
 | 3 | [ ] | Policy create/edit shell: scaffold form layout with base fields (display name, XP, currency, claim window, anchor strategy, grace). |
 | 4 | [ ] | Streak curve editor component: grid for day/multiplier/bonus/cap; add row/reorder; client-side validation per rules. |
 | 5 | [ ] | Seasonal boosts editor: list/add/edit boost rows with date pickers and overlap validation. |

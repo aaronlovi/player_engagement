@@ -1,0 +1,99 @@
+<div class="page">
+  <header class="page__header">
+    <div>
+      <h1>Policy versions</h1>
+      <p class="page__description">Query policy versions by key with optional filters.</p>
+    </div>
+    <div class="page__actions">
+      <button type="button" (click)="fetch()" [disabled]="loading()">
+        {{ loading() ? 'Loading…' : 'Run query' }}
+      </button>
+    </div>
+  </header>
+
+  <section class="panel card">
+    <form [formGroup]="form" class="filter-form" (ngSubmit)="fetch()">
+      <div class="form-row">
+        <label for="policyKey">Policy key</label>
+        <input
+          id="policyKey"
+          type="text"
+          formControlName="policyKey"
+          placeholder="e.g. daily-login"
+          [class.invalid]="form.get('policyKey')?.invalid && form.get('policyKey')?.touched"
+        />
+        @if (form.get('policyKey')?.invalid && form.get('policyKey')?.touched) {
+          <p class="error">Policy key is required (min 3 characters).</p>
+        }
+      </div>
+
+      <div class="form-row">
+        <label for="status">Status (optional)</label>
+        <select id="status" formControlName="status">
+          <option value="">Any</option>
+          <option value="Draft">Draft</option>
+          <option value="Published">Published</option>
+          <option value="Archived">Archived</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label for="limit">Limit</label>
+        <input
+          id="limit"
+          type="number"
+          formControlName="limit"
+          min="1"
+          max="200"
+          [class.invalid]="form.get('limit')?.invalid && form.get('limit')?.touched"
+        />
+        @if (form.get('limit')?.invalid && form.get('limit')?.touched) {
+          <p class="error">Limit must be between 1 and 200.</p>
+        }
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    @if (lastStatus()) {
+      <p class="meta">Last response status: {{ lastStatus() }}</p>
+    }
+
+    @if (error()) {
+      <div class="card error-card">
+        <p>{{ error() }}</p>
+      </div>
+    }
+
+    @if (hasResults()) {
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Version</th>
+                <th>Status</th>
+                <th>Effective</th>
+                <th>Published</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of items(); track item.version.policyVersion) {
+                <tr>
+                  <td>{{ item.version.policyVersion }}</td>
+                  <td><span [class]="statusClass(item.version.status)">{{ item.version.status }}</span></td>
+                  <td>{{ item.version.effectiveAt || '—' }}</td>
+                  <td>{{ item.version.publishedAt || '—' }}</td>
+                  <td>{{ item.version.createdAt }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    } @else {
+      <p class="muted">Run a query to see results.</p>
+    }
+  </section>
+</div>
