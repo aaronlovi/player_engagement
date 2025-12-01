@@ -1,25 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, signal, WritableSignal } from '@angular/core';
 
-import { ApiCallResult, HealthResponse, XpApiService, XpStubResponse } from './xp-api.service';
-
-interface ApiState<T> {
-  loading: boolean;
-  status: number | null;
-  success: boolean | null;
-  body: T | null;
-  error: string | null;
-}
-
-function createInitialState<T>(): ApiState<T> {
-  return {
-    loading: false,
-    status: null,
-    success: null,
-    body: null,
-    error: null
-  };
-}
+import { ApiCallResult, HealthResponse, XpApiService, XpStubResponse } from '../../core/api/xp-api.service';
+import { ApiState, createInitialState } from '../../core/utils/http';
 
 @Component({
   selector: 'app-health-page',

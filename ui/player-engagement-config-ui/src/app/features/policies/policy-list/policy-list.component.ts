@@ -2,12 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, signal } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import {
-  ApiResult,
-  PolicyApiService,
-  PolicyListItemDto,
-  PolicyVersionStatus
-} from './policy-api.service';
+import { PolicyApiService, PolicyListItemDto, PolicyVersionStatus } from '../../../core/api/policy-api.service';
+import { ApiResult } from '../../../core/utils/http';
 
 type StatusFilter = '' | PolicyVersionStatus;
 type PolicyListForm = {

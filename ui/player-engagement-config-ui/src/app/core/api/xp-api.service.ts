@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
-import { API_BASE_URL } from './api-base-url.token';
+import { API_BASE_URL } from '../../api-base-url.token';
 
 export interface HealthResponse {
   status: string;

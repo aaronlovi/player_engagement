@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
-import { HealthPageComponent } from './health-page.component';
-import { PolicyListComponent } from './policy-list.component';
+import { HealthPageComponent } from './features/health/health-page.component';
+import { PolicyListComponent } from './features/policies/policy-list/policy-list.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'policies', pathMatch: 'full' },

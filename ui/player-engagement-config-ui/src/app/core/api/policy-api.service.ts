@@ -2,8 +2,9 @@ import { Inject, Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
-import { API_BASE_URL } from './api-base-url.token';
-import { environment } from '../environments/environment';
+import { API_BASE_URL } from '../../api-base-url.token';
+import { environment } from '../../../environments/environment';
+import { ApiResult } from '../utils/http';
 
 export type PolicyVersionStatus = 'Draft' | 'Published' | 'Archived';
 
@@ -85,13 +86,6 @@ export interface PublishPolicyVersionRequestDto {
 
 export interface RetirePolicyVersionRequestDto {
   retiredAt?: string | null;
-}
-
-export interface ApiResult<T> {
-  ok: boolean;
-  status: number | null;
-  body: T | null;
-  error?: string | null;
 }
 
 @Injectable({
