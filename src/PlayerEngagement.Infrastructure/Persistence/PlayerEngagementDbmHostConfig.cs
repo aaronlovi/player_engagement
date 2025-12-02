@@ -7,7 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using PlayerEngagement.Infrastructure.Policies.Services;
+using PlayerEngagement.Infrastructure.Policies.Services.DailyLoginBonus.XPGrant;
 
 namespace PlayerEngagement.Infrastructure.Persistence;
 

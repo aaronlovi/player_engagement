@@ -6,7 +6,7 @@ using InnoAndLogic.Persistence;
 using InnoAndLogic.Shared;
 using InnoAndLogic.Shared.Models;
 using Microsoft.Extensions.Logging;
-using PlayerEngagement.Infrastructure.Persistence.DTOs.XpPolicyDTOs;
+using PlayerEngagement.Infrastructure.Persistence.DTOs.DailyLoginBonus.XPGrant;
 
 namespace PlayerEngagement.Infrastructure.Persistence;
 

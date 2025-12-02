@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using InnoAndLogic.Shared;
 using Microsoft.Extensions.Logging.Abstractions;
 using PlayerEngagement.Infrastructure.Persistence;
-using PlayerEngagement.Infrastructure.Persistence.DTOs.XpPolicyDTOs;
-using PlayerEngagement.Infrastructure.Tests.TestUtilities;
+using PlayerEngagement.Infrastructure.Persistence.DTOs.DailyLoginBonus.XPGrant;
+using PlayerEngagement.Infrastructure.Tests.TestUtilities.DailyLoginBonus.XPGrant;
 using Xunit;
 
 namespace PlayerEngagement.Infrastructure.Tests.Persistence;
@@ -219,7 +218,7 @@ public sealed class PlayerEngagementDbmInMemoryServiceTests {
         Result<List<PolicyVersionDTO>> result = await _service.ListPolicyVersionsAsync(policyKey, "Published", null, null, CancellationToken.None);
 
         Assert.False(result.IsFailure);
-        Assert.Single(result.Value!);
+        _ = Assert.Single(result.Value!);
         Assert.Equal(2, result.Value![0].PolicyVersion);
     }
 

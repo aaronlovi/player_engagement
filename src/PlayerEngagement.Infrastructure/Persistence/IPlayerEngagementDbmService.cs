@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using InnoAndLogic.Persistence;
 using InnoAndLogic.Shared;
-using PlayerEngagement.Infrastructure.Persistence.DTOs.XpPolicyDTOs;
+using PlayerEngagement.Infrastructure.Persistence.DTOs.DailyLoginBonus.XPGrant;
 
 namespace PlayerEngagement.Infrastructure.Persistence;
 

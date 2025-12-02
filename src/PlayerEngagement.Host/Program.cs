@@ -124,9 +124,7 @@ internal static class Program {
 
     private static void ConfigureMiddleware(WebApplication app) {
         _ = app.UseSwagger();
-        _ = app.UseSwaggerUI(c => {
-            c.SwaggerEndpoint("/swagger/v1/swagger.json", "Player Engagement API v1");
-        });
+        _ = app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Player Engagement API v1"));
         _ = app.UseRouting();
         _ = app.UseCors(CorsPolicyName);
         _ = app.UseRequestPipelineLogging();

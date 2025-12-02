@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using PlayerEngagement.Domain.Policies;
-using PlayerEngagement.Host.Contracts.Policies;
-using PlayerEngagement.Host.Validation;
+using PlayerEngagement.Domain.Policies.DailyLoginBonus.XPGrant;
+using PlayerEngagement.Host.Contracts.Policies.DailyLoginBonus.XPGrant;
+using PlayerEngagement.Host.Validation.DailyLoginBonus.XPGrant;
 using Xunit;
 
 namespace PlayerEngagement.Host.Tests.Validation;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using InnoAndLogic.Shared;
 using InnoAndLogic.Shared.Models;
-using PlayerEngagement.Infrastructure.Persistence.DTOs.XpPolicyDTOs;
+using PlayerEngagement.Infrastructure.Persistence.DTOs.DailyLoginBonus.XPGrant;
 
 namespace PlayerEngagement.Infrastructure.Persistence;
 

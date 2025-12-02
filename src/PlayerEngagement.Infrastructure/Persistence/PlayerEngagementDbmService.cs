@@ -8,8 +8,8 @@ using Npgsql;
 using InnoAndLogic.Shared;
 using InnoAndLogic.Shared.Models;
 using Microsoft.Extensions.Logging;
-using PlayerEngagement.Infrastructure.Persistence.DTOs.XpPolicyDTOs;
-using PlayerEngagement.Infrastructure.Persistence.Statements;
+using PlayerEngagement.Infrastructure.Persistence.DTOs.DailyLoginBonus.XPGrant;
+using PlayerEngagement.Infrastructure.Persistence.Statements.DailyLoginBonus.XPGrant;
 
 namespace PlayerEngagement.Infrastructure.Persistence;
 
@@ -318,8 +318,7 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
             return Result<List<PolicyVersionDTO>>.Failure(exec);
         }
 
-        List<PolicyVersionDTO> copy = new(stmt.Versions.Count);
-        copy.AddRange(stmt.Versions);
+        List<PolicyVersionDTO> copy = [.. stmt.Versions];
         _logger.LogInformation("ListPolicyVersionsAsync complete: policyKey={PolicyKey}, returned={Count}", policyKey, copy.Count);
         return Result<List<PolicyVersionDTO>>.Success(copy);
     }
@@ -366,8 +365,7 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
         if (exec.IsFailure)
             return Result<List<PolicyVersionDTO>>.Failure(exec);
 
-        List<PolicyVersionDTO> copy = new(stmt.Policies.Count);
-        copy.AddRange(stmt.Policies);
+        List<PolicyVersionDTO> copy = [.. stmt.Policies];
         _logger.LogInformation("ListPublishedPoliciesAsync complete: count={Count}", copy.Count);
         return Result<List<PolicyVersionDTO>>.Success(copy);
     }
@@ -380,8 +378,7 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
         if (exec.IsFailure)
             return Result<List<PolicyStreakCurveEntryDTO>>.Failure(exec);
 
-        List<PolicyStreakCurveEntryDTO> copy = new(stmt.Entries.Count);
-        copy.AddRange(stmt.Entries);
+        List<PolicyStreakCurveEntryDTO> copy = [.. stmt.Entries];
         _logger.LogInformation("GetPolicyStreakCurveAsync complete: policyKey={PolicyKey}, version={Version}, count={Count}", policyKey, policyVersion, copy.Count);
         return Result<List<PolicyStreakCurveEntryDTO>>.Success(copy);
     }
@@ -394,8 +391,7 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
         if (exec.IsFailure)
             return Result<List<PolicySeasonalBoostDTO>>.Failure(exec);
 
-        List<PolicySeasonalBoostDTO> copy = new(stmt.Boosts.Count);
-        copy.AddRange(stmt.Boosts);
+        List<PolicySeasonalBoostDTO> copy = [.. stmt.Boosts];
         _logger.LogInformation("GetPolicySeasonalBoostsAsync complete: policyKey={PolicyKey}, version={Version}, count={Count}", policyKey, policyVersion, copy.Count);
         return Result<List<PolicySeasonalBoostDTO>>.Success(copy);
     }
@@ -408,8 +404,7 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
         if (exec.IsFailure)
             return Result<List<PolicySegmentOverrideDTO>>.Failure(exec);
 
-        List<PolicySegmentOverrideDTO> copy = new(stmt.Overrides.Count);
-        copy.AddRange(stmt.Overrides);
+        List<PolicySegmentOverrideDTO> copy = [.. stmt.Overrides];
         _logger.LogInformation("GetPolicySegmentOverridesAsync complete: policyKey={PolicyKey}, count={Count}", policyKey, copy.Count);
         return Result<List<PolicySegmentOverrideDTO>>.Success(copy);
     }
