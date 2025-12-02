@@ -14,6 +14,17 @@ comment on function ${schema}.now_utc() is 'Returns the current UTC timestamp fo
 
 -------------------------------------------------------------------------------
 
+create table if not exists ${schema}.generator (
+    last_reserved bigint not null
+);
+
+insert into ${schema}.generator (last_reserved) values (1);
+
+comment on table ${schema}.generator is 'Tracks the last reserved ID for manual ID generation';
+comment on column ${schema}.generator.last_reserved is 'The last reserved ID for generating unique IDs';
+
+-------------------------------------------------------------------------------
+
 create table ${schema}.xp_users (
     user_id bigint generated always as identity primary key,
     external_user_id text not null,

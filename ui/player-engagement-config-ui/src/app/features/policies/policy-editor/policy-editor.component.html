@@ -80,6 +80,9 @@
             formControlName="currency"
             title="Currency code for rewards (e.g., XP). Must match backend policy currency expectations."
           />
+          @if (isControlInvalid(form.get('currency'))) {
+            <p class="error">Currency must be 3-8 uppercase letters.</p>
+          }
         </div>
       </div>
 
@@ -120,6 +123,9 @@
               <option [value]="option.value">{{ option.label }}</option>
             }
           </select>
+          @if (isControlInvalid(form.get('anchorStrategy'))) {
+            <p class="error">Select a valid anchor strategy.</p>
+          }
         </div>
       </div>
 

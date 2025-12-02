@@ -70,3 +70,22 @@ table {
     color: #0f172a;
   }
 }
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+
+  button {
+    padding: 0.35rem 0.65rem;
+    border-radius: 0.4rem;
+    border: 1px solid #cbd5e1;
+    background-color: #fff;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}

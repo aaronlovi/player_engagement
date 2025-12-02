@@ -63,10 +63,10 @@ limit @limit_rows;
 
     protected override IReadOnlyCollection<NpgsqlParameter> GetBoundParameters() =>
         new[] {
-            new NpgsqlParameter("policy_key", _policyKey),
-            new NpgsqlParameter("status", _status ?? (object)DBNull.Value),
-            new NpgsqlParameter("effective_before", _effectiveBefore ?? (object)DBNull.Value),
-            new NpgsqlParameter("limit_rows", _limit)
+            new NpgsqlParameter("policy_key", NpgsqlTypes.NpgsqlDbType.Text) { Value = _policyKey },
+            new NpgsqlParameter("status", NpgsqlTypes.NpgsqlDbType.Text) { Value = _status ?? (object)DBNull.Value },
+            new NpgsqlParameter("effective_before", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = _effectiveBefore ?? (object)DBNull.Value },
+            new NpgsqlParameter("limit_rows", NpgsqlTypes.NpgsqlDbType.Integer) { Value = _limit }
         };
 
     protected override void BeforeRowProcessing(DbDataReader reader) {

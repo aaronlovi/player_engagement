@@ -1,6 +1,6 @@
 export type PolicyVersionStatus = 'Draft' | 'Published' | 'Archived';
 
-export type AnchorStrategy = 'ANCHOR_TIMEZONE' | 'FIXED_UTC' | 'SERVER_LOCAL';
+export type AnchorStrategy = 'AnchorTimezone' | 'FixedUtc' | 'ServerLocal';
 
 export type StreakModelType =
   | 'PlateauCap'

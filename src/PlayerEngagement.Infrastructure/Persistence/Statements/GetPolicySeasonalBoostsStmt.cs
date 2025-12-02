@@ -8,7 +8,7 @@ using PlayerEngagement.Infrastructure.Persistence.DTOs.XpPolicyDTOs;
 namespace PlayerEngagement.Infrastructure.Persistence.Statements;
 
 internal sealed class GetPolicySeasonalBoostsStmt : PostgresQueryDbStmtBase {
-    private const string SqlTemplate = @"""
+    private const string SqlTemplate = @"
 select boost_id,
        policy_key,
        policy_version,
@@ -20,7 +20,7 @@ from ${schema}.xp_policy_seasonal_boosts
 where policy_key = @policy_key
   and policy_version = @policy_version
 order by start_utc asc;
-""";
+";
 
     private static string? _sql;
     private static readonly object SqlLock = new();

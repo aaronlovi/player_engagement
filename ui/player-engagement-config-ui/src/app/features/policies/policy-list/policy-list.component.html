@@ -60,6 +60,12 @@
       <p class="meta">Last response status: {{ lastStatus() }}</p>
     }
 
+    @if (actionMessage()) {
+      <div class="card success-card">
+        <p>{{ actionMessage() }}</p>
+      </div>
+    }
+
     @if (error()) {
       <div class="card error-card">
         <p>{{ error() }}</p>
@@ -77,6 +83,7 @@
                 <th>Effective</th>
                 <th>Published</th>
                 <th>Created</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -87,6 +94,22 @@
                   <td>{{ item.version.effectiveAt || '—' }}</td>
                   <td>{{ item.version.publishedAt || '—' }}</td>
                   <td>{{ item.version.createdAt }}</td>
+                  <td class="actions">
+                    <button
+                      type="button"
+                      (click)="publish(item)"
+                      [disabled]="!canPublish(item.version.status) || isBusy(item) || loading()"
+                    >
+                      Publish
+                    </button>
+                    <button
+                      type="button"
+                      (click)="retire(item)"
+                      [disabled]="!canRetire(item.version.status) || isBusy(item) || loading()"
+                    >
+                      Retire
+                    </button>
+                  </td>
                 </tr>
               }
             </tbody>

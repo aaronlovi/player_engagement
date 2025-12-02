@@ -7,7 +7,7 @@ using PlayerEngagement.Infrastructure.Persistence.DTOs.XpPolicyDTOs;
 namespace PlayerEngagement.Infrastructure.Persistence.Statements;
 
 internal sealed class GetPolicyStreakCurveStmt : PostgresQueryDbStmtBase {
-    private const string SqlTemplate = @"""
+    private const string SqlTemplate = @"
 select streak_curve_id,
        policy_key,
        policy_version,
@@ -19,7 +19,7 @@ from ${schema}.xp_policy_streak_curve
 where policy_key = @policy_key
   and policy_version = @policy_version
 order by day_index asc;
-""";
+";
 
     private static string? _sql;
     private static readonly object SqlLock = new();

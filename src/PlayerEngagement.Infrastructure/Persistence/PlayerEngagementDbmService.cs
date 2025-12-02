@@ -59,6 +59,7 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
 
         long policyVersion = dto.PolicyVersion != 0 ? dto.PolicyVersion : (long)await GetNextId64(ct);
         long policyId = dto.PolicyId ?? (long)await GetNextId64(ct);
+        _logger.LogInformation("Assigned ids for create: policyVersion={PolicyVersion}, policyId={PolicyId}", policyVersion, policyId);
 
         List<PolicyStreakCurveEntryDTO> normalizedStreak = await NormalizeStreakEntriesAsync(dto.PolicyKey, policyVersion, streak, ct);
         List<PolicySeasonalBoostDTO> normalizedBoosts = await NormalizeSeasonalBoostsAsync(dto.PolicyKey, policyVersion, boosts, ct);
@@ -81,7 +82,10 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
             _logger.LogError("EnsurePolicyShellStmt failed for policyKey={PolicyKey}: {Error}", dto.PolicyKey, ensureResult.ErrorMessage);
             return Result<long>.Failure(ensureResult);
         }
-        _logger.LogInformation("EnsurePolicyShellStmt succeeded for policyKey={PolicyKey}", dto.PolicyKey);
+        _logger.LogInformation(
+            "EnsurePolicyShellStmt succeeded for policyKey={PolicyKey}, resolvedPolicyId={PolicyId}",
+            dto.PolicyKey,
+            ensurePolicyStmt.PolicyId);
 
         policyId = ensurePolicyStmt.PolicyId;
 
@@ -115,7 +119,11 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
             _logger.LogError("InsertPolicyVersionStmt failed for policyKey={PolicyKey}, version={Version}: {Error}", dto.PolicyKey, policyVersion, versionResult.ErrorMessage);
             return Result<long>.Failure(versionResult);
         }
-        _logger.LogInformation("InsertPolicyVersionStmt succeeded for policyKey={PolicyKey}, version={Version}", dto.PolicyKey, policyVersion);
+        _logger.LogInformation(
+            "InsertPolicyVersionStmt succeeded for policyKey={PolicyKey}, version={Version}, rowsAffected={Rows}",
+            dto.PolicyKey,
+            policyVersion,
+            insertVersionStmt.NumRowsAffected);
 
         _logger.LogInformation("Replacing streak curve for policyKey={PolicyKey}, version={Version}", dto.PolicyKey, policyVersion);
         Result streakResult = await ReplaceStreakCurveAsync(dto.PolicyKey, policyVersion, normalizedStreak, tx, ct);
@@ -305,8 +313,10 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
         _logger.LogInformation("Executing ListPolicyVersionsStmt for policyKey={PolicyKey}", policyKey);
         Result exec = await Executor.ExecuteQueryWithRetry(stmt, ct);
 
-        if (exec.IsFailure)
+        if (exec.IsFailure) {
+            _logger.LogError("ListPolicyVersionsStmt failed for policyKey={PolicyKey}: {Error}", policyKey, exec.ErrorMessage);
             return Result<List<PolicyVersionDTO>>.Failure(exec);
+        }
 
         List<PolicyVersionDTO> copy = new(stmt.Versions.Count);
         copy.AddRange(stmt.Versions);
@@ -334,11 +344,15 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
         var stmt = new GetPolicyVersionStmt(SchemaName, policyKey, policyVersion);
         Result exec = await Executor.ExecuteQueryWithRetry(stmt, ct);
 
-        if (exec.IsFailure)
+        if (exec.IsFailure) {
+            _logger.LogError("GetPolicyVersionStmt failed: policyKey={PolicyKey}, version={Version}, error={Error}", policyKey, policyVersion, exec.ErrorMessage);
             return Result<PolicyVersionDTO>.Failure(exec);
+        }
 
-        if (stmt.PolicyVersion.IsEmpty)
+        if (stmt.PolicyVersion.IsEmpty) {
+            _logger.LogWarning("GetPolicyVersionAsync not found: policyKey={PolicyKey}, version={Version}", policyKey, policyVersion);
             return Result<PolicyVersionDTO>.Failure(ErrorCodes.NotFound, $"Policy '{policyKey}' version '{policyVersion}' not found.");
+        }
 
         _logger.LogInformation("GetPolicyVersionAsync complete: policyKey={PolicyKey}, version={Version}", policyKey, policyVersion);
         return Result<PolicyVersionDTO>.Success(stmt.PolicyVersion);
@@ -480,7 +494,7 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
             _logger.LogError("DeletePolicyStreakCurveStmt failed for policyKey={PolicyKey}, version={Version}: {Error}", policyKey, policyVersion, deleteResult.ErrorMessage);
             return deleteResult;
         }
-        _logger.LogInformation("DeletePolicyStreakCurveStmt succeeded for policyKey={PolicyKey}, version={Version}", policyKey, policyVersion);
+        _logger.LogInformation("DeletePolicyStreakCurveStmt succeeded for policyKey={PolicyKey}, version={Version}, rowsAffected={Rows}", policyKey, policyVersion, deleteStmt.NumRowsAffected);
 
         foreach (PolicyStreakCurveEntryDTO entry in entries) {
             var insertStmt = new InsertPolicyStreakCurveEntryStmt(
@@ -499,7 +513,7 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
                 _logger.LogError("InsertPolicyStreakCurveEntryStmt failed for policyKey={PolicyKey}, version={Version}, dayIndex={DayIndex}: {Error}", policyKey, policyVersion, entry.DayIndex, insertResult.ErrorMessage);
                 return insertResult;
             }
-            _logger.LogInformation("InsertPolicyStreakCurveEntryStmt succeeded for policyKey={PolicyKey}, version={Version}, dayIndex={DayIndex}", policyKey, policyVersion, entry.DayIndex);
+            _logger.LogInformation("InsertPolicyStreakCurveEntryStmt succeeded for policyKey={PolicyKey}, version={Version}, dayIndex={DayIndex}, rowsAffected={Rows}", policyKey, policyVersion, entry.DayIndex, insertStmt.NumRowsAffected);
         }
 
         return Result.Success;
@@ -519,7 +533,7 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
             _logger.LogError("DeletePolicySeasonalBoostsStmt failed for policyKey={PolicyKey}, version={Version}: {Error}", policyKey, policyVersion, deleteResult.ErrorMessage);
             return deleteResult;
         }
-        _logger.LogInformation("DeletePolicySeasonalBoostsStmt succeeded for policyKey={PolicyKey}, version={Version}", policyKey, policyVersion);
+        _logger.LogInformation("DeletePolicySeasonalBoostsStmt succeeded for policyKey={PolicyKey}, version={Version}, rowsAffected={Rows}", policyKey, policyVersion, deleteStmt.NumRowsAffected);
 
         foreach (PolicySeasonalBoostDTO boost in boosts) {
             var insertStmt = new InsertPolicySeasonalBoostStmt(
@@ -538,7 +552,7 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
                 _logger.LogError("InsertPolicySeasonalBoostStmt failed for policyKey={PolicyKey}, version={Version}, boostId={BoostId}: {Error}", policyKey, policyVersion, boost.BoostId, insertResult.ErrorMessage);
                 return insertResult;
             }
-            _logger.LogInformation("InsertPolicySeasonalBoostStmt succeeded for policyKey={PolicyKey}, version={Version}, boostId={BoostId}", policyKey, policyVersion, boost.BoostId);
+            _logger.LogInformation("InsertPolicySeasonalBoostStmt succeeded for policyKey={PolicyKey}, version={Version}, boostId={BoostId}, rowsAffected={Rows}", policyKey, policyVersion, boost.BoostId, insertStmt.NumRowsAffected);
         }
 
         return Result.Success;
@@ -557,7 +571,7 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
             _logger.LogError("DeletePolicySegmentOverridesStmt failed for policyKey={PolicyKey}: {Error}", policyKey, deleteResult.ErrorMessage);
             return deleteResult;
         }
-        _logger.LogInformation("DeletePolicySegmentOverridesStmt succeeded for policyKey={PolicyKey}", policyKey);
+        _logger.LogInformation("DeletePolicySegmentOverridesStmt succeeded for policyKey={PolicyKey}, rowsAffected={Rows}", policyKey, deleteStmt.NumRowsAffected);
 
         foreach (PolicySegmentOverrideDTO dto in overrides) {
             var insertStmt = new InsertPolicySegmentOverrideStmt(
@@ -575,7 +589,7 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
                 _logger.LogError("InsertPolicySegmentOverrideStmt failed for policyKey={PolicyKey}, segment={Segment}: {Error}", policyKey, dto.SegmentKey, insertResult.ErrorMessage);
                 return insertResult;
             }
-            _logger.LogInformation("InsertPolicySegmentOverrideStmt succeeded for policyKey={PolicyKey}, segment={Segment}", policyKey, dto.SegmentKey);
+            _logger.LogInformation("InsertPolicySegmentOverrideStmt succeeded for policyKey={PolicyKey}, segment={Segment}, rowsAffected={Rows}", policyKey, dto.SegmentKey, insertStmt.NumRowsAffected);
         }
 
         return Result.Success;

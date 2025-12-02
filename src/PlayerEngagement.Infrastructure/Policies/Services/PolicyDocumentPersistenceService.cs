@@ -40,9 +40,12 @@ public sealed class PolicyDocumentPersistenceService : IPolicyDocumentPersistenc
         if (result.IsFailure)
             return Result<PolicyDocument>.Failure(result);
 
+        _logger.LogInformation("Loading policy document after create: policyKey={PolicyKey}, version={Version}", dto.PolicyKey, result.Value);
         PolicyDocument? document = await LoadPolicyDocumentAsync(dto.PolicyKey, result.Value, ct);
-        if (document is null)
+        if (document is null) {
+            _logger.LogError("Policy draft persisted but could not be rehydrated: policyKey={PolicyKey}, version={Version}", dto.PolicyKey, result.Value);
             return Result<PolicyDocument>.Failure(ErrorCodes.NotFound, $"Policy '{dto.PolicyKey}' version '{result.Value}' could not be loaded.");
+        }
 
         return Result<PolicyDocument>.Success(document);
     }
@@ -90,9 +93,8 @@ public sealed class PolicyDocumentPersistenceService : IPolicyDocumentPersistenc
     }
 
     /// <inheritdoc />
-    public async Task<PolicyDocument?> GetPolicyVersionAsync(string policyKey, long policyVersion, CancellationToken ct) {
-        return await LoadPolicyDocumentAsync(policyKey, policyVersion, ct);
-    }
+    public async Task<PolicyDocument?> GetPolicyVersionAsync(string policyKey, long policyVersion, CancellationToken ct) =>
+        await LoadPolicyDocumentAsync(policyKey, policyVersion, ct);
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<PolicyVersionDocument>> ListPolicyVersionsAsync(string policyKey, string? status, DateTime? effectiveBefore, int? limit, CancellationToken ct) {

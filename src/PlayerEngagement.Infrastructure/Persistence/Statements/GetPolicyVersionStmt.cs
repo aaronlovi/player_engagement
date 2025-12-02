@@ -8,7 +8,7 @@ using PlayerEngagement.Infrastructure.Persistence.DTOs.XpPolicyDTOs;
 namespace PlayerEngagement.Infrastructure.Persistence.Statements;
 
 internal sealed class GetPolicyVersionStmt : PostgresQueryDbStmtBase {
-    private const string SqlTemplate = @"""
+    private const string SqlTemplate = @"
 select p.policy_id,
        p.policy_key,
        p.display_name,
@@ -37,7 +37,7 @@ join ${schema}.xp_policy_versions v on p.policy_key = v.policy_key
 where p.policy_key = @policy_key
   and v.policy_version = @policy_version
 limit 1;
-""";
+";
 
     private static string? _sql;
     private static readonly object SqlLock = new();

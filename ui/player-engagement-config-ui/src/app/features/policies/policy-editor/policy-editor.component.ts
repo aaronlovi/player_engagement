@@ -82,9 +82,9 @@ export class PolicyEditorComponent implements OnDestroy {
   protected readonly seasonalBoosts = signal<SeasonalBoostDto[]>([]);
 
   readonly anchorOptions: { label: string; value: AnchorStrategy }[] = [
-    { label: 'Anchor Timezone', value: 'ANCHOR_TIMEZONE' },
-    { label: 'Fixed UTC', value: 'FIXED_UTC' },
-    { label: 'Server Local', value: 'SERVER_LOCAL' }
+    { label: 'Anchor Timezone', value: 'AnchorTimezone' },
+    { label: 'Fixed UTC', value: 'FixedUtc' },
+    { label: 'Server Local', value: 'ServerLocal' }
   ];
 
   readonly streakModelOptions: { label: string; value: StreakModelType; description: string }[] = [
@@ -106,10 +106,10 @@ export class PolicyEditorComponent implements OnDestroy {
       displayName: fb.nonNullable.control('', [Validators.required, Validators.maxLength(128)]),
       description: fb.nonNullable.control('', [Validators.maxLength(1024)]),
       baseXpAmount: fb.nonNullable.control(100, [Validators.required, Validators.min(1)]),
-      currency: fb.nonNullable.control('XP', [Validators.required]),
+      currency: fb.nonNullable.control('XPX', [Validators.required, Validators.pattern(/^[A-Z]{3,8}$/)]),
       claimWindowStartMinutes: fb.nonNullable.control(0, [Validators.min(0), Validators.max(1439)]),
       claimWindowDurationHours: fb.nonNullable.control(24, [Validators.min(1), Validators.max(24)]),
-      anchorStrategy: fb.nonNullable.control<AnchorStrategy>('ANCHOR_TIMEZONE', [Validators.required]),
+      anchorStrategy: fb.nonNullable.control<AnchorStrategy>('AnchorTimezone', [Validators.required]),
       graceAllowedMisses: fb.nonNullable.control(0, [Validators.min(0)]),
       graceWindowDays: fb.nonNullable.control(7, [Validators.min(1)]),
       previewSampleWindowDays: fb.nonNullable.control(7, [Validators.min(1)]),

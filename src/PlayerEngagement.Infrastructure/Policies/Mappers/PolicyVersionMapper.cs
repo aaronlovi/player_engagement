@@ -69,9 +69,11 @@ internal static class PolicyVersionMapper {
     }
 
     private static AnchorStrategy MapAnchor(string anchorStrategy) {
-        if (string.Equals(anchorStrategy, "FIXED_UTC", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(anchorStrategy, "FixedUtc", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(anchorStrategy, "FIXED_UTC", StringComparison.OrdinalIgnoreCase))
             return AnchorStrategy.FixedUtc;
-        if (string.Equals(anchorStrategy, "SERVER_LOCAL", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(anchorStrategy, "ServerLocal", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(anchorStrategy, "SERVER_LOCAL", StringComparison.OrdinalIgnoreCase))
             return AnchorStrategy.ServerLocal;
         return AnchorStrategy.AnchorTimezone;
     }
@@ -79,10 +81,15 @@ internal static class PolicyVersionMapper {
     private static StreakModelDefinition MapStreak(string modelType, string parametersJson) {
         StreakModelType type = modelType switch {
             string s when string.Equals(s, "PLATEAU_CAP", StringComparison.OrdinalIgnoreCase) => StreakModelType.PlateauCap,
+            string s when string.Equals(s, "PlateauCap", StringComparison.OrdinalIgnoreCase) => StreakModelType.PlateauCap,
             string s when string.Equals(s, "WEEKLY_CYCLE_RESET", StringComparison.OrdinalIgnoreCase) => StreakModelType.WeeklyCycleReset,
+            string s when string.Equals(s, "WeeklyCycleReset", StringComparison.OrdinalIgnoreCase) => StreakModelType.WeeklyCycleReset,
             string s when string.Equals(s, "DECAY_CURVE", StringComparison.OrdinalIgnoreCase) => StreakModelType.DecayCurve,
+            string s when string.Equals(s, "DecayCurve", StringComparison.OrdinalIgnoreCase) => StreakModelType.DecayCurve,
             string s when string.Equals(s, "TIERED_SEASONAL_RESET", StringComparison.OrdinalIgnoreCase) => StreakModelType.TieredSeasonalReset,
+            string s when string.Equals(s, "TieredSeasonalReset", StringComparison.OrdinalIgnoreCase) => StreakModelType.TieredSeasonalReset,
             string s when string.Equals(s, "MILESTONE_META_REWARD", StringComparison.OrdinalIgnoreCase) => StreakModelType.MilestoneMetaReward,
+            string s when string.Equals(s, "MilestoneMetaReward", StringComparison.OrdinalIgnoreCase) => StreakModelType.MilestoneMetaReward,
             _ => throw new InvalidOperationException($"Unknown streak model type '{modelType}'.")
         };
 
