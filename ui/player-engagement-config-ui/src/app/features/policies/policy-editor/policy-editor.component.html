@@ -2,7 +2,7 @@
   <header class="page__header">
     <div>
       <h1>Create policy draft</h1>
-      <p class="page__description">Base fields only. Streak and boosts will be added in later steps.</p>
+      <p class="page__description">Configure core fields, streak model, preview defaults, streak curve, and boosts.</p>
     </div>
     <div class="page__actions">
       <button type="button" (click)="submit()" [disabled]="submitting()">
@@ -15,7 +15,13 @@
     <form [formGroup]="form" class="form-grid" (ngSubmit)="submit()">
       <div class="form-row">
         <label for="policyKey">Policy key</label>
-        <input id="policyKey" type="text" formControlName="policyKey" placeholder="e.g. daily-login" />
+        <input
+          id="policyKey"
+          type="text"
+          formControlName="policyKey"
+          placeholder="e.g. daily-login"
+          title="Stable, immutable identifier used by services and grains; lowercase letters, digits, '-' or '_' and cannot change after creation."
+        />
         @if (form.get('policyKey')?.invalid && form.get('policyKey')?.touched) {
           <p class="error">Policy key is required (min 3 characters).</p>
         }
@@ -23,7 +29,12 @@
 
       <div class="form-row">
         <label for="displayName">Display name</label>
-        <input id="displayName" type="text" formControlName="displayName" />
+        <input
+          id="displayName"
+          type="text"
+          formControlName="displayName"
+          title="Operator-friendly name shown in lists and reports; can change between drafts."
+        />
         @if (form.get('displayName')?.invalid && form.get('displayName')?.touched) {
           <p class="error">Display name is required.</p>
         }
@@ -31,32 +42,66 @@
 
       <div class="form-row">
         <label for="description">Description</label>
-        <textarea id="description" rows="2" formControlName="description" placeholder="Purpose or notes"></textarea>
+        <textarea
+          id="description"
+          rows="2"
+          formControlName="description"
+          placeholder="Purpose or notes"
+          title="Optional operational notes; not exposed to players. Capture rollout intent or constraints."
+        ></textarea>
       </div>
 
       <div class="form-row">
         <label for="baseXpAmount">Base XP amount</label>
-        <input id="baseXpAmount" type="number" formControlName="baseXpAmount" />
+        <input
+          id="baseXpAmount"
+          type="number"
+          formControlName="baseXpAmount"
+          title="Starting XP granted before streak multipliers, additive bonuses, and seasonal boosts."
+        />
       </div>
 
       <div class="form-row">
         <label for="currency">Currency</label>
-        <input id="currency" type="text" formControlName="currency" />
+        <input
+          id="currency"
+          type="text"
+          formControlName="currency"
+          title="Currency code for rewards (e.g., XP). Must match backend policy currency expectations."
+        />
       </div>
 
       <div class="form-row">
         <label for="claimWindowStartMinutes">Claim window start (minutes)</label>
-        <input id="claimWindowStartMinutes" type="number" formControlName="claimWindowStartMinutes" min="0" max="1439" />
+        <input
+          id="claimWindowStartMinutes"
+          type="number"
+          formControlName="claimWindowStartMinutes"
+          min="0"
+          max="1439"
+          title="Minutes offset from anchor midnight when daily claim opens (0-1439)."
+        />
       </div>
 
       <div class="form-row">
         <label for="claimWindowDurationHours">Claim window duration (hours)</label>
-        <input id="claimWindowDurationHours" type="number" formControlName="claimWindowDurationHours" min="1" max="24" />
+        <input
+          id="claimWindowDurationHours"
+          type="number"
+          formControlName="claimWindowDurationHours"
+          min="1"
+          max="24"
+          title="How many hours the claim window stays open after the start offset (1-24)."
+        />
       </div>
 
       <div class="form-row">
         <label for="anchorStrategy">Anchor strategy</label>
-        <select id="anchorStrategy" formControlName="anchorStrategy">
+        <select
+          id="anchorStrategy"
+          formControlName="anchorStrategy"
+          title="How reward day boundaries are calculated: player timezone, fixed UTC, or server local; affects claim window alignment."
+        >
           @for (option of anchorOptions; track option.value) {
             <option [value]="option.value">{{ option.label }}</option>
           }
@@ -64,25 +109,259 @@
       </div>
 
       <div class="form-row">
+        <label for="streakModelType">Streak model</label>
+        <select
+          id="streakModelType"
+          formControlName="streakModelType"
+          title="Choose how streak progression behaves; determines allowed parameters, validation rules, and preview outputs."
+        >
+          @for (option of streakModelOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+        <p class="hint">{{ describeStreakModel() }}</p>
+      </div>
+
+      <div class="form-row">
         <label for="graceAllowedMisses">Grace allowed misses</label>
-        <input id="graceAllowedMisses" type="number" formControlName="graceAllowedMisses" min="0" />
+        <input
+          id="graceAllowedMisses"
+          type="number"
+          formControlName="graceAllowedMisses"
+          min="0"
+          title="Maximum missed days allowed within the grace window before streak resets; set to 0 to disable grace."
+        />
       </div>
 
       <div class="form-row">
         <label for="graceWindowDays">Grace window (days)</label>
-        <input id="graceWindowDays" type="number" formControlName="graceWindowDays" min="1" />
+        <input
+          id="graceWindowDays"
+          type="number"
+          formControlName="graceWindowDays"
+          min="1"
+          title="Sliding window in days over which misses are counted for grace; must be ≥ allowed misses."
+        />
       </div>
 
       <div class="form-row">
         <label for="previewSampleWindowDays">Preview window (days)</label>
-        <input id="previewSampleWindowDays" type="number" formControlName="previewSampleWindowDays" min="1" />
+        <input
+          id="previewSampleWindowDays"
+          type="number"
+          formControlName="previewSampleWindowDays"
+          min="1"
+          title="Number of days to simulate when previewing XP payouts; drives preview charts/tables."
+        />
       </div>
 
-      <div class="form-row">
-        <label for="previewDefaultSegment">Preview default segment</label>
-        <input id="previewDefaultSegment" type="text" formControlName="previewDefaultSegment" placeholder="optional" />
+      <div class="form-row checkbox-row">
+        <label>
+          <input
+            type="checkbox"
+            formControlName="enablePreviewDefaultSegment"
+            title="Enable a default segment key for preview calls when operators do not specify one."
+          />
+          Provide default preview segment
+        </label>
       </div>
+
+      @if (form.controls.enablePreviewDefaultSegment.value) {
+        <div class="form-row">
+          <label for="previewDefaultSegment">Preview default segment</label>
+          <input
+            id="previewDefaultSegment"
+            type="text"
+            formControlName="previewDefaultSegment"
+            placeholder="Optional, e.g. vip_a"
+            title="Segment key (alphanumeric/underscore, up to 32 chars) used when previews run without an explicit segment."
+          />
+        </div>
+      }
     </form>
+  </section>
+
+  <section class="panel card">
+    <h2>Streak model parameters</h2>
+    <p class="hint">Configure fields for the selected streak model. Defaults are applied when parameters are optional.</p>
+
+    @if (validationError()) {
+      <div class="card error-card">
+        <p>{{ validationError() }}</p>
+      </div>
+    }
+
+    @switch (form.controls.streakModelType.value) {
+      @case ('PlateauCap') {
+        <div [formGroup]="plateauForm" class="form-grid">
+          <div class="form-row">
+            <label for="plateauDay">Plateau day</label>
+            <input
+              id="plateauDay"
+              type="number"
+              formControlName="plateauDay"
+              min="1"
+              title="1-based day when streak growth stops increasing and applies the plateau multiplier."
+            />
+            @if (plateauForm.controls.plateauDay.invalid && plateauForm.controls.plateauDay.touched) {
+              <p class="error">Plateau day must be 1 or greater.</p>
+            }
+          </div>
+
+          <div class="form-row">
+            <label for="plateauMultiplier">Plateau multiplier</label>
+            <input
+              id="plateauMultiplier"
+              type="number"
+              step="0.01"
+              formControlName="plateauMultiplier"
+              min="0.01"
+              title="Multiplier applied on and after plateau day; use >1 for continued growth or 1 to hard-cap."
+            />
+            @if (plateauForm.controls.plateauMultiplier.invalid && plateauForm.controls.plateauMultiplier.touched) {
+              <p class="error">Multiplier must be positive.</p>
+            }
+          </div>
+        </div>
+      }
+      @case ('WeeklyCycleReset') {
+        <p class="hint">Weekly cycle reset uses a fixed 7-day cadence and does not require additional parameters.</p>
+      }
+      @case ('DecayCurve') {
+        <div [formGroup]="decayForm" class="form-grid">
+          <div class="form-row">
+            <label for="decayPercent">Decay percent (0-1)</label>
+            <input
+              id="decayPercent"
+              type="number"
+              step="0.01"
+              min="0"
+              max="1"
+              formControlName="decayPercent"
+              title="Fraction of progress decayed after grace day (0 = no decay, 1 = full reset)."
+            />
+            @if (decayForm.controls.decayPercent.invalid && decayForm.controls.decayPercent.touched) {
+              <p class="error">Enter a value between 0 and 1.</p>
+            }
+          </div>
+
+          <div class="form-row">
+            <label for="graceDay">Grace day</label>
+            <input
+              id="graceDay"
+              type="number"
+              min="0"
+              formControlName="graceDay"
+              title="Day index before decay begins; days on or before this value are exempt from decay."
+            />
+            @if (decayForm.controls.graceDay.invalid && decayForm.controls.graceDay.touched) {
+              <p class="error">Grace day must be 0 or greater.</p>
+            }
+          </div>
+        </div>
+      }
+      @case ('TieredSeasonalReset') {
+        <div class="list-header">
+          <div>Start day</div>
+          <div>End day</div>
+          <div>Bonus multiplier</div>
+          <div></div>
+        </div>
+        @for (tier of tiers.controls; track $index; let i = $index) {
+          <div class="list-row" [formGroup]="tier">
+            <div class="form-row compact">
+              <input
+                type="number"
+                formControlName="startDay"
+                min="1"
+                title="First day of this tier (inclusive), 1-based; tiers must not overlap and should be ordered."
+              />
+              @if (tier.controls.startDay.invalid && tier.controls.startDay.touched) {
+                <p class="error">>= 1</p>
+              }
+            </div>
+            <div class="form-row compact">
+              <input
+                type="number"
+                formControlName="endDay"
+                min="1"
+                title="Last day of this tier (inclusive); must be greater than or equal to start day."
+              />
+              @if (tier.controls.endDay.invalid && tier.controls.endDay.touched) {
+                <p class="error">>= 1</p>
+              }
+            </div>
+            <div class="form-row compact">
+              <input
+                type="number"
+                formControlName="bonusMultiplier"
+                step="0.01"
+                min="0.01"
+                title="Multiplier applied within this tier before streak curve multipliers are applied."
+              />
+              @if (tier.controls.bonusMultiplier.invalid && tier.controls.bonusMultiplier.touched) {
+                <p class="error">> 0</p>
+              }
+            </div>
+            <div class="actions">
+              <button type="button" (click)="removeTier(i)" [disabled]="tiers.length === 1">Remove</button>
+            </div>
+          </div>
+        }
+        <div class="list-actions">
+          <button type="button" (click)="addTier()">Add tier</button>
+        </div>
+      }
+      @case ('MilestoneMetaReward') {
+        <div class="list-header">
+          <div>Day</div>
+          <div>Reward type</div>
+          <div>Reward value</div>
+          <div></div>
+        </div>
+        @for (milestone of milestones.controls; track $index; let i = $index) {
+          <div class="list-row" [formGroup]="milestone">
+            <div class="form-row compact">
+              <input
+                type="number"
+                formControlName="day"
+                min="1"
+                title="1-based day when the milestone reward triggers."
+              />
+              @if (milestone.controls.day.invalid && milestone.controls.day.touched) {
+                <p class="error">>= 1</p>
+              }
+            </div>
+            <div class="form-row compact">
+              <input
+                type="text"
+                formControlName="rewardType"
+                title="Identifier for the reward type (badge, loot table, etc.) logged to backend."
+              />
+              @if (milestone.controls.rewardType.invalid && milestone.controls.rewardType.touched) {
+                <p class="error">Required</p>
+              }
+            </div>
+            <div class="form-row compact">
+              <input
+                type="text"
+                formControlName="rewardValue"
+                title="Payload/value for the reward type (e.g., badge code, loot table id) stored with the policy."
+              />
+              @if (milestone.controls.rewardValue.invalid && milestone.controls.rewardValue.touched) {
+                <p class="error">Required</p>
+              }
+            </div>
+            <div class="actions">
+              <button type="button" (click)="removeMilestone(i)" [disabled]="milestones.length === 1">Remove</button>
+            </div>
+          </div>
+        }
+        <div class="list-actions">
+          <button type="button" (click)="addMilestone()">Add milestone</button>
+        </div>
+      }
+    }
   </section>
 
   <section class="panel card">

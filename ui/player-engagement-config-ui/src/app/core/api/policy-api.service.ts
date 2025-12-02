@@ -5,7 +5,12 @@ import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from '../../api-base-url.token';
 import { environment } from '../../../environments/environment';
 import { ApiResult } from '../utils/http';
-import { PolicyVersionStatus } from './policy-types';
+import {
+  AnchorStrategy,
+  PolicyVersionStatus,
+  StreakModelParameters,
+  StreakModelType
+} from './policy-types';
 
 export interface StreakCurveEntryDto {
   dayIndex: number;
@@ -29,11 +34,11 @@ export interface PolicyVersionDto {
   currency: string;
   claimWindowStartOffset: string;
   claimWindowDuration: string;
-  anchorStrategy: string;
+  anchorStrategy: AnchorStrategy | string;
   graceAllowedMisses: number;
   graceWindowDays: number;
-  streakModelType: string;
-  streakModelParameters: Record<string, unknown>;
+  streakModelType: StreakModelType | string;
+  streakModelParameters: StreakModelParameters | Record<string, unknown>;
   previewSampleWindowDays: number;
   previewDefaultSegment?: string | null;
   effectiveAt?: string | null;
@@ -66,11 +71,11 @@ export interface CreatePolicyVersionRequestDto {
   currency: string;
   claimWindowStartMinutes: number;
   claimWindowDurationHours: number;
-  anchorStrategy: string;
+  anchorStrategy: AnchorStrategy | string;
   graceAllowedMisses: number;
   graceWindowDays: number;
-  streakModelType: string;
-  streakModelParameters: Record<string, unknown>;
+  streakModelType: StreakModelType;
+  streakModelParameters: StreakModelParameters | Record<string, unknown>;
   previewSampleWindowDays: number;
   previewDefaultSegment?: string | null;
   streakCurve: StreakCurveEntryDto[];

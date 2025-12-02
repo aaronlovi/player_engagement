@@ -1,9 +1,18 @@
 import { CommonModule } from '@angular/common';
 import { Component, signal } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { PolicyApiService, CreatePolicyVersionRequestDto, SeasonalBoostDto, StreakCurveEntryDto } from '../../../core/api/policy-api.service';
-import { AnchorStrategy } from '../../../core/api/policy-types';
+import {
+  AnchorStrategy,
+  DecayCurveParameters,
+  MilestoneMetaRewardParameters,
+  MilestoneParameters,
+  PlateauCapParameters,
+  StreakModelType,
+  TierParameters,
+  TieredSeasonalResetParameters
+} from '../../../core/api/policy-types';
 import { ApiState, createInitialState } from '../../../core/utils/http';
 import { StreakCurveEditorComponent } from '../streak-curve-editor/streak-curve-editor.component';
 import { SeasonalBoostsEditorComponent } from '../seasonal-boosts-editor/seasonal-boosts-editor.component';
@@ -20,7 +29,31 @@ type PolicyEditorForm = {
   graceAllowedMisses: FormControl<number>;
   graceWindowDays: FormControl<number>;
   previewSampleWindowDays: FormControl<number>;
+  streakModelType: FormControl<StreakModelType>;
+  enablePreviewDefaultSegment: FormControl<boolean>;
   previewDefaultSegment: FormControl<string>;
+};
+
+type PlateauForm = {
+  plateauDay: FormControl<number>;
+  plateauMultiplier: FormControl<number>;
+};
+
+type DecayForm = {
+  decayPercent: FormControl<number>;
+  graceDay: FormControl<number>;
+};
+
+type TierForm = {
+  startDay: FormControl<number>;
+  endDay: FormControl<number>;
+  bonusMultiplier: FormControl<number>;
+};
+
+type MilestoneForm = {
+  day: FormControl<number>;
+  rewardType: FormControl<string>;
+  rewardValue: FormControl<string>;
 };
 
 @Component({
@@ -32,9 +65,14 @@ type PolicyEditorForm = {
 })
 export class PolicyEditorComponent {
   readonly form: FormGroup<PolicyEditorForm>;
+  readonly plateauForm: FormGroup<PlateauForm>;
+  readonly decayForm: FormGroup<DecayForm>;
+  readonly tiers: FormArray<FormGroup<TierForm>>;
+  readonly milestones: FormArray<FormGroup<MilestoneForm>>;
 
   protected readonly submitting = signal(false);
   protected readonly state = signal<ApiState<unknown>>(createInitialState());
+  protected readonly validationError = signal<string | null>(null);
   protected readonly streakCurve = signal<StreakCurveEntryDto[]>([
     { dayIndex: 0, multiplier: 1.0, additiveBonusXp: 0, capNextDay: false }
   ]);
@@ -44,6 +82,14 @@ export class PolicyEditorComponent {
     { label: 'Anchor Timezone', value: 'ANCHOR_TIMEZONE' },
     { label: 'Fixed UTC', value: 'FIXED_UTC' },
     { label: 'Server Local', value: 'SERVER_LOCAL' }
+  ];
+
+  readonly streakModelOptions: { label: string; value: StreakModelType; description: string }[] = [
+    { label: 'Plateau cap', value: 'PlateauCap', description: 'Growth caps after a target day.' },
+    { label: 'Weekly cycle reset', value: 'WeeklyCycleReset', description: 'Resets progress every 7 days.' },
+    { label: 'Decay curve', value: 'DecayCurve', description: 'Soft reset after a grace period.' },
+    { label: 'Tiered seasonal reset', value: 'TieredSeasonalReset', description: 'Tier-based bonuses within a season.' },
+    { label: 'Milestone meta reward', value: 'MilestoneMetaReward', description: 'Extra rewards at configured milestones.' }
   ];
 
   constructor(
@@ -62,13 +108,35 @@ export class PolicyEditorComponent {
       graceAllowedMisses: fb.nonNullable.control(0, [Validators.min(0)]),
       graceWindowDays: fb.nonNullable.control(7, [Validators.min(1)]),
       previewSampleWindowDays: fb.nonNullable.control(7, [Validators.min(1)]),
+      streakModelType: fb.nonNullable.control<StreakModelType>('PlateauCap', [Validators.required]),
+      enablePreviewDefaultSegment: fb.nonNullable.control(false),
       previewDefaultSegment: fb.nonNullable.control('')
     });
+
+    this.plateauForm = fb.nonNullable.group<PlateauForm>({
+      plateauDay: fb.nonNullable.control(1, [Validators.required, Validators.min(1)]),
+      plateauMultiplier: fb.nonNullable.control(1.0, [Validators.required, Validators.min(0.01)])
+    });
+
+    this.decayForm = fb.nonNullable.group<DecayForm>({
+      decayPercent: fb.nonNullable.control(0.1, [Validators.required, Validators.min(0), Validators.max(1)]),
+      graceDay: fb.nonNullable.control(0, [Validators.required, Validators.min(0)])
+    });
+
+    this.tiers = fb.nonNullable.array<FormGroup<TierForm>>([this.createTierGroup()]);
+    this.milestones = fb.nonNullable.array<FormGroup<MilestoneForm>>([this.createMilestoneGroup()]);
   }
 
   async submit(): Promise<void> {
+    this.validationError.set(null);
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      return;
+    }
+
+    const modelType = this.form.controls.streakModelType.value;
+    if (!this.ensureParameterFormsValid(modelType)) {
       return;
     }
 
@@ -101,6 +169,11 @@ export class PolicyEditorComponent {
 
   private buildPayload(): { policyKey: string; payload: CreatePolicyVersionRequestDto } {
     const value = this.form.getRawValue();
+    const streakModelType = value.streakModelType;
+    const previewDefaultSegment = value.enablePreviewDefaultSegment
+      ? value.previewDefaultSegment.trim() || undefined
+      : undefined;
+
     return {
       policyKey: value.policyKey,
       payload: {
@@ -113,14 +186,143 @@ export class PolicyEditorComponent {
         anchorStrategy: value.anchorStrategy,
         graceAllowedMisses: value.graceAllowedMisses,
         graceWindowDays: Math.max(value.graceWindowDays, value.graceAllowedMisses),
-        streakModelType: 'PlateauCap',
-        streakModelParameters: { plateauDay: 1, plateauMultiplier: 1.0 },
+        streakModelType,
+        streakModelParameters: this.buildStreakModelParameters(streakModelType),
         previewSampleWindowDays: value.previewSampleWindowDays,
-        previewDefaultSegment: value.previewDefaultSegment || undefined,
+        previewDefaultSegment,
         streakCurve: this.streakCurve(),
         seasonalBoosts: this.seasonalBoosts(),
         effectiveAt: undefined
       }
+    };
+  }
+
+  private buildStreakModelParameters(type: StreakModelType): PlateauCapParameters | DecayCurveParameters | TieredSeasonalResetParameters | MilestoneMetaRewardParameters | Record<string, never> {
+    switch (type) {
+      case 'PlateauCap':
+        return {
+          plateauDay: Math.max(1, Math.trunc(this.plateauForm.controls.plateauDay.value)),
+          plateauMultiplier: this.plateauForm.controls.plateauMultiplier.value
+        };
+      case 'WeeklyCycleReset':
+        return {};
+      case 'DecayCurve':
+        return {
+          decayPercent: this.decayForm.controls.decayPercent.value,
+          graceDay: Math.max(0, Math.trunc(this.decayForm.controls.graceDay.value))
+        };
+      case 'TieredSeasonalReset':
+        return {
+          tiers: this.tiers.controls.map(group => this.mapTier(group))
+        };
+      case 'MilestoneMetaReward':
+        return {
+          milestones: this.milestones.controls.map(group => this.mapMilestone(group))
+        };
+      default:
+        return {};
+    }
+  }
+
+  private ensureParameterFormsValid(type: StreakModelType): boolean {
+    switch (type) {
+      case 'PlateauCap':
+        this.plateauForm.markAllAsTouched();
+        return this.plateauForm.valid;
+      case 'WeeklyCycleReset':
+        return true;
+      case 'DecayCurve':
+        this.decayForm.markAllAsTouched();
+        return this.decayForm.valid;
+      case 'TieredSeasonalReset':
+        this.tiers.markAllAsTouched();
+        if (this.tiers.length === 0) {
+          this.validationError.set('Add at least one tier for tiered seasonal reset.');
+          return false;
+        }
+
+        if (this.tiers.controls.some(group => group.controls.endDay.value < group.controls.startDay.value)) {
+          this.validationError.set('Tier end day must be greater than or equal to start day.');
+          return false;
+        }
+
+        return this.tiers.controls.every(group => group.valid);
+      case 'MilestoneMetaReward':
+        this.milestones.markAllAsTouched();
+        if (this.milestones.length === 0) {
+          this.validationError.set('Add at least one milestone.');
+          return false;
+        }
+
+        return this.milestones.controls.every(group => group.valid);
+      default:
+        return false;
+    }
+  }
+
+  addTier(): void {
+    this.tiers.push(this.createTierGroup());
+  }
+
+  removeTier(index: number): void {
+    if (this.tiers.length === 1) {
+      this.tiers.at(0).reset({
+        startDay: 1,
+        endDay: 1,
+        bonusMultiplier: 1.0
+      });
+      return;
+    }
+
+    this.tiers.removeAt(index);
+  }
+
+  addMilestone(): void {
+    this.milestones.push(this.createMilestoneGroup());
+  }
+
+  removeMilestone(index: number): void {
+    if (this.milestones.length === 1) {
+      this.milestones.at(0).reset({
+        day: 1,
+        rewardType: '',
+        rewardValue: ''
+      });
+      return;
+    }
+
+    this.milestones.removeAt(index);
+  }
+
+  private createTierGroup(): FormGroup<TierForm> {
+    return this.fb.nonNullable.group<TierForm>({
+      startDay: this.fb.nonNullable.control(1, [Validators.required, Validators.min(1)]),
+      endDay: this.fb.nonNullable.control(1, [Validators.required, Validators.min(1)]),
+      bonusMultiplier: this.fb.nonNullable.control(1.0, [Validators.required, Validators.min(0.01)])
+    });
+  }
+
+  private createMilestoneGroup(): FormGroup<MilestoneForm> {
+    return this.fb.nonNullable.group<MilestoneForm>({
+      day: this.fb.nonNullable.control(1, [Validators.required, Validators.min(1)]),
+      rewardType: this.fb.nonNullable.control('', [Validators.required]),
+      rewardValue: this.fb.nonNullable.control('', [Validators.required])
+    });
+  }
+
+  private mapTier(group: FormGroup<TierForm>): TierParameters {
+    return {
+      startDay: Math.max(1, Math.trunc(group.controls.startDay.value)),
+      endDay: Math.max(1, Math.trunc(group.controls.endDay.value)),
+      bonusMultiplier: group.controls.bonusMultiplier.value
+    };
+  }
+
+  private mapMilestone(group: FormGroup<MilestoneForm>): MilestoneParameters {
+    return {
+      day: Math.max(1, Math.trunc(group.controls.day.value)),
+      rewardType: group.controls.rewardType.value.trim(),
+      rewardValue: group.controls.rewardValue.value.trim()
     };
   }
 
@@ -130,5 +332,11 @@ export class PolicyEditorComponent {
 
   onSeasonalBoostsChanged(entries: SeasonalBoostDto[]): void {
     this.seasonalBoosts.set(entries);
+  }
+
+  describeStreakModel(): string {
+    const selected = this.form.controls.streakModelType.value;
+    const option = this.streakModelOptions.find(o => o.value === selected);
+    return option?.description ?? 'Select a streak model';
   }
 }
