@@ -1,4 +1,4 @@
-### Daily Login Bonus – XP Grant
+# Daily Login Bonus – XP Grant
 
 **Section:** Technical Requirements
 
