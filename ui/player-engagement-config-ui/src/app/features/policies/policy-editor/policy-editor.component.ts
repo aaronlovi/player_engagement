@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, signal } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnDestroy, signal } from '@angular/core';
+import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Subscription } from 'rxjs';
 
 import { PolicyApiService, CreatePolicyVersionRequestDto, SeasonalBoostDto, StreakCurveEntryDto } from '../../../core/api/policy-api.service';
 import {
@@ -13,7 +14,7 @@ import {
   TierParameters,
   TieredSeasonalResetParameters
 } from '../../../core/api/policy-types';
-import { ApiState, createInitialState } from '../../../core/utils/http';
+import { ApiState, createInitialState, toApiState } from '../../../core/utils/http';
 import { StreakCurveEditorComponent } from '../streak-curve-editor/streak-curve-editor.component';
 import { SeasonalBoostsEditorComponent } from '../seasonal-boosts-editor/seasonal-boosts-editor.component';
 
@@ -63,7 +64,7 @@ type MilestoneForm = {
   templateUrl: './policy-editor.component.html',
   styleUrls: ['./policy-editor.component.scss']
 })
-export class PolicyEditorComponent {
+export class PolicyEditorComponent implements OnDestroy {
   readonly form: FormGroup<PolicyEditorForm>;
   readonly plateauForm: FormGroup<PlateauForm>;
   readonly decayForm: FormGroup<DecayForm>;
@@ -72,6 +73,8 @@ export class PolicyEditorComponent {
 
   protected readonly submitting = signal(false);
   protected readonly state = signal<ApiState<unknown>>(createInitialState());
+  protected readonly validationMessages = signal<string[]>([]);
+  protected readonly toast = signal<{ kind: 'success' | 'error'; message: string } | null>(null);
   protected readonly validationError = signal<string | null>(null);
   protected readonly streakCurve = signal<StreakCurveEntryDto[]>([
     { dayIndex: 0, multiplier: 1.0, additiveBonusXp: 0, capNextDay: false }
@@ -92,6 +95,8 @@ export class PolicyEditorComponent {
     { label: 'Milestone meta reward', value: 'MilestoneMetaReward', description: 'Extra rewards at configured milestones.' }
   ];
 
+  private previewSegmentSub?: Subscription;
+
   constructor(
     private readonly fb: FormBuilder,
     private readonly api: PolicyApiService
@@ -110,7 +115,9 @@ export class PolicyEditorComponent {
       previewSampleWindowDays: fb.nonNullable.control(7, [Validators.min(1)]),
       streakModelType: fb.nonNullable.control<StreakModelType>('PlateauCap', [Validators.required]),
       enablePreviewDefaultSegment: fb.nonNullable.control(false),
-      previewDefaultSegment: fb.nonNullable.control('')
+      previewDefaultSegment: fb.nonNullable.control({ value: '', disabled: true }, [
+        Validators.pattern(/^[A-Za-z0-9_]{1,32}$/)
+      ])
     });
 
     this.plateauForm = fb.nonNullable.group<PlateauForm>({
@@ -125,10 +132,26 @@ export class PolicyEditorComponent {
 
     this.tiers = fb.nonNullable.array<FormGroup<TierForm>>([this.createTierGroup()]);
     this.milestones = fb.nonNullable.array<FormGroup<MilestoneForm>>([this.createMilestoneGroup()]);
+
+    this.previewSegmentSub = this.form.controls.enablePreviewDefaultSegment.valueChanges.subscribe(enabled => {
+      const control = this.form.controls.previewDefaultSegment;
+      if (enabled) {
+        control.setValidators([Validators.required, Validators.pattern(/^[A-Za-z0-9_]{1,32}$/)]);
+        control.enable({ emitEvent: false });
+      } else {
+        control.clearValidators();
+        control.setValue('', { emitEvent: false });
+        control.disable({ emitEvent: false });
+      }
+
+      control.updateValueAndValidity({ emitEvent: false });
+    });
   }
 
   async submit(): Promise<void> {
     this.validationError.set(null);
+    this.validationMessages.set([]);
+    this.toast.set(null);
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -147,13 +170,13 @@ export class PolicyEditorComponent {
       const { policyKey, payload } = this.buildPayload();
       const result = await this.api.createPolicyVersion(policyKey, payload);
 
-      this.state.set({
-        loading: false,
-        status: result.status,
-        success: result.ok,
-        body: result.body,
-        error: result.ok ? null : result.error ?? 'Request failed'
-      });
+      this.state.set(toApiState(result));
+      if (result.ok) {
+        this.toast.set({ kind: 'success', message: 'Draft created successfully.' });
+      } else {
+        this.validationMessages.set(this.extractValidationMessages(result.body));
+        this.toast.set({ kind: 'error', message: result.error ?? 'Request failed' });
+      }
     } catch (error) {
       this.state.set({
         loading: false,
@@ -162,6 +185,7 @@ export class PolicyEditorComponent {
         body: null,
         error: error instanceof Error ? error.message : 'Unknown error'
       });
+      this.toast.set({ kind: 'error', message: error instanceof Error ? error.message : 'Unknown error' });
     } finally {
       this.submitting.set(false);
     }
@@ -338,5 +362,76 @@ export class PolicyEditorComponent {
     const selected = this.form.controls.streakModelType.value;
     const option = this.streakModelOptions.find(o => o.value === selected);
     return option?.description ?? 'Select a streak model';
+  }
+
+  private extractValidationMessages(body: unknown): string[] {
+    if (!body || typeof body !== 'object') {
+      return [];
+    }
+
+    const messages: string[] = [];
+    const candidate = body as { errors?: Record<string, unknown>; title?: unknown; detail?: unknown; message?: unknown };
+
+    if (candidate.errors && typeof candidate.errors === 'object') {
+      for (const [field, value] of Object.entries(candidate.errors)) {
+        if (Array.isArray(value)) {
+          messages.push(`${field}: ${value.join(', ')}`);
+        } else if (typeof value === 'string') {
+          messages.push(`${field}: ${value}`);
+        }
+      }
+    }
+
+    const extras = [candidate.title, candidate.detail, candidate.message].filter(v => typeof v === 'string') as string[];
+    for (const extra of extras) {
+      if (messages.includes(extra)) continue;
+      messages.push(extra);
+    }
+
+    return messages;
+  }
+
+  showPreviewDefaultSegment(): boolean {
+    return this.form.controls.enablePreviewDefaultSegment.value;
+  }
+
+  previewSegmentInvalid(): boolean {
+    return this.isControlInvalid(this.form.controls.previewDefaultSegment);
+  }
+
+  hasStatus(): boolean {
+    return this.state().status !== null;
+  }
+
+  responseStatus(): number | null {
+    return this.state().status;
+  }
+
+  hasError(): boolean {
+    return !!this.state().error;
+  }
+
+  errorMessage(): string | null {
+    return this.state().error;
+  }
+
+  hasValidationMessages(): boolean {
+    return this.validationMessages().length > 0;
+  }
+
+  validationMessagesList(): string[] {
+    return this.validationMessages();
+  }
+
+  currentToast() {
+    return this.toast();
+  }
+
+  isControlInvalid(control: AbstractControl | null | undefined): boolean {
+    return !!control && control.invalid && control.touched;
+  }
+
+  ngOnDestroy(): void {
+    this.previewSegmentSub?.unsubscribe();
   }
 }

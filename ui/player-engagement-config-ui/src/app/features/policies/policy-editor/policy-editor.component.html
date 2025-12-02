@@ -11,173 +11,197 @@
     </div>
   </header>
 
+  @if (currentToast()) {
+    <section class="toast" [class.toast--success]="currentToast()?.kind === 'success'" [class.toast--error]="currentToast()?.kind === 'error'">
+      <p>{{ currentToast()?.message }}</p>
+    </section>
+  }
+
   <section class="panel card">
     <form [formGroup]="form" class="form-grid" (ngSubmit)="submit()">
-      <div class="form-row">
-        <label for="policyKey">Policy key</label>
-        <input
-          id="policyKey"
-          type="text"
-          formControlName="policyKey"
-          placeholder="e.g. daily-login"
-          title="Stable, immutable identifier used by services and grains; lowercase letters, digits, '-' or '_' and cannot change after creation."
-        />
-        @if (form.get('policyKey')?.invalid && form.get('policyKey')?.touched) {
-          <p class="error">Policy key is required (min 3 characters).</p>
-        }
-      </div>
-
-      <div class="form-row">
-        <label for="displayName">Display name</label>
-        <input
-          id="displayName"
-          type="text"
-          formControlName="displayName"
-          title="Operator-friendly name shown in lists and reports; can change between drafts."
-        />
-        @if (form.get('displayName')?.invalid && form.get('displayName')?.touched) {
-          <p class="error">Display name is required.</p>
-        }
-      </div>
-
-      <div class="form-row">
-        <label for="description">Description</label>
-        <textarea
-          id="description"
-          rows="2"
-          formControlName="description"
-          placeholder="Purpose or notes"
-          title="Optional operational notes; not exposed to players. Capture rollout intent or constraints."
-        ></textarea>
-      </div>
-
-      <div class="form-row">
-        <label for="baseXpAmount">Base XP amount</label>
-        <input
-          id="baseXpAmount"
-          type="number"
-          formControlName="baseXpAmount"
-          title="Starting XP granted before streak multipliers, additive bonuses, and seasonal boosts."
-        />
-      </div>
-
-      <div class="form-row">
-        <label for="currency">Currency</label>
-        <input
-          id="currency"
-          type="text"
-          formControlName="currency"
-          title="Currency code for rewards (e.g., XP). Must match backend policy currency expectations."
-        />
-      </div>
-
-      <div class="form-row">
-        <label for="claimWindowStartMinutes">Claim window start (minutes)</label>
-        <input
-          id="claimWindowStartMinutes"
-          type="number"
-          formControlName="claimWindowStartMinutes"
-          min="0"
-          max="1439"
-          title="Minutes offset from anchor midnight when daily claim opens (0-1439)."
-        />
-      </div>
-
-      <div class="form-row">
-        <label for="claimWindowDurationHours">Claim window duration (hours)</label>
-        <input
-          id="claimWindowDurationHours"
-          type="number"
-          formControlName="claimWindowDurationHours"
-          min="1"
-          max="24"
-          title="How many hours the claim window stays open after the start offset (1-24)."
-        />
-      </div>
-
-      <div class="form-row">
-        <label for="anchorStrategy">Anchor strategy</label>
-        <select
-          id="anchorStrategy"
-          formControlName="anchorStrategy"
-          title="How reward day boundaries are calculated: player timezone, fixed UTC, or server local; affects claim window alignment."
-        >
-          @for (option of anchorOptions; track option.value) {
-            <option [value]="option.value">{{ option.label }}</option>
-          }
-        </select>
-      </div>
-
-      <div class="form-row">
-        <label for="streakModelType">Streak model</label>
-        <select
-          id="streakModelType"
-          formControlName="streakModelType"
-          title="Choose how streak progression behaves; determines allowed parameters, validation rules, and preview outputs."
-        >
-          @for (option of streakModelOptions; track option.value) {
-            <option [value]="option.value">{{ option.label }}</option>
-          }
-        </select>
-        <p class="hint">{{ describeStreakModel() }}</p>
-      </div>
-
-      <div class="form-row">
-        <label for="graceAllowedMisses">Grace allowed misses</label>
-        <input
-          id="graceAllowedMisses"
-          type="number"
-          formControlName="graceAllowedMisses"
-          min="0"
-          title="Maximum missed days allowed within the grace window before streak resets; set to 0 to disable grace."
-        />
-      </div>
-
-      <div class="form-row">
-        <label for="graceWindowDays">Grace window (days)</label>
-        <input
-          id="graceWindowDays"
-          type="number"
-          formControlName="graceWindowDays"
-          min="1"
-          title="Sliding window in days over which misses are counted for grace; must be ≥ allowed misses."
-        />
-      </div>
-
-      <div class="form-row">
-        <label for="previewSampleWindowDays">Preview window (days)</label>
-        <input
-          id="previewSampleWindowDays"
-          type="number"
-          formControlName="previewSampleWindowDays"
-          min="1"
-          title="Number of days to simulate when previewing XP payouts; drives preview charts/tables."
-        />
-      </div>
-
-      <div class="form-row checkbox-row">
-        <label>
-          <input
-            type="checkbox"
-            formControlName="enablePreviewDefaultSegment"
-            title="Enable a default segment key for preview calls when operators do not specify one."
-          />
-          Provide default preview segment
-        </label>
-      </div>
-
-      @if (form.controls.enablePreviewDefaultSegment.value) {
+      <div class="form-section">
+        <h2>Identity & description</h2>
         <div class="form-row">
-          <label for="previewDefaultSegment">Preview default segment</label>
+          <label for="policyKey">Policy key</label>
           <input
-            id="previewDefaultSegment"
+            id="policyKey"
             type="text"
-            formControlName="previewDefaultSegment"
-            placeholder="Optional, e.g. vip_a"
-            title="Segment key (alphanumeric/underscore, up to 32 chars) used when previews run without an explicit segment."
+            formControlName="policyKey"
+            placeholder="e.g. daily-login"
+            title="Stable, immutable identifier used by services and grains; lowercase letters, digits, '-' or '_' and cannot change after creation."
+          />
+          @if (isControlInvalid(form.get('policyKey'))) {
+            <p class="error">Policy key is required (min 3 characters).</p>
+          }
+        </div>
+
+        <div class="form-row">
+          <label for="displayName">Display name</label>
+          <input
+            id="displayName"
+            type="text"
+            formControlName="displayName"
+            title="Operator-friendly name shown in lists and reports; can change between drafts."
+          />
+          @if (isControlInvalid(form.get('displayName'))) {
+            <p class="error">Display name is required.</p>
+          }
+        </div>
+
+        <div class="form-row">
+          <label for="description">Description</label>
+          <textarea
+            id="description"
+            rows="2"
+            formControlName="description"
+            placeholder="Purpose or notes"
+            title="Optional operational notes; not exposed to players. Capture rollout intent or constraints."
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>Base reward</h2>
+        <div class="form-row">
+          <label for="baseXpAmount">Base XP amount</label>
+          <input
+            id="baseXpAmount"
+            type="number"
+            formControlName="baseXpAmount"
+            title="Starting XP granted before streak multipliers, additive bonuses, and seasonal boosts."
           />
         </div>
-      }
+
+        <div class="form-row">
+          <label for="currency">Currency</label>
+          <input
+            id="currency"
+            type="text"
+            formControlName="currency"
+            title="Currency code for rewards (e.g., XP). Must match backend policy currency expectations."
+          />
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>Claim window</h2>
+        <div class="form-row">
+          <label for="claimWindowStartMinutes">Claim window start (minutes)</label>
+          <input
+            id="claimWindowStartMinutes"
+            type="number"
+            formControlName="claimWindowStartMinutes"
+            min="0"
+            max="1439"
+            title="Minutes offset from anchor midnight when daily claim opens (0-1439)."
+          />
+        </div>
+
+        <div class="form-row">
+          <label for="claimWindowDurationHours">Claim window duration (hours)</label>
+          <input
+            id="claimWindowDurationHours"
+            type="number"
+            formControlName="claimWindowDurationHours"
+            min="1"
+            max="24"
+            title="How many hours the claim window stays open after the start offset (1-24)."
+          />
+        </div>
+
+        <div class="form-row">
+          <label for="anchorStrategy">Anchor strategy</label>
+          <select
+            id="anchorStrategy"
+            formControlName="anchorStrategy"
+            title="How reward day boundaries are calculated: player timezone, fixed UTC, or server local; affects claim window alignment."
+          >
+            @for (option of anchorOptions; track option.value) {
+              <option [value]="option.value">{{ option.label }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>Streak & grace</h2>
+        <div class="form-row">
+          <label for="streakModelType">Streak model</label>
+          <select
+            id="streakModelType"
+            formControlName="streakModelType"
+            title="Choose how streak progression behaves; determines allowed parameters, validation rules, and preview outputs."
+          >
+            @for (option of streakModelOptions; track option.value) {
+              <option [value]="option.value">{{ option.label }}</option>
+            }
+          </select>
+          <p class="hint">{{ describeStreakModel() }}</p>
+        </div>
+
+        <div class="form-row">
+          <label for="graceAllowedMisses">Grace allowed misses</label>
+          <input
+            id="graceAllowedMisses"
+            type="number"
+            formControlName="graceAllowedMisses"
+            min="0"
+            title="Maximum missed days allowed within the grace window before streak resets; set to 0 to disable grace."
+          />
+        </div>
+
+        <div class="form-row">
+          <label for="graceWindowDays">Grace window (days)</label>
+          <input
+            id="graceWindowDays"
+            type="number"
+            formControlName="graceWindowDays"
+            min="1"
+            title="Sliding window in days over which misses are counted for grace; must be ≥ allowed misses."
+          />
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>Preview defaults</h2>
+        <div class="form-row">
+          <label for="previewSampleWindowDays">Preview window (days)</label>
+          <input
+            id="previewSampleWindowDays"
+            type="number"
+            formControlName="previewSampleWindowDays"
+            min="1"
+            title="Number of days to simulate when previewing XP payouts; drives preview charts/tables."
+          />
+        </div>
+
+        <div class="form-row checkbox-row">
+          <label>
+            <input
+              type="checkbox"
+              formControlName="enablePreviewDefaultSegment"
+              title="Enable a default segment key for preview calls when operators do not specify one."
+            />
+            Provide default preview segment
+          </label>
+        </div>
+
+        @if (showPreviewDefaultSegment()) {
+          <div class="form-row">
+            <label for="previewDefaultSegment">Preview default segment</label>
+            <input
+              id="previewDefaultSegment"
+              type="text"
+              formControlName="previewDefaultSegment"
+              placeholder="Optional, e.g. vip_a"
+              title="Segment key (alphanumeric/underscore, up to 32 chars) used when previews run without an explicit segment."
+            />
+            @if (previewSegmentInvalid()) {
+              <p class="error">Segment must be alphanumeric/underscore, up to 32 characters.</p>
+            }
+          </div>
+        }
+      </div>
     </form>
   </section>
 
@@ -203,7 +227,7 @@
               min="1"
               title="1-based day when streak growth stops increasing and applies the plateau multiplier."
             />
-            @if (plateauForm.controls.plateauDay.invalid && plateauForm.controls.plateauDay.touched) {
+            @if (isControlInvalid(plateauForm.controls.plateauDay)) {
               <p class="error">Plateau day must be 1 or greater.</p>
             }
           </div>
@@ -218,7 +242,7 @@
               min="0.01"
               title="Multiplier applied on and after plateau day; use >1 for continued growth or 1 to hard-cap."
             />
-            @if (plateauForm.controls.plateauMultiplier.invalid && plateauForm.controls.plateauMultiplier.touched) {
+            @if (isControlInvalid(plateauForm.controls.plateauMultiplier)) {
               <p class="error">Multiplier must be positive.</p>
             }
           </div>
@@ -276,7 +300,7 @@
                 min="1"
                 title="First day of this tier (inclusive), 1-based; tiers must not overlap and should be ordered."
               />
-              @if (tier.controls.startDay.invalid && tier.controls.startDay.touched) {
+              @if (isControlInvalid(tier.controls.startDay)) {
                 <p class="error">>= 1</p>
               }
             </div>
@@ -287,7 +311,7 @@
                 min="1"
                 title="Last day of this tier (inclusive); must be greater than or equal to start day."
               />
-              @if (tier.controls.endDay.invalid && tier.controls.endDay.touched) {
+              @if (isControlInvalid(tier.controls.endDay)) {
                 <p class="error">>= 1</p>
               }
             </div>
@@ -299,7 +323,7 @@
                 min="0.01"
                 title="Multiplier applied within this tier before streak curve multipliers are applied."
               />
-              @if (tier.controls.bonusMultiplier.invalid && tier.controls.bonusMultiplier.touched) {
+              @if (isControlInvalid(tier.controls.bonusMultiplier)) {
                 <p class="error">> 0</p>
               }
             </div>
@@ -328,7 +352,7 @@
                 min="1"
                 title="1-based day when the milestone reward triggers."
               />
-              @if (milestone.controls.day.invalid && milestone.controls.day.touched) {
+              @if (isControlInvalid(milestone.controls.day)) {
                 <p class="error">>= 1</p>
               }
             </div>
@@ -338,7 +362,7 @@
                 formControlName="rewardType"
                 title="Identifier for the reward type (badge, loot table, etc.) logged to backend."
               />
-              @if (milestone.controls.rewardType.invalid && milestone.controls.rewardType.touched) {
+              @if (isControlInvalid(milestone.controls.rewardType)) {
                 <p class="error">Required</p>
               }
             </div>
@@ -348,7 +372,7 @@
                 formControlName="rewardValue"
                 title="Payload/value for the reward type (e.g., badge code, loot table id) stored with the policy."
               />
-              @if (milestone.controls.rewardValue.invalid && milestone.controls.rewardValue.touched) {
+              @if (isControlInvalid(milestone.controls.rewardValue)) {
                 <p class="error">Required</p>
               }
             </div>
@@ -364,14 +388,18 @@
     }
   </section>
 
-  <section class="panel card">
+  <section class="panel card editor-section">
+    <h2>Streak curve</h2>
+    <p class="hint">Define day-by-day multipliers, additive bonuses, and caps for the streak.</p>
     <app-streak-curve-editor
       [entries]="streakCurve()"
       (changed)="onStreakChanged($event)"
     />
   </section>
 
-  <section class="panel card">
+  <section class="panel card editor-section">
+    <h2>Seasonal boosts</h2>
+    <p class="hint">Configure time-bound boosts. Windows may not overlap.</p>
     <app-seasonal-boosts-editor
       [boosts]="seasonalBoosts()"
       (changed)="onSeasonalBoostsChanged($event)"
@@ -379,19 +407,24 @@
   </section>
 
   <section class="panel">
-    @if (state().status) {
-      <p class="meta">Last response status: {{ state().status }}</p>
+    @if (hasStatus()) {
+      <p class="meta">Last response status: {{ responseStatus() }}</p>
     }
 
-    @if (state().error) {
+    @if (hasError()) {
       <div class="card error-card">
-        <p>{{ state().error }}</p>
+        <p>{{ errorMessage() }}</p>
       </div>
     }
 
-    @if (state().success === true) {
-      <div class="card success-card">
-        <p>Draft created successfully.</p>
+    @if (hasValidationMessages()) {
+      <div class="card error-card">
+        <p>Validation issues:</p>
+        <ul>
+          @for (message of validationMessagesList(); track message) {
+            <li>{{ message }}</li>
+          }
+        </ul>
       </div>
     }
   </section>

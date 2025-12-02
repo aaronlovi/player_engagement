@@ -72,6 +72,7 @@ Adopt default .NET formatting: four-space indentation, file-scoped namespaces wh
 - **Forms/validation:** Use reactive forms for admin flows; group controls with explicit types and validators. Surface API validation errors visibly to the user (toasts/inline).
 - **Form UX:** Provide clear, descriptive tooltips (`title` attributes or help icons) on form fields so operators can quickly recall purpose, constraints, and side effects without leaving the page.
 - **Templates:** Keep component templates thin—minimal logic or JS in HTML. Push computations, lookups, and branching into the component class and expose simple bindings for the view.
+- **Template smell check:** If a template binding needs more than a simple property (e.g., multiple dotted accesses or inline `find`/`map`/`filter`), move that logic into the component class and bind to a helper instead.
 - **Error handling:** Wrap API calls in try/catch and surface status/error in view state; avoid unhandled promise rejections.
 - **Styling:** Keep global shell styles minimal; scope feature styles with component stylesheets. Prefer consistent button/link styles and badges across features.
 - **Testing:** Add unit tests for services and key components; e2e for critical flows (create→publish, retire, overrides) when feasible.

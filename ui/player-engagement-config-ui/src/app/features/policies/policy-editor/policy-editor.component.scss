@@ -4,6 +4,24 @@
   gap: 1rem;
 }
 
+.form-section {
+  grid-column: 1 / -1;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background-color: #f8fafc;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+
+  h2 {
+    grid-column: 1 / -1;
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    color: #0f172a;
+  }
+}
+
 .form-row {
   display: flex;
   flex-direction: column;
@@ -101,4 +119,35 @@
   border-color: #86efac;
   background-color: #f0fdf4;
   color: #14532d;
+}
+
+.toast {
+  border: 1px solid #cbd5e1;
+  background-color: #f8fafc;
+  color: #0f172a;
+  border-radius: 0.5rem;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+
+  &.toast--success {
+    border-color: #86efac;
+    background-color: #f0fdf4;
+    color: #14532d;
+  }
+
+  &.toast--error {
+    border-color: #fca5a5;
+    background-color: #fef2f2;
+    color: #991b1b;
+  }
+}
+
+.editor-section {
+  h2 {
+    margin-top: 0;
+  }
+
+  .hint {
+    margin-bottom: 0.5rem;
+  }
 }
