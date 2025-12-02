@@ -32,8 +32,8 @@ select p.policy_id,
        v.created_at,
        v.created_by,
        v.published_at
-from ${schema}.xp_policies p
-join ${schema}.xp_policy_versions v on p.policy_key = v.policy_key
+from ${schema}.daily_login_bonus_xp_policies p
+join ${schema}.daily_login_bonus_xp_policy_versions v on p.policy_key = v.policy_key
 where p.policy_key = @policy_key
   and (@status is null or v.status = @status)
   and (@effective_before is null or v.effective_at is null or v.effective_at <= @effective_before)

@@ -1,7 +1,7 @@
 namespace PlayerEngagement.Infrastructure.Persistence.DTOs.DailyLoginBonus.XPGrant;
 
 /// <summary>
-/// DTO representing a single row from xp_policy_streak_curve.
+/// DTO representing a single row from daily_login_bonus_xp_policy_streak_curve.
 /// </summary>
 public sealed record PolicyStreakCurveEntryDTO(
     long StreakCurveId,

@@ -7,7 +7,7 @@ namespace PlayerEngagement.Infrastructure.Persistence.Statements.DailyLoginBonus
 
 internal sealed class ArchiveCurrentPublishedStmt : PostgresNonQueryDbStmtBase {
     private const string SqlTemplate = @"
-update ${schema}.xp_policy_versions
+update ${schema}.daily_login_bonus_xp_policy_versions
 set status = 'Archived',
     superseded_at = @superseded_at
 where policy_key = @policy_key

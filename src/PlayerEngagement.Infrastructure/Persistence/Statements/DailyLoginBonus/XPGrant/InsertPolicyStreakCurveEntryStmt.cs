@@ -6,7 +6,7 @@ namespace PlayerEngagement.Infrastructure.Persistence.Statements.DailyLoginBonus
 
 internal sealed class InsertPolicyStreakCurveEntryStmt : PostgresNonQueryDbStmtBase {
     private const string SqlTemplate = @"
-insert into ${schema}.xp_policy_streak_curve (
+insert into ${schema}.daily_login_bonus_xp_policy_streak_curve (
     streak_curve_id,
     policy_key,
     policy_version,

@@ -7,7 +7,7 @@ namespace PlayerEngagement.Infrastructure.Persistence.Statements.DailyLoginBonus
 
 internal sealed class InsertPolicyVersionStmt : PostgresNonQueryDbStmtBase {
     private const string SqlTemplate = @"
-insert into ${schema}.xp_policy_versions (
+insert into ${schema}.daily_login_bonus_xp_policy_versions (
     policy_key,
     policy_version,
     status,

@@ -3,7 +3,7 @@ using System;
 namespace PlayerEngagement.Infrastructure.Persistence.DTOs.DailyLoginBonus.XPGrant;
 
 /// <summary>
-/// Projection of xp_policy_versions joined to xp_policies for arbitrary version lookups.
+/// Projection of daily_login_bonus_xp_policy_versions joined to daily_login_bonus_xp_policies for arbitrary version lookups.
 /// </summary>
 public sealed record PolicyVersionDTO(
     long PolicyId,

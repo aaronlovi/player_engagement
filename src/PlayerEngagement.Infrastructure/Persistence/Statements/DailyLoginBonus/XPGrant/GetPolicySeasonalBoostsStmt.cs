@@ -15,7 +15,7 @@ select boost_id,
        multiplier,
        start_utc,
        end_utc
-from ${schema}.xp_policy_seasonal_boosts
+from ${schema}.daily_login_bonus_xp_policy_seasonal_boosts
 where policy_key = @policy_key
   and policy_version = @policy_version
 order by start_utc asc;

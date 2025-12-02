@@ -5,7 +5,7 @@ using Npgsql;
 namespace PlayerEngagement.Infrastructure.Persistence.Statements.DailyLoginBonus.XPGrant;
 
 internal sealed class DeletePolicySeasonalBoostsStmt : PostgresNonQueryDbStmtBase {
-    private const string SqlTemplate = @"delete from ${schema}.xp_policy_seasonal_boosts where policy_key = @policy_key and policy_version = @policy_version;";
+    private const string SqlTemplate = @"delete from ${schema}.daily_login_bonus_xp_policy_seasonal_boosts where policy_key = @policy_key and policy_version = @policy_version;";
 
     private static string? _sql;
     private static readonly object SqlLock = new();

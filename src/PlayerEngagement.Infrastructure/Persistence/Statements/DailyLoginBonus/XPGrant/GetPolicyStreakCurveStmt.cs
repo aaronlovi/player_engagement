@@ -15,7 +15,7 @@ select streak_curve_id,
        multiplier,
        additive_bonus_xp,
        cap_next_day
-from ${schema}.xp_policy_streak_curve
+from ${schema}.daily_login_bonus_xp_policy_streak_curve
 where policy_key = @policy_key
   and policy_version = @policy_version
 order by day_index asc;
