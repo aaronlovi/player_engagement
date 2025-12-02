@@ -212,5 +212,19 @@ describe('ObjectUtils', () => {
             expect(result.left).toEqual({ nested: { a: 1 } } as JsonObject);
             expect(result.right).toEqual({ nested: { a: 2 } } as JsonObject);
         });
+
+        it('should ignore blank vs null while capturing other differences', () => {
+            const obj1 = { status: 'Draft', previewDefaultSegment: '' } as JsonObject;
+            const obj2 = { status: 'Published', previewDefaultSegment: null } as JsonObject;
+            const result = ObjectUtils.getDiffs(obj1, obj2);
+
+            const left = result.left as Record<string, unknown>;
+            const right = result.right as Record<string, unknown>;
+
+            expect(left['status']).toBe('Draft');
+            expect(right['status']).toBe('Published');
+            expect(left['previewDefaultSegment']).toBeUndefined();
+            expect(right['previewDefaultSegment']).toBeUndefined();
+        });
     });
 });
