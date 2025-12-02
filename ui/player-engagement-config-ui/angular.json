@@ -45,6 +45,10 @@
             ],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
+            "allowedCommonJsDependencies": [
+              "fast-json-stable-stringify",
+              "fast-deep-equal"
+            ],
             "assets": [
               {
                 "glob": "**/*",

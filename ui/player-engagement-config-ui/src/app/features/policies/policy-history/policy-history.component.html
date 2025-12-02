@@ -95,17 +95,23 @@
             <thead>
               <tr>
                 <th>Field</th>
-                <th>Version {{ selectedA()!.version.policyVersion }}</th>
-                <th>Version {{ selectedB()!.version.policyVersion }}</th>
+                <th>Version {{ selectedAId() }}</th>
+                <th>Version {{ selectedBId() }}</th>
               </tr>
             </thead>
             <tbody>
-              @for (field of fields; track field.path) {
-                <tr [class.diff]="diffClass(field) === 'diff'">
-                  <td>{{ field.label }}</td>
-                  <td>{{ readValue(selectedA()!, field.path) || '—' }}</td>
-                  <td>{{ readValue(selectedB()!, field.path) || '—' }}</td>
+              @if (diffKeys().length === 0) {
+                <tr>
+                  <td colspan="3" class="muted">No differences detected.</td>
                 </tr>
+              } @else {
+                @for (key of diffKeys(); track key) {
+                  <tr [class.diff]="diffClass(key) === 'diff'">
+                    <td>{{ key }}</td>
+                    <td>{{ formatDiffValue(key, 'left') }}</td>
+                    <td>{{ formatDiffValue(key, 'right') }}</td>
+                  </tr>
+                }
               }
             </tbody>
           </table>
