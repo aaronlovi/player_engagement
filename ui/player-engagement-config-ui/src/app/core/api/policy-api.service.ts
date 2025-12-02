@@ -5,8 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from '../../api-base-url.token';
 import { environment } from '../../../environments/environment';
 import { ApiResult } from '../utils/http';
-
-export type PolicyVersionStatus = 'Draft' | 'Published' | 'Archived';
+import { PolicyVersionStatus } from './policy-types';
 
 export interface StreakCurveEntryDto {
   dayIndex: number;

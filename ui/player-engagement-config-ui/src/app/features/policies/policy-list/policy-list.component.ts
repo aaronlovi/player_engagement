@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, signal } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
-import { PolicyApiService, PolicyListItemDto, PolicyVersionStatus } from '../../../core/api/policy-api.service';
+import { PolicyApiService, PolicyListItemDto } from '../../../core/api/policy-api.service';
+import { PolicyVersionStatus } from '../../../core/api/policy-types';
 import { ApiResult } from '../../../core/utils/http';
 
 type StatusFilter = '' | PolicyVersionStatus;
@@ -15,7 +17,7 @@ type PolicyListForm = {
 @Component({
   selector: 'app-policy-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './policy-list.component.html',
   styleUrls: ['./policy-list.component.scss']
 })

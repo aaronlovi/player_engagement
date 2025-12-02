@@ -1,0 +1,105 @@
+<div class="page">
+  <header class="page__header">
+    <div>
+      <h1>Create policy draft</h1>
+      <p class="page__description">Base fields only. Streak and boosts will be added in later steps.</p>
+    </div>
+    <div class="page__actions">
+      <button type="button" (click)="submit()" [disabled]="submitting()">
+        {{ submitting() ? 'Submitting…' : 'Create draft' }}
+      </button>
+    </div>
+  </header>
+
+  <section class="panel card">
+    <form [formGroup]="form" class="form-grid" (ngSubmit)="submit()">
+      <div class="form-row">
+        <label for="policyKey">Policy key</label>
+        <input id="policyKey" type="text" formControlName="policyKey" placeholder="e.g. daily-login" />
+        @if (form.get('policyKey')?.invalid && form.get('policyKey')?.touched) {
+          <p class="error">Policy key is required (min 3 characters).</p>
+        }
+      </div>
+
+      <div class="form-row">
+        <label for="displayName">Display name</label>
+        <input id="displayName" type="text" formControlName="displayName" />
+        @if (form.get('displayName')?.invalid && form.get('displayName')?.touched) {
+          <p class="error">Display name is required.</p>
+        }
+      </div>
+
+      <div class="form-row">
+        <label for="description">Description</label>
+        <textarea id="description" rows="2" formControlName="description" placeholder="Purpose or notes"></textarea>
+      </div>
+
+      <div class="form-row">
+        <label for="baseXpAmount">Base XP amount</label>
+        <input id="baseXpAmount" type="number" formControlName="baseXpAmount" />
+      </div>
+
+      <div class="form-row">
+        <label for="currency">Currency</label>
+        <input id="currency" type="text" formControlName="currency" />
+      </div>
+
+      <div class="form-row">
+        <label for="claimWindowStartMinutes">Claim window start (minutes)</label>
+        <input id="claimWindowStartMinutes" type="number" formControlName="claimWindowStartMinutes" min="0" max="1439" />
+      </div>
+
+      <div class="form-row">
+        <label for="claimWindowDurationHours">Claim window duration (hours)</label>
+        <input id="claimWindowDurationHours" type="number" formControlName="claimWindowDurationHours" min="1" max="24" />
+      </div>
+
+      <div class="form-row">
+        <label for="anchorStrategy">Anchor strategy</label>
+        <select id="anchorStrategy" formControlName="anchorStrategy">
+          @for (option of anchorOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label for="graceAllowedMisses">Grace allowed misses</label>
+        <input id="graceAllowedMisses" type="number" formControlName="graceAllowedMisses" min="0" />
+      </div>
+
+      <div class="form-row">
+        <label for="graceWindowDays">Grace window (days)</label>
+        <input id="graceWindowDays" type="number" formControlName="graceWindowDays" min="1" />
+      </div>
+
+      <div class="form-row">
+        <label for="previewSampleWindowDays">Preview window (days)</label>
+        <input id="previewSampleWindowDays" type="number" formControlName="previewSampleWindowDays" min="1" />
+      </div>
+
+      <div class="form-row">
+        <label for="previewDefaultSegment">Preview default segment</label>
+        <input id="previewDefaultSegment" type="text" formControlName="previewDefaultSegment" placeholder="optional" />
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    @if (state().status) {
+      <p class="meta">Last response status: {{ state().status }}</p>
+    }
+
+    @if (state().error) {
+      <div class="card error-card">
+        <p>{{ state().error }}</p>
+      </div>
+    }
+
+    @if (state().success === true) {
+      <div class="card success-card">
+        <p>Draft created successfully.</p>
+      </div>
+    }
+  </section>
+</div>

@@ -48,7 +48,7 @@ Keep C# namespaces aligned with folder structure (e.g., file `Policies/Mappers/F
 
 Refer back to this checklist before finalizing any task.
 
-## Coding Style & Naming Conventions
+## Coding Style & Naming Conventions (Backend / .NET)
 
 Adopt default .NET formatting: four-space indentation, file-scoped namespaces when practical, PascalCase for classes and public members, camelCase for locals, and suffix asynchronous methods with `Async`. Keep `internal` types inside their domain project and prefer small, focused files. Run `dotnet format` before submitting changes to ensure consistent spacing, ordering, and usings.
 
@@ -63,6 +63,17 @@ Adopt default .NET formatting: four-space indentation, file-scoped namespaces wh
 - Do not use nested classes/records; keep all types top-level in their own files for clarity.
 - Avoid LINQ in production code paths to reduce allocations; LINQ is acceptable only in unit tests where brevity matters.
 - Provide XML documentation for all public types and members (classes, records, methods, properties, fields) to keep contracts explicit.
+
+## Frontend (Angular) Guidelines
+
+- **Project structure:** Use a feature/core layout. Place shared services/utilities under `src/app/core` (e.g., `core/api`, `core/utils`, `core/models/types`) and feature components under `src/app/features/<area>/...`.
+- **Routing:** Keep routes in `app.routes.ts` and feature-specific routing (when needed) colocated with the feature.
+- **Services/HTTP:** Centralize API services in `core/api`. Prefer typed request/response DTOs and a shared HTTP helper for result/state mapping. Inject base URLs/tokens via Angular DI/environment.
+- **Forms/validation:** Use reactive forms for admin flows; group controls with explicit types and validators. Surface API validation errors visibly to the user (toasts/inline).
+- **Error handling:** Wrap API calls in try/catch and surface status/error in view state; avoid unhandled promise rejections.
+- **Styling:** Keep global shell styles minimal; scope feature styles with component stylesheets. Prefer consistent button/link styles and badges across features.
+- **Testing:** Add unit tests for services and key components; e2e for critical flows (create→publish, retire, overrides) when feasible.
+- **Auth/config:** Read API base URLs and auth headers from environment files; avoid hardcoding secrets.
 
 ## Testing Guidelines
 

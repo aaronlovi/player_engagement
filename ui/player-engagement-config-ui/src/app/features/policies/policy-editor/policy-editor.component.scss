@@ -1,0 +1,52 @@
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  label {
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  input,
+  textarea,
+  select {
+    padding: 0.55rem 0.65rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.45rem;
+    font-size: 0.95rem;
+  }
+
+  textarea {
+    resize: vertical;
+  }
+
+  .error {
+    margin: 0;
+    color: #b91c1c;
+    font-size: 0.85rem;
+  }
+}
+
+.meta {
+  margin: 0;
+  color: #475569;
+}
+
+.error-card {
+  border-color: #fca5a5;
+  background-color: #fef2f2;
+  color: #991b1b;
+}
+
+.success-card {
+  border-color: #86efac;
+  background-color: #f0fdf4;
+  color: #14532d;
+}
