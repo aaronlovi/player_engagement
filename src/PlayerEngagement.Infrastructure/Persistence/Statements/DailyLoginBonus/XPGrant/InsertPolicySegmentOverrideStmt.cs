@@ -7,7 +7,7 @@ namespace PlayerEngagement.Infrastructure.Persistence.Statements.DailyLoginBonus
 
 internal sealed class InsertPolicySegmentOverrideStmt : PostgresNonQueryDbStmtBase {
     private const string SqlTemplate = @"
-insert into ${schema}.xp_policy_segment_overrides (
+insert into ${schema}.daily_login_bonus_xp_policy_segment_overrides (
     override_id,
     segment_key,
     policy_key,

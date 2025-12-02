@@ -7,7 +7,7 @@ namespace PlayerEngagement.Infrastructure.Persistence.Statements.DailyLoginBonus
 
 internal sealed class PublishPolicyVersionStmt : PostgresNonQueryDbStmtBase {
     private const string SqlTemplate = @"
-update ${schema}.xp_policy_versions
+update ${schema}.daily_login_bonus_xp_policy_versions
 set status = 'Published',
     effective_at = @effective_at,
     superseded_at = null,

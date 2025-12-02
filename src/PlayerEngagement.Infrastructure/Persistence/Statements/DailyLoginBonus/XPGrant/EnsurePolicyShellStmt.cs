@@ -8,7 +8,7 @@ namespace PlayerEngagement.Infrastructure.Persistence.Statements.DailyLoginBonus
 
 internal sealed class EnsurePolicyShellStmt : PostgresQueryDbStmtBase {
     private const string SqlTemplate = @"
-insert into ${schema}.xp_policies (policy_key, policy_id, display_name, description, created_at, created_by)
+insert into ${schema}.daily_login_bonus_xp_policies (policy_key, policy_id, display_name, description, created_at, created_by)
 values (@policy_key, @policy_id, @display_name, @description, @created_at, @created_by)
 on conflict (policy_key) do update
     set display_name = excluded.display_name,

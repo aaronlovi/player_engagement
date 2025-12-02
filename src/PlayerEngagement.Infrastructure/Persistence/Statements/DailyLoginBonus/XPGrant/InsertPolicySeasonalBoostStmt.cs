@@ -7,7 +7,7 @@ namespace PlayerEngagement.Infrastructure.Persistence.Statements.DailyLoginBonus
 
 internal sealed class InsertPolicySeasonalBoostStmt : PostgresNonQueryDbStmtBase {
     private const string SqlTemplate = @"
-insert into ${schema}.xp_policy_seasonal_boosts (
+insert into ${schema}.daily_login_bonus_xp_policy_seasonal_boosts (
     policy_key,
     policy_version,
     boost_id,

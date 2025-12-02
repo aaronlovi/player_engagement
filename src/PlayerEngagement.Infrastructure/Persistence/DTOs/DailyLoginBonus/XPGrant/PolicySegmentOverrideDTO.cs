@@ -3,7 +3,7 @@ using System;
 namespace PlayerEngagement.Infrastructure.Persistence.DTOs.DailyLoginBonus.XPGrant;
 
 /// <summary>
-/// DTO representing a row from xp_policy_segment_overrides.
+/// DTO representing a row from daily_login_bonus_xp_policy_segment_overrides.
 /// </summary>
 public sealed record PolicySegmentOverrideDTO(
     long OverrideId,

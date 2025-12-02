@@ -14,7 +14,7 @@ select override_id,
        target_policy_version,
        created_at,
        created_by
-from ${schema}.xp_policy_segment_overrides
+from ${schema}.daily_login_bonus_xp_policy_segment_overrides
 where policy_key = @policy_key;
 """;
 
