@@ -22,7 +22,7 @@ Enhance the Angular admin interface so live-ops teams can manage policy versions
 | 6 | [x] | Preview settings + streak model parameters UI: inputs per model type, toggle default segment, sample window. |
 | 7 | [x] | Validation/feedback: inline field errors, submit blocking, success/error toasts; display API validation messages. |
 | 8 | [x] | Publish/retire actions: buttons with confirm dialogs; call publish/retire endpoints and refresh state. |
-| 9 | [ ] | History/diff view: show version list for a policy and render side-by-side diff of selected versions. |
+| 9 | [x] | History/diff view: show version list for a policy and render side-by-side diff of selected versions. |
 | 10 | [ ] | Segment overrides UI: table/form to map segment → policy version; uses overrides endpoint. |
 | 11 | [ ] | Auth/guards: route guard and action-level checks for operator roles; hide disabled actions. |
 | 12 | [ ] | Testing: unit tests for services/components; e2e happy paths (create→publish, retire, edit overrides). |
