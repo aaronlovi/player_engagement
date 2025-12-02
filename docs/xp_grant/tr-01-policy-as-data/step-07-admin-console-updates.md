@@ -18,7 +18,7 @@ Enhance the Angular admin interface so live-ops teams can manage policy versions
 | 2 | [x] | Policy list view: render paged list with status/effective dates; link to detail/edit routes. |
 | 3 | [x] | Policy create/edit shell: scaffold form layout with base fields (display name, XP, currency, claim window, anchor strategy, grace). |
 | 4 | [x] | Streak curve editor component: grid for day/multiplier/bonus/cap; add row/reorder; client-side validation per rules. |
-| 5 | [ ] | Seasonal boosts editor: list/add/edit boost rows with date pickers and overlap validation. |
+| 5 | [x] | Seasonal boosts editor: list/add/edit boost rows with date pickers and overlap validation. |
 | 6 | [ ] | Preview settings + streak model parameters UI: inputs per model type, toggle default segment, sample window. |
 | 7 | [ ] | Validation/feedback: inline field errors, submit blocking, success/error toasts; display API validation messages. |
 | 8 | [ ] | Publish/retire actions: buttons with confirm dialogs; call publish/retire endpoints and refresh state. |
@@ -41,3 +41,13 @@ Enhance the Angular admin interface so live-ops teams can manage policy versions
 
 - Do operators require draft collaboration features (e.g., comments, staged approvals)?
 - Should the UI visualize projected XP payouts for different streak models via charts?
+
+## Streak Model Reference (for UI wiring)
+
+| Model | Key Parameters | Notes |
+| --- | --- | --- |
+| PlateauCap | `plateauDay:int`, `plateauMultiplier:decimal` | Multiplier caps after plateauDay. |
+| WeeklyCycleReset | *(none)* | Fixed 7-day cycle. |
+| DecayCurve | `decayPercent:decimal`, `graceDay:int` | Decay applied after graceDay. |
+| TieredSeasonalReset | `tiers:[{ startDay:int, endDay:int, bonusMultiplier:decimal }]` | Non-overlapping tiers. |
+| MilestoneMetaReward | `milestones:[{ day:int, rewardType:string, rewardValue:string }]` | Milestone-based rewards. |

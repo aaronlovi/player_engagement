@@ -92,6 +92,13 @@
     />
   </section>
 
+  <section class="panel card">
+    <app-seasonal-boosts-editor
+      [boosts]="seasonalBoosts()"
+      (changed)="onSeasonalBoostsChanged($event)"
+    />
+  </section>
+
   <section class="panel">
     @if (state().status) {
       <p class="meta">Last response status: {{ state().status }}</p>

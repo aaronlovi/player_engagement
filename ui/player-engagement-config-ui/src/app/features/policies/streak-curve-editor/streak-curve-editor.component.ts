@@ -22,7 +22,6 @@ export class StreakCurveEditorComponent {
   @Input() set entries(value: StreakCurveEntryDto[] | null) {
     const safe = value ?? [];
     this.rows = safe.map((e) => this.createRow(e));
-    this.emitChanges();
   }
 
   @Output() changed = new EventEmitter<StreakCurveEntryDto[]>();
@@ -31,7 +30,7 @@ export class StreakCurveEditorComponent {
   protected readonly hasError = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
 
-  constructor(private readonly fb: FormBuilder) {}
+  constructor(private readonly fb: FormBuilder) { }
 
   addRow(): void {
     const nextDay = this.rows.length > 0 ? (this.rows[this.rows.length - 1].getRawValue().dayIndex ?? 0) + 1 : 0;

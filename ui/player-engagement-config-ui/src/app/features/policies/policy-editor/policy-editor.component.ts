@@ -2,10 +2,11 @@ import { CommonModule } from '@angular/common';
 import { Component, signal } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { PolicyApiService, CreatePolicyVersionRequestDto, StreakCurveEntryDto } from '../../../core/api/policy-api.service';
+import { PolicyApiService, CreatePolicyVersionRequestDto, SeasonalBoostDto, StreakCurveEntryDto } from '../../../core/api/policy-api.service';
 import { AnchorStrategy } from '../../../core/api/policy-types';
 import { ApiState, createInitialState } from '../../../core/utils/http';
 import { StreakCurveEditorComponent } from '../streak-curve-editor/streak-curve-editor.component';
+import { SeasonalBoostsEditorComponent } from '../seasonal-boosts-editor/seasonal-boosts-editor.component';
 
 type PolicyEditorForm = {
   policyKey: FormControl<string>;
@@ -25,7 +26,7 @@ type PolicyEditorForm = {
 @Component({
   selector: 'app-policy-editor',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, StreakCurveEditorComponent],
+  imports: [CommonModule, ReactiveFormsModule, StreakCurveEditorComponent, SeasonalBoostsEditorComponent],
   templateUrl: './policy-editor.component.html',
   styleUrls: ['./policy-editor.component.scss']
 })
@@ -37,6 +38,7 @@ export class PolicyEditorComponent {
   protected readonly streakCurve = signal<StreakCurveEntryDto[]>([
     { dayIndex: 0, multiplier: 1.0, additiveBonusXp: 0, capNextDay: false }
   ]);
+  protected readonly seasonalBoosts = signal<SeasonalBoostDto[]>([]);
 
   readonly anchorOptions: { label: string; value: AnchorStrategy }[] = [
     { label: 'Anchor Timezone', value: 'ANCHOR_TIMEZONE' },
@@ -116,7 +118,7 @@ export class PolicyEditorComponent {
         previewSampleWindowDays: value.previewSampleWindowDays,
         previewDefaultSegment: value.previewDefaultSegment || undefined,
         streakCurve: this.streakCurve(),
-        seasonalBoosts: [],
+        seasonalBoosts: this.seasonalBoosts(),
         effectiveAt: undefined
       }
     };
@@ -124,5 +126,9 @@ export class PolicyEditorComponent {
 
   onStreakChanged(entries: StreakCurveEntryDto[]): void {
     this.streakCurve.set(entries);
+  }
+
+  onSeasonalBoostsChanged(entries: SeasonalBoostDto[]): void {
+    this.seasonalBoosts.set(entries);
   }
 }
