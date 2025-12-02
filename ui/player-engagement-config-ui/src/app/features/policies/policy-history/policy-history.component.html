@@ -1,0 +1,118 @@
+<div class="page">
+  <header class="page__header">
+    <div>
+      <h1>Policy history</h1>
+      <p class="page__description">View versions and compare differences.</p>
+    </div>
+    <div class="page__actions">
+      <button type="button" (click)="fetch()">
+        Refresh
+      </button>
+      <a class="link-button" routerLink="/policies">Back to list</a>
+    </div>
+  </header>
+
+  <section class="panel card">
+    <form [formGroup]="form" class="filter-form" (ngSubmit)="fetch()">
+      <div class="form-row">
+        <label for="policyKey">Policy key</label>
+        <input id="policyKey" type="text" formControlName="policyKey" placeholder="e.g. daily-login" />
+      </div>
+
+      <div class="form-row">
+        <label for="limit">Limit</label>
+        <input id="limit" type="number" formControlName="limit" min="1" max="200" />
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    @if (state().status) {
+      <p class="meta">Last response status: {{ state().status }}</p>
+    }
+
+    @if (versions().length > 0) {
+      <div class="card">
+        <h2>Versions</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Version</th>
+                <th>Status</th>
+                <th>Effective</th>
+                <th>Published</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of versions(); track item.version.policyVersion) {
+                <tr>
+                  <td>{{ item.version.policyVersion }}</td>
+                  <td>{{ item.version.status }}</td>
+                  <td>{{ item.version.effectiveAt || '—' }}</td>
+                  <td>{{ item.version.publishedAt || '—' }}</td>
+                  <td>{{ item.version.createdAt }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    } @else if (state().loading) {
+      <p class="muted">Loading…</p>
+    } @else if (state().success === true) {
+      <p class="muted">No versions found.</p>
+    }
+  </section>
+
+  @if (selectedA() || selectedB()) {
+    <section class="panel card">
+      <h2>Diff</h2>
+      <div class="diff-controls">
+        <div class="form-row">
+          <label for="versionA">Version A</label>
+          <select id="versionA" #selectA [value]="selectedAId()" (change)="onSelectA(selectA.value)">
+            @for (item of versions(); track item.version.policyVersion) {
+              <option [value]="item.version.policyVersion">{{ item.version.policyVersion }} ({{ item.version.status }})</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="versionB">Version B</label>
+          <select id="versionB" #selectB [value]="selectedBId()" (change)="onSelectB(selectB.value)">
+            @for (item of versions(); track item.version.policyVersion) {
+              <option [value]="item.version.policyVersion">{{ item.version.policyVersion }} ({{ item.version.status }})</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      @if (selectedA() && selectedB()) {
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Version {{ selectedA()!.version.policyVersion }}</th>
+                <th>Version {{ selectedB()!.version.policyVersion }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (field of fields; track field.path) {
+                <tr [class.diff]="diffClass(field) === 'diff'">
+                  <td>{{ field.label }}</td>
+                  <td>{{ readValue(selectedA()!, field.path) || '—' }}</td>
+                  <td>{{ readValue(selectedB()!, field.path) || '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="muted">Select two versions to compare.</p>
+      }
+    </section>
+  }
+</div>
