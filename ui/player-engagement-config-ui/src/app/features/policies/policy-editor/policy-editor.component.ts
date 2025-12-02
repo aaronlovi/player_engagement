@@ -2,9 +2,10 @@ import { CommonModule } from '@angular/common';
 import { Component, signal } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { PolicyApiService, CreatePolicyVersionRequestDto } from '../../../core/api/policy-api.service';
+import { PolicyApiService, CreatePolicyVersionRequestDto, StreakCurveEntryDto } from '../../../core/api/policy-api.service';
 import { AnchorStrategy } from '../../../core/api/policy-types';
 import { ApiState, createInitialState } from '../../../core/utils/http';
+import { StreakCurveEditorComponent } from '../streak-curve-editor/streak-curve-editor.component';
 
 type PolicyEditorForm = {
   policyKey: FormControl<string>;
@@ -24,7 +25,7 @@ type PolicyEditorForm = {
 @Component({
   selector: 'app-policy-editor',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, StreakCurveEditorComponent],
   templateUrl: './policy-editor.component.html',
   styleUrls: ['./policy-editor.component.scss']
 })
@@ -33,6 +34,9 @@ export class PolicyEditorComponent {
 
   protected readonly submitting = signal(false);
   protected readonly state = signal<ApiState<unknown>>(createInitialState());
+  protected readonly streakCurve = signal<StreakCurveEntryDto[]>([
+    { dayIndex: 0, multiplier: 1.0, additiveBonusXp: 0, capNextDay: false }
+  ]);
 
   readonly anchorOptions: { label: string; value: AnchorStrategy }[] = [
     { label: 'Anchor Timezone', value: 'ANCHOR_TIMEZONE' },
@@ -111,12 +115,14 @@ export class PolicyEditorComponent {
         streakModelParameters: { plateauDay: 1, plateauMultiplier: 1.0 },
         previewSampleWindowDays: value.previewSampleWindowDays,
         previewDefaultSegment: value.previewDefaultSegment || undefined,
-        streakCurve: [
-          { dayIndex: 0, multiplier: 1.0, additiveBonusXp: 0, capNextDay: false }
-        ],
+        streakCurve: this.streakCurve(),
         seasonalBoosts: [],
         effectiveAt: undefined
       }
     };
+  }
+
+  onStreakChanged(entries: StreakCurveEntryDto[]): void {
+    this.streakCurve.set(entries);
   }
 }

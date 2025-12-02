@@ -85,6 +85,13 @@
     </form>
   </section>
 
+  <section class="panel card">
+    <app-streak-curve-editor
+      [entries]="streakCurve()"
+      (changed)="onStreakChanged($event)"
+    />
+  </section>
+
   <section class="panel">
     @if (state().status) {
       <p class="meta">Last response status: {{ state().status }}</p>
