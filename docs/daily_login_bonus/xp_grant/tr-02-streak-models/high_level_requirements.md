@@ -6,12 +6,15 @@ Support configurable daily login streak models for the XP Grant so policies can 
 
 ## Primary Requirements
 
-- Support the five models: Plateau/Cap, Weekly Cycle Reset, Decay/Soft Reset (round down/clamp to min 1), Tiered Seasonal Reset, and Milestone Meta-Reward.
+- Support the five models: Plateau/Cap, Weekly Cycle Reset, Decay/Soft Reset (round down/clamp to min 1), Tiered Seasonal Reset, and Milestone Meta-Reward (XP-only/flag until non-XP assets exist).
 - Streak computation is deterministic and pure-function: given policy, prior streak state, reward-day id, and claim timing, the next state and XP modifiers are predictable.
 - Policy selection drives behavior: every claim references a policy version whose streak model dictates streak transitions and XP curve resolution.
 - Idempotent claims: multiple attempts in the same reward day return the same streak/XP result; streak state mutates only once per reward day.
 - Timezone-safe: streak evaluation uses reward-day boundaries derived from anchor timezone/claim window (TR-03) to avoid DST or tz exploits.
 - Observability: emit logs/metrics tracing streak model decisions (model type, day index, grace/decay usage, season boundary hits, milestone unlocks).
+- Milestone handling options and the current stance are documented in `docs/daily_login_bonus/xp_grant/milestone_options.md`.
+- Grace is applied before model-specific mechanics, capped by policy, and does not cross season boundaries.
+- Preview/eligibility responses should include upcoming milestone/season notes (e.g., “milestone in 2 days”, “season resets in 3 days”).
 
 ## Outcomes & Acceptance
 

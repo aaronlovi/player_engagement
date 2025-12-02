@@ -16,18 +16,22 @@
 
 - Plateau/Cap: increment streak until `PlateauDay`, then clamp; apply `PlateauMultiplier` at and after plateau. Missed day resets to 0 unless grace window covers it.
 - Weekly Cycle Reset: streak counts 1..7 and resets to 1 on the 8th reward day after a claimed sequence; grace only prevents breakage within the grace window.
-– Decay/Soft Reset: after `GraceDay`, apply `DecayPercent`, round **down** (floor) to an integer, then clamp to at least 1: `next = max(1, floor(current_streak * (1 - decayPercent)))`. Use this effective streak day for the streak curve.
-- Tiered Seasonal Reset: streak accumulates within season; reset to day 1 on season boundary. Tiers define day ranges and multipliers/bonuses; tiers must not overlap.
-- Milestone Meta-Reward: streak growth follows the curve; when `current_streak` reaches configured milestones, emit meta-reward events/flags and prevent duplicate milestone grants.
+- Decay/Soft Reset: after `GraceDay`, apply `DecayPercent`, round **down** (floor) to an integer, then clamp to at least 1: `next = max(1, floor(current_streak * (1 - decayPercent)))`. Use this effective streak day for the streak curve.
+- Tiered Seasonal Reset: streak accumulates within season; reset to day 1 on the first claim after the hard season end. Season boundaries come from an Orleans SeasonGrain (authoritative start/end) referenced by season_id; policy seasonal metadata is a fallback. The grain reads season data via the Dbm service on activation and re-reads at season end to pick up the next season. No carryover into the next season. Tiers define day ranges and multipliers/bonuses; tiers must not overlap.
+- Milestone Meta-Reward: streak growth follows the curve; when `current_streak` reaches configured milestones, apply normal XP and mark the milestone in award/state for idempotency. Defer external reward events until non-XP assets exist.
 
 ## Grace & Miss Handling
 
-- Miss detection is based on gap between `last_reward_day_id` and current reward day. If gap ≤ configured grace window and remaining `grace_allowed_misses` permits, maintain streak; otherwise reset per model rules.
+- Miss detection is based on gap between `last_reward_day_id` and current reward day. If gap ≤ configured grace window and remaining `grace_allowed_misses` permits, apply grace **before** any model-specific mechanics (e.g., decay/reset) and keep the streak intact; otherwise apply the model rules.
+- Grace consumption is capped at the policy level (total `grace_allowed_misses`); consume one per missed reward day covered. When grace covers a miss, the current claim advances the streak by 1 (subject to curve caps).
+- Grace cannot bridge season boundaries in Tiered Seasonal Reset; streak resets on the first claim after the hard season end.
 - Track `grace_used` and surface in analytics; apply grace before model-specific decay/reset logic.
 
 ## XP Calculation
 
-– Streak curve day index is derived from effective streak day after applying model rules (including decay floor+clamp). The curve can cap growth; model multipliers/bonuses compose with curve values without exceeding policy-defined limits.
+- Streak curve day index is derived from effective streak day after applying model rules (including decay floor+clamp). The curve can cap growth; model multipliers/bonuses compose with curve values without exceeding policy-defined limits. Milestone hits are recorded in award metadata/state but do not emit external rewards yet.
+- See `docs/daily_login_bonus/xp_grant/milestone_options.md` for milestone handling options and the current XP-only/flag stance.
+- Eligibility/preview should surface upcoming streak milestones (days to next milestone) and season boundary notes (days until reset) alongside projected XP.
 
 - All arithmetic uses integers for day indices and decimals for multipliers; avoid floating-point drift.
 
