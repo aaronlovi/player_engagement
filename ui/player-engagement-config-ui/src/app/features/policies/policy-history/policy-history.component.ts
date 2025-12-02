@@ -87,13 +87,14 @@ export class PolicyHistoryComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Capture previous selections BEFORE resetting
+    const previousA = this.selectedA()?.version.policyVersion;
+    const previousB = this.selectedB()?.version.policyVersion;
+
     this.state.set({ ...createInitialState(), loading: true });
     this.versions.set([]);
     this.selectedA.set(null);
     this.selectedB.set(null);
-
-    const previousA = this.selectedA()?.version.policyVersion;
-    const previousB = this.selectedB()?.version.policyVersion;
 
     const { policyKey, limit } = this.form.getRawValue();
     const result = await this.api.listPolicyVersions(policyKey, { limit });
@@ -111,29 +112,52 @@ export class PolicyHistoryComponent implements OnInit, OnDestroy {
 
     this.selectedA.set(matchA ?? items.at(0) ?? null);
     this.selectedB.set(matchB ?? items.at(1) ?? matchA ?? items.at(0) ?? null);
-    this.computeDiffs();
+    this.clearDiff();
   }
 
   onSelectA(value: string): void {
     const parsed = Number(value);
     const match = this.versions().find(v => v.version.policyVersion === parsed);
     this.selectedA.set(match ?? null);
-    this.computeDiffs();
+    this.clearDiff();
   }
 
   onSelectB(value: string): void {
     const parsed = Number(value);
     const match = this.versions().find(v => v.version.policyVersion === parsed);
     this.selectedB.set(match ?? null);
+    this.clearDiff();
+  }
+
+  /** Clears the current diff results */
+  clearDiff(): void {
+    this.diffs.set(null);
+    this.diffKeys.set([]);
+  }
+
+  /** Triggers diff computation - called by Compare button */
+  compare(): void {
     this.computeDiffs();
   }
 
-  selectedAId(): string | number {
-    return this.selectedA()?.version.policyVersion ?? '';
+  selectedAId(): string {
+    const id = this.selectedA()?.version.policyVersion;
+    return id !== undefined ? String(id) : '';
   }
 
-  selectedBId(): string | number {
-    return this.selectedB()?.version.policyVersion ?? '';
+  selectedBId(): string {
+    const id = this.selectedB()?.version.policyVersion;
+    return id !== undefined ? String(id) : '';
+  }
+
+  /** Checks if the given version number is selected in dropdown A */
+  isSelectedA(policyVersion: number): boolean {
+    return this.selectedA()?.version.policyVersion === policyVersion;
+  }
+
+  /** Checks if the given version number is selected in dropdown B */
+  isSelectedB(policyVersion: number): boolean {
+    return this.selectedB()?.version.policyVersion === policyVersion;
   }
 
   private normalizeItems(policyKey: string, body: unknown): PolicyListItemDto[] {
@@ -171,89 +195,67 @@ export class PolicyHistoryComponent implements OnInit, OnDestroy {
     });
   }
 
-  private normalizeStatus(status: any): string {
+  private readonly statusMap: Record<number, string> = {
+    1: 'Draft',
+    2: 'Published',
+    3: 'Archived'
+  };
+
+  private normalizeStatus(status: unknown): string {
     if (status === null || status === undefined) return 'Draft';
     if (typeof status === 'number') {
-      switch (status) {
-        case 1:
-          return 'Draft';
-        case 2:
-          return 'Published';
-        case 3:
-          return 'Archived';
-        default:
-          return 'Draft';
-      }
+      return this.statusMap[status] ?? 'Draft';
     }
-
-    const text = status.toString();
-    if (!text) return 'Draft';
-    if (/^published$/i.test(text)) return 'Published';
-    if (/^archived$/i.test(text)) return 'Archived';
+    const text = String(status).toLowerCase();
+    if (text === 'published') return 'Published';
+    if (text === 'archived') return 'Archived';
     return 'Draft';
   }
 
   diffClass(key: string): string {
-    const diff = this.diffs();
-    if (!diff) return '';
-
-    const lv = (diff.left as any)[key];
-    const rv = (diff.right as any)[key];
-    return ObjectUtils.deepEqual(lv, rv) ? '' : 'diff';
+    return this.diffKeys().includes(key) ? 'diff' : '';
   }
 
-  readValue(item: PolicyListItemDto, path: keyof PolicyListItemDto['version']): unknown {
-    return (item?.version as any)?.[path];
+  /** Returns a friendly label for a diff field key */
+  fieldLabel(key: string): string {
+    const field = this.fields.find(f => f.path === key);
+    return field?.label ?? key;
+  }
+
+  /** Converts a policy version to a JsonObject for diffing */
+  private versionToJsonObject(v: PolicyListItemDto['version']): JsonObject {
+    return {
+      status: v.status,
+      baseXpAmount: v.baseXpAmount,
+      currency: v.currency,
+      claimWindowStartOffset: v.claimWindowStartOffset,
+      claimWindowDuration: v.claimWindowDuration,
+      anchorStrategy: v.anchorStrategy,
+      graceAllowedMisses: v.graceAllowedMisses,
+      graceWindowDays: v.graceWindowDays,
+      streakModelType: v.streakModelType,
+      streakModelParameters: v.streakModelParameters as JsonObject,
+      previewSampleWindowDays: v.previewSampleWindowDays,
+      previewDefaultSegment: v.previewDefaultSegment,
+      effectiveAt: v.effectiveAt,
+      supersededAt: v.supersededAt,
+      createdAt: v.createdAt,
+      createdBy: v.createdBy,
+      publishedAt: v.publishedAt
+    } as JsonObject;
   }
 
   private computeDiffs(): void {
     const a = this.selectedA();
     const b = this.selectedB();
     if (!a || !b) {
-        this.diffs.set(null);
-        this.diffKeys.set([]);
-        return;
+      this.diffs.set(null);
+      this.diffKeys.set([]);
+      return;
     }
 
-    const left: JsonObject = {
-      status: a.version.status as any,
-      baseXpAmount: a.version.baseXpAmount,
-      currency: a.version.currency,
-      claimWindowStartOffset: a.version.claimWindowStartOffset,
-      claimWindowDuration: a.version.claimWindowDuration,
-      anchorStrategy: a.version.anchorStrategy,
-      graceAllowedMisses: a.version.graceAllowedMisses,
-      graceWindowDays: a.version.graceWindowDays,
-      streakModelType: a.version.streakModelType,
-      streakModelParameters: a.version.streakModelParameters as any,
-      previewSampleWindowDays: a.version.previewSampleWindowDays,
-      previewDefaultSegment: a.version.previewDefaultSegment as any,
-      effectiveAt: a.version.effectiveAt as any,
-      supersededAt: a.version.supersededAt as any,
-      createdAt: a.version.createdAt as any,
-      createdBy: a.version.createdBy,
-      publishedAt: a.version.publishedAt as any
-    };
-
-    const right: JsonObject = {
-      status: b.version.status as any,
-      baseXpAmount: b.version.baseXpAmount,
-      currency: b.version.currency,
-      claimWindowStartOffset: b.version.claimWindowStartOffset,
-      claimWindowDuration: b.version.claimWindowDuration,
-      anchorStrategy: b.version.anchorStrategy,
-      graceAllowedMisses: b.version.graceAllowedMisses,
-      graceWindowDays: b.version.graceWindowDays,
-      streakModelType: b.version.streakModelType,
-      streakModelParameters: b.version.streakModelParameters as any,
-      previewSampleWindowDays: b.version.previewSampleWindowDays,
-      previewDefaultSegment: b.version.previewDefaultSegment as any,
-      effectiveAt: b.version.effectiveAt as any,
-      supersededAt: b.version.supersededAt as any,
-      createdAt: b.version.createdAt as any,
-      createdBy: b.version.createdBy,
-      publishedAt: b.version.publishedAt as any
-    };
+    const left = this.versionToJsonObject(a.version);
+    const right = this.versionToJsonObject(b.version);
 
     const diff = ObjectUtils.getDiffs(left, right);
     this.diffs.set(diff);

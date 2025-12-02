@@ -2,6 +2,29 @@
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+
+  button[type="submit"] {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.95rem;
+    border-radius: 0.5rem;
+    border: 1px solid #2563eb;
+    background-color: #2563eb;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background-color: #1d4ed8;
+      border-color: #1d4ed8;
+    }
+
+    &:disabled {
+      background-color: #94a3b8;
+      border-color: #94a3b8;
+      cursor: not-allowed;
+    }
+  }
 }
 
 .form-row {
@@ -21,6 +44,10 @@
     border-radius: 0.45rem;
     font-size: 0.95rem;
   }
+
+  &--button {
+    justify-content: flex-end;
+  }
 }
 
 .meta {
@@ -28,8 +55,18 @@
   color: #475569;
 }
 
+.error {
+  margin: 0 0 0.5rem 0;
+  color: #dc2626;
+  font-weight: 600;
+}
+
 .muted {
   color: #94a3b8;
+
+  &.hint {
+    font-style: italic;
+  }
 }
 
 .table-wrapper {
@@ -63,4 +100,27 @@ table {
   gap: 1rem;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   margin-bottom: 1rem;
+
+  button {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.95rem;
+    border-radius: 0.5rem;
+    border: 1px solid #2563eb;
+    background-color: #2563eb;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background-color: #1d4ed8;
+      border-color: #1d4ed8;
+    }
+
+    &:disabled {
+      background-color: #94a3b8;
+      border-color: #94a3b8;
+      cursor: not-allowed;
+    }
+  }
 }
