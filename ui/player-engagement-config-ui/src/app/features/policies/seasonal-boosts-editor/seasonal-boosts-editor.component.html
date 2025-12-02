@@ -1,0 +1,50 @@
+<div class="boosts-editor">
+  <div class="boosts-editor__header">
+    <div>
+      <h3>Seasonal boosts</h3>
+      <p class="muted">Add boost windows; overlaps are not allowed.</p>
+    </div>
+    <button type="button" (click)="addRow()">Add boost</button>
+  </div>
+
+  @if (error()) {
+    <div class="alert alert--error">
+      {{ error() }}
+    </div>
+  }
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Label</th>
+          <th>Multiplier</th>
+          <th>Start (UTC)</th>
+          <th>End (UTC)</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows; let i = $index; track i) {
+          <tr>
+            <td>
+              <input type="text" [formControl]="row.controls.label" (input)="onFieldChange()" />
+            </td>
+            <td>
+              <input type="number" step="0.01" [formControl]="row.controls.multiplier" (input)="onFieldChange()" min="1" />
+            </td>
+            <td>
+              <input type="datetime-local" [formControl]="row.controls.startUtc" (change)="onFieldChange()" />
+            </td>
+            <td>
+              <input type="datetime-local" [formControl]="row.controls.endUtc" (change)="onFieldChange()" />
+            </td>
+            <td>
+              <button type="button" class="ghost" (click)="removeRow(i)">Remove</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

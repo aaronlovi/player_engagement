@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <EmbeddedResource Include="Persistence/Migrations/*.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="InnoAndLogic.Persistence" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../PlayerEngagement.Shared/PlayerEngagement.Shared.csproj" />
+    <ProjectReference Include="../PlayerEngagement.Domain/PlayerEngagement.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="PlayerEngagement.Infrastructure.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,116 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using InnoAndLogic.Shared;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
+using PlayerEngagement.Domain.Policies.DailyLoginBonus.XPGrant;
+using PlayerEngagement.Infrastructure.Persistence;
+using PlayerEngagement.Infrastructure.Persistence.DTOs.DailyLoginBonus.XPGrant;
+using PlayerEngagement.Infrastructure.Policies.Services.DailyLoginBonus.XPGrant;
+using PlayerEngagement.Infrastructure.Tests.TestUtilities.DailyLoginBonus.XPGrant;
+using Xunit;
+
+namespace PlayerEngagement.Infrastructure.Tests.Policies.Services;
+
+public sealed class PolicyDocumentPersistenceServiceTests : IDisposable {
+    private readonly Mock<IPlayerEngagementDbmService> _dbmMock = new(MockBehavior.Strict);
+    private readonly PolicyDocumentPersistenceService _service;
+
+    public PolicyDocumentPersistenceServiceTests() {
+        _service = new PolicyDocumentPersistenceService(_dbmMock.Object, NullLoggerFactory.Instance);
+    }
+
+    public void Dispose() => _dbmMock.VerifyAll();
+
+    [Fact]
+    public async Task GetCurrentPolicyAsync_ReturnsMappedDocument() {
+        ActivePolicyDTO active = PolicyDtoFactory.CreateActive("daily-login", version: 2);
+        List<PolicyStreakCurveEntryDTO> streak = [new(1, active.PolicyKey, active.PolicyVersion, 1, 1.1m, 5, false)];
+        List<PolicySeasonalBoostDTO> boosts = [
+            new(1, active.PolicyKey, active.PolicyVersion, "Boost", 2.0m, DateTime.UtcNow, DateTime.UtcNow.AddDays(1))
+        ];
+
+        _ = _dbmMock.Setup(dbm => dbm.GetCurrentPolicyAsync(active.PolicyKey, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<ActivePolicyDTO>.Success(active));
+        _ = _dbmMock.Setup(dbm => dbm.GetPolicyStreakCurveAsync(active.PolicyKey, active.PolicyVersion, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<List<PolicyStreakCurveEntryDTO>>.Success(streak));
+        _ = _dbmMock.Setup(dbm => dbm.GetPolicySeasonalBoostsAsync(active.PolicyKey, active.PolicyVersion, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<List<PolicySeasonalBoostDTO>>.Success(boosts));
+
+        PolicyDocument? document = await _service.GetCurrentPolicyAsync(active.PolicyKey, DateTime.UtcNow, CancellationToken.None);
+
+        Assert.NotNull(document);
+        Assert.Equal(2, document!.Version.PolicyVersion);
+        _ = Assert.Single(document.StreakCurve);
+        _ = Assert.Single(document.SeasonalBoosts);
+    }
+
+    [Fact]
+    public async Task GetCurrentPolicyAsync_MapsTypedStreakModel() {
+        ActivePolicyDTO active = PolicyDtoFactory.CreateActive(
+            "daily-login",
+            version: 5,
+            modelType: "PLATEAU_CAP",
+            modelParameters: "{\"plateauDay\":4,\"plateauMultiplier\":1.4}");
+
+        _ = _dbmMock.Setup(dbm => dbm.GetCurrentPolicyAsync(active.PolicyKey, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<ActivePolicyDTO>.Success(active));
+        _ = _dbmMock.Setup(dbm => dbm.GetPolicyStreakCurveAsync(active.PolicyKey, active.PolicyVersion, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<List<PolicyStreakCurveEntryDTO>>.Success([]));
+        _ = _dbmMock.Setup(dbm => dbm.GetPolicySeasonalBoostsAsync(active.PolicyKey, active.PolicyVersion, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<List<PolicySeasonalBoostDTO>>.Success([]));
+
+        PolicyDocument? document = await _service.GetCurrentPolicyAsync(active.PolicyKey, DateTime.UtcNow, CancellationToken.None);
+
+        PlateauCapStreakModel model = Assert.IsType<PlateauCapStreakModel>(document!.Version.StreakModel);
+        Assert.Equal(4, model.PlateauDay);
+        Assert.Equal(1.4m, model.PlateauMultiplier);
+    }
+
+    [Fact]
+    public async Task GetCurrentPolicyAsync_ReturnsNull_WhenDbmFails() {
+        string policyKey = "missing";
+        _ = _dbmMock.Setup(dbm => dbm.GetCurrentPolicyAsync(policyKey, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<ActivePolicyDTO>.Success(ActivePolicyDTO.Empty));
+
+        PolicyDocument? document = await _service.GetCurrentPolicyAsync(policyKey, DateTime.UtcNow, CancellationToken.None);
+
+        Assert.Null(document);
+    }
+
+    [Fact]
+    public async Task ListPublishedPoliciesAsync_MapsEachVersion() {
+        List<PolicyVersionDTO> versions = [
+            PolicyDtoFactory.CreateVersion("daily-login", version: 1, modelType: "DECAY_CURVE", modelParameters: "{\"decayPercent\":0.2,\"graceDay\":1}"),
+            PolicyDtoFactory.CreateVersion("daily-login", version: 2, modelType: "TIERED_SEASONAL_RESET", modelParameters: "{\"tiers\":[{\"startDay\":1,\"endDay\":3,\"bonusMultiplier\":1.1},{\"startDay\":5,\"endDay\":7,\"bonusMultiplier\":1.2}]}")
+        ];
+        _ = _dbmMock.Setup(dbm => dbm.ListPublishedPoliciesAsync(It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<List<PolicyVersionDTO>>.Success(versions));
+        _ = _dbmMock.Setup(dbm => dbm.GetPolicyStreakCurveAsync("daily-login", 1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<List<PolicyStreakCurveEntryDTO>>.Success([]));
+        _ = _dbmMock.Setup(dbm => dbm.GetPolicySeasonalBoostsAsync("daily-login", 1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<List<PolicySeasonalBoostDTO>>.Success([]));
+        _ = _dbmMock.Setup(dbm => dbm.GetPolicyStreakCurveAsync("daily-login", 2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<List<PolicyStreakCurveEntryDTO>>.Success([]));
+        _ = _dbmMock.Setup(dbm => dbm.GetPolicySeasonalBoostsAsync("daily-login", 2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<List<PolicySeasonalBoostDTO>>.Success([]));
+
+        IReadOnlyList<PolicyDocument> documents = await _service.ListPublishedPoliciesAsync(DateTime.UtcNow, CancellationToken.None);
+
+        Assert.Equal(2, documents.Count);
+        _ = Assert.IsType<DecayCurveStreakModel>(documents[0].Version.StreakModel);
+        _ = Assert.IsType<TieredSeasonalResetStreakModel>(documents[1].Version.StreakModel);
+    }
+
+    [Fact]
+    public async Task GetSegmentOverridesAsync_ReturnsEmptyDictionaryOnFailure() {
+        _ = _dbmMock.Setup(dbm => dbm.GetPolicySegmentOverridesAsync("daily-login", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<List<PolicySegmentOverrideDTO>>.Success(null!));
+
+        IReadOnlyDictionary<string, long> overrides = await _service.GetSegmentOverridesAsync("daily-login", CancellationToken.None);
+
+        Assert.Empty(overrides);
+    }
+}

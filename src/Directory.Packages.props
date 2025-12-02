@@ -11,7 +11,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageVersion>
-    <PackageVersion Include="InnoAndLogic.Persistence" Version="1.0.9" />
+    <PackageVersion Include="InnoAndLogic.Persistence" Version="1.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
@@ -31,7 +31,6 @@
 
     <!-- Test Projects -->
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
-    <PackageVersion Include="FluentAssertions" Version="8.6.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="9.0.8" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageVersion Include="Microsoft.Orleans.TestingHost" Version="9.2.1" />

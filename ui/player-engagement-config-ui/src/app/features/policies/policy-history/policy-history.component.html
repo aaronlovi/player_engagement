@@ -1,0 +1,148 @@
+<div class="page">
+  <header class="page__header">
+    <div>
+      <h1>Policy history</h1>
+      <p class="page__description">View versions and compare differences.</p>
+    </div>
+    <div class="page__actions">
+      <a class="link-button" routerLink="/policies">Back to list</a>
+    </div>
+  </header>
+
+  <section class="panel card">
+    <form [formGroup]="form" class="filter-form" (ngSubmit)="fetch()">
+      <div class="form-row">
+        <label for="policyKey">Policy key</label>
+        <input id="policyKey" type="text" formControlName="policyKey" placeholder="e.g. daily-login" />
+      </div>
+
+      <div class="form-row">
+        <label for="limit">Limit</label>
+        <input id="limit" type="number" formControlName="limit" min="1" max="200" />
+      </div>
+
+      <div class="form-row form-row--button">
+        <button type="submit" [disabled]="form.invalid">Search</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    @if (state().status) {
+    <p class="meta">Last response status: {{ state().status }}</p>
+    }
+
+    @if (state().error) {
+    <p class="error">Error: {{ state().error }}</p>
+    }
+
+    @if (versions().length > 0) {
+    <div class="card">
+      <h2>Versions</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Version</th>
+              <th scope="col">Status</th>
+              <th scope="col">Effective</th>
+              <th scope="col">Published</th>
+              <th scope="col">Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of versions(); track item.version.policyVersion; let i = $index) {
+            <tr>
+              <td>{{ item.version.policyVersion }}{{ i === 0 ? ' (latest)' : '' }}</td>
+              <td>{{ item.version.status }}</td>
+              <td>{{ item.version.effectiveAt || '—' }}</td>
+              <td>{{ item.version.publishedAt || '—' }}</td>
+              <td>{{ item.version.createdAt }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    } @else if (state().loading) {
+    <p class="muted">Loading…</p>
+    } @else if (state().success === true) {
+    <p class="muted">No versions found.</p>
+    } @else if (!state().status) {
+    <p class="muted hint">Enter a policy key above to view its version history.</p>
+    }
+  </section>
+
+  @if (selectedA() || selectedB()) {
+  <section class="panel card">
+    <h2>Compare Versions</h2>
+    <div class="diff-controls">
+      <div class="form-row">
+        <label for="versionA">Version A</label>
+        <select id="versionA" (change)="onSelectA($any($event.target).value)">
+          @for (item of versions(); track item.version.policyVersion; let i = $index; let last = $last) {
+          <option [value]="item.version.policyVersion" [selected]="isSelectedA(item.version.policyVersion)">{{
+            item.version.policyVersion
+            }} ({{
+            item.version.status }}){{ i
+            === 0 ? ' — latest' : last ? ' — oldest' : '' }}
+          </option>
+          }
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label for="versionB">Version B</label>
+        <select id="versionB" (change)="onSelectB($any($event.target).value)">
+          @for (item of versions(); track item.version.policyVersion; let i = $index; let last = $last) {
+          <option [value]="item.version.policyVersion" [selected]="isSelectedB(item.version.policyVersion)">{{
+            item.version.policyVersion
+            }} ({{
+            item.version.status }}){{ i
+            === 0 ? ' — latest' : last ? ' — oldest' : '' }}
+          </option>
+          }
+        </select>
+      </div>
+
+      <div class="form-row form-row--button">
+        <button type="button" (click)="compare()"
+          [disabled]="!selectedA() || !selectedB() || selectedAId() === selectedBId()">
+          Compare
+        </button>
+      </div>
+    </div>
+
+    @if (diffs()) {
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Field</th>
+            <th scope="col">Version {{ selectedAId() }}</th>
+            <th scope="col">Version {{ selectedBId() }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (diffKeys().length === 0) {
+          <tr>
+            <td colspan="3" class="muted">No differences detected.</td>
+          </tr>
+          } @else {
+          @for (key of diffKeys(); track key) {
+          <tr [class.diff]="diffClass(key) === 'diff'">
+            <td>{{ fieldLabel(key) }}</td>
+            <td>{{ formatDiffValue(key, 'left') }}</td>
+            <td>{{ formatDiffValue(key, 'right') }}</td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+    } @else {
+    <p class="muted">Select two different versions and click Compare.</p>
+    }
+  </section>
+  }
+</div>
