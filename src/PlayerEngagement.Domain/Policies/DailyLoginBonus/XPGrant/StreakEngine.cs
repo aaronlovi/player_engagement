@@ -257,6 +257,10 @@ public sealed class StreakEngine : IStreakEngine
         {
             computation.MilestoneHits = [.. hits];
             computation.ModelState = new StreakModelRuntimeState([.. updatedClaimed]);
+            foreach (MilestoneMetaRewardMilestone hit in hits) {
+                _logger.LogInformation("Milestone hit at day {MilestoneDay} for streak day {EffectiveDay}.",
+                    hit.Day, computation.EffectiveStreakDay);
+            }
         }
     }
 
