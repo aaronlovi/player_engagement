@@ -40,7 +40,12 @@ public sealed class StreakEngineTieredSeasonalTests
     public void Evaluate_SeasonEnd_ResetsStreak()
     {
         StreakEngine engine = new();
-        PolicyDocument policy = PolicyDocumentFactory.CreateTieredSeasonalPolicy(baseXp: BaseXp);
+        PolicyDocument policy = PolicyDocumentFactory.CreateTieredSeasonalPolicy(
+            baseXp: BaseXp,
+            streakCurve: new[]
+            {
+                new StreakCurveEntry(0, 1m, 0, false)
+            });
         DateOnly seasonEnd = new(2024, 1, 10);
         SeasonBoundaryInfo season = new(seasonEnd.AddDays(-5), seasonEnd);
 
