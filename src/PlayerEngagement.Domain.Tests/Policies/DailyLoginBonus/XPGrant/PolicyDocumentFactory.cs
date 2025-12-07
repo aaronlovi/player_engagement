@@ -97,6 +97,23 @@ internal static class PolicyDocumentFactory
             streakCurve: streakCurve ?? DefaultDecayCurve());
     }
 
+    public static PolicyDocument CreateTieredSeasonalPolicy(
+        IReadOnlyList<TieredSeasonalResetTierDefinition>? tiers = null,
+        int? baseXp = null,
+        IReadOnlyList<StreakCurveEntry>? streakCurve = null)
+    {
+        TieredSeasonalResetStreakModel model = new(tiers ?? DefaultSeasonalTiers());
+        PolicyVersionDocument version = CreatePolicyVersionDocument(
+            baseXpAmount: baseXp,
+            streakModel: model,
+            gracePolicy: new GracePolicyDefinition(0, 0));
+
+        return CreatePolicyDocument(
+            description: "Seasonal test policy",
+            version: version,
+            streakCurve: streakCurve ?? DefaultSeasonalCurve());
+    }
+
     private static IReadOnlyList<StreakCurveEntry> DefaultPlateauCurve()
     {
         return
@@ -117,6 +134,28 @@ internal static class PolicyDocumentFactory
             new StreakCurveEntry(3, 1.3m, 0, false),
             new StreakCurveEntry(4, 1.4m, 0, false),
             new StreakCurveEntry(5, 1.5m, 0, false)
+        ];
+    }
+
+    private static IReadOnlyList<TieredSeasonalResetTierDefinition> DefaultSeasonalTiers()
+    {
+        return
+        [
+            new TieredSeasonalResetTierDefinition(1, 3, 1.2m),
+            new TieredSeasonalResetTierDefinition(4, 6, 1.5m)
+        ];
+    }
+
+    private static IReadOnlyList<StreakCurveEntry> DefaultSeasonalCurve()
+    {
+        return
+        [
+            new StreakCurveEntry(0, 1m, 0, false),
+            new StreakCurveEntry(1, 1.05m, 0, false),
+            new StreakCurveEntry(2, 1.1m, 0, false),
+            new StreakCurveEntry(3, 1.15m, 0, false),
+            new StreakCurveEntry(4, 1.2m, 0, false),
+            new StreakCurveEntry(5, 1.25m, 0, false)
         ];
     }
 

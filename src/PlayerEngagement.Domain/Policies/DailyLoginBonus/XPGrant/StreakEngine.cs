@@ -194,15 +194,17 @@ public sealed class StreakEngine : IStreakEngine
         ref StreakEngineModelComputation computation)
     {
         // Seasonal reset boundary detection is not wired yet; placeholder keeps streak as-is.
-        // Tier selection could adjust multiplier; currently no additional multiplier applied.
         if (model is null)
         {
             _logger.LogError("Streak model type {ModelType} missing TieredSeasonalReset configuration.", StreakModelType.TieredSeasonalReset);
             return;
         }
 
+        TieredSeasonalResetTierDefinition? tier = SelectTier(model, computation.EffectiveStreakDay);
+        if (tier != null)
+            computation.ModelMultiplier *= tier.BonusMultiplier;
+
         _ = rewardDayId;
-        _ = computation;
     }
 
     private void ApplyMilestone(
@@ -246,6 +248,17 @@ public sealed class StreakEngine : IStreakEngine
             computation.MilestoneHits = [.. hits];
             computation.ModelState = new StreakModelRuntimeState([.. updatedClaimed]);
         }
+    }
+
+    private static TieredSeasonalResetTierDefinition? SelectTier(TieredSeasonalResetStreakModel model, int effectiveStreakDay)
+    {
+        foreach (TieredSeasonalResetTierDefinition tier in model.Tiers)
+        {
+            if (effectiveStreakDay >= tier.StartDay && effectiveStreakDay <= tier.EndDay)
+                return tier;
+        }
+
+        return null;
     }
 
     private static StreakCurveEntry ResolveCurveEntry(IReadOnlyList<StreakCurveEntry> curve, int effectiveStreakDay)
