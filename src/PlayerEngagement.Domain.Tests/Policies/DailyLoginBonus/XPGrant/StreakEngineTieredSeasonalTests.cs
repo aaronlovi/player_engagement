@@ -14,14 +14,14 @@ public sealed class StreakEngineTieredSeasonalTests
         StreakEngine engine = new();
         PolicyDocument policy = PolicyDocumentFactory.CreateTieredSeasonalPolicy(
             baseXp: BaseXp,
-            streakCurve: new[]
-            {
+            streakCurve:
+            [
                 new StreakCurveEntry(0, 1m, 0, false),
                 new StreakCurveEntry(1, 1m, 0, false),
                 new StreakCurveEntry(2, 1m, 0, false),
                 new StreakCurveEntry(3, 1m, 0, false),
                 new StreakCurveEntry(4, 1m, 0, false)
-            });
+            ]);
         DateOnly lastDay = new(2024, 1, 1);
         StreakState prior = new(3, 3, 0, lastDay, StreakModelRuntimeState.Empty);
 
@@ -42,10 +42,10 @@ public sealed class StreakEngineTieredSeasonalTests
         StreakEngine engine = new();
         PolicyDocument policy = PolicyDocumentFactory.CreateTieredSeasonalPolicy(
             baseXp: BaseXp,
-            streakCurve: new[]
-            {
+            streakCurve:
+            [
                 new StreakCurveEntry(0, 1m, 0, false)
-            });
+            ]);
         DateOnly seasonEnd = new(2024, 1, 10);
         SeasonBoundaryInfo season = new(seasonEnd.AddDays(-5), seasonEnd);
 
@@ -59,7 +59,7 @@ public sealed class StreakEngineTieredSeasonalTests
 
         Assert.Equal(1, result.State.CurrentStreak);
         Assert.Equal(5, result.State.LongestStreak); // longest preserved
-        Assert.Equal(1m, result.EffectiveMultiplier); // curve day1
-        Assert.Equal(100, result.XpAwarded);
+        Assert.Equal(1.2m, result.EffectiveMultiplier); // tier 1 multiplier on reset day
+        Assert.Equal(120, result.XpAwarded);
     }
 }
