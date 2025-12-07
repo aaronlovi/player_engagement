@@ -16,7 +16,8 @@ public sealed record StreakTransitionContext
         PolicyDocument policy,
         StreakState priorState,
         DateOnly rewardDayId,
-        DateTime claimTimestampUtc)
+        DateTime claimTimestampUtc,
+        SeasonBoundaryInfo? seasonBoundary = null)
     {
         ArgumentNullException.ThrowIfNull(policy);
         ArgumentNullException.ThrowIfNull(priorState);
@@ -25,6 +26,7 @@ public sealed record StreakTransitionContext
         PriorState = priorState;
         RewardDayId = rewardDayId;
         ClaimTimestampUtc = claimTimestampUtc;
+        SeasonBoundary = seasonBoundary;
     }
 
     /// <summary>Policy document driving streak behavior.</summary>
@@ -38,4 +40,7 @@ public sealed record StreakTransitionContext
 
     /// <summary>Claim timestamp in UTC (used for observability and ordering).</summary>
     public DateTime ClaimTimestampUtc { get; }
+
+    /// <summary>Optional season boundary info (when using tiered seasonal reset).</summary>
+    public SeasonBoundaryInfo? SeasonBoundary { get; }
 }

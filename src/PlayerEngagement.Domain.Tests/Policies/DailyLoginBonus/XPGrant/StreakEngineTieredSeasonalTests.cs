@@ -35,4 +35,26 @@ public sealed class StreakEngineTieredSeasonalTests
         Assert.Equal(1.5m, result.EffectiveMultiplier); // tier multiplier applied on top of curve 1.0
         Assert.Equal(150, result.XpAwarded);
     }
+
+    [Fact]
+    public void Evaluate_SeasonEnd_ResetsStreak()
+    {
+        StreakEngine engine = new();
+        PolicyDocument policy = PolicyDocumentFactory.CreateTieredSeasonalPolicy(baseXp: BaseXp);
+        DateOnly seasonEnd = new(2024, 1, 10);
+        SeasonBoundaryInfo season = new(seasonEnd.AddDays(-5), seasonEnd);
+
+        DateOnly lastDay = seasonEnd;
+        StreakState prior = new(5, 5, 0, lastDay, StreakModelRuntimeState.Empty);
+
+        DateOnly rewardDay = seasonEnd.AddDays(1); // first claim after season end
+        StreakTransitionContext context = new(policy, prior, rewardDay, DateTime.UnixEpoch, season);
+
+        StreakTransitionResult result = engine.Evaluate(context);
+
+        Assert.Equal(1, result.State.CurrentStreak);
+        Assert.Equal(5, result.State.LongestStreak); // longest preserved
+        Assert.Equal(1m, result.EffectiveMultiplier); // curve day1
+        Assert.Equal(100, result.XpAwarded);
+    }
 }

@@ -12,8 +12,7 @@
 
 ## Next steps (per plan)
 
-- Flesh out Decay/Soft Reset rules for multi-miss scenarios and model-specific state.
-- Implement Tiered Seasonal Reset logic with SeasonGrain integration and tier multiplier selection.
+- Implement Tiered Seasonal Reset logic with SeasonGrain integration (season boundary reset) and finalize tier behavior.
 - Implement Milestone Meta-Reward state persistence and observability hooks; extend metrics/logging.
 - Wire engine into eligibility/claim flows, policy/DTO validation, and persistence of streak/model_state.
 - Update docs/runbooks and have owner run `dotnet test src/PlayerEngagement.sln`.

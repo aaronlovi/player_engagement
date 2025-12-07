@@ -39,7 +39,12 @@ public sealed class StreakEngine : IStreakEngine
         int graceUsed = context.PriorState.GraceUsed;
         int baseStreak = CalculateBaseStreak(context.PriorState, context.RewardDayId, gracePolicy, out bool graceApplied, ref graceUsed, model);
 
-        StreakEngineModelComputation modelComputation = ApplyModelRules(model, baseStreak, context.PriorState.ModelState, context.RewardDayId);
+        StreakEngineModelComputation modelComputation = ApplyModelRules(
+            model,
+            baseStreak,
+            context.PriorState.ModelState,
+            context.RewardDayId,
+            context.SeasonBoundary);
 
         StreakCurveEntry curveEntry = ResolveCurveEntry(policy.StreakCurve, modelComputation.EffectiveStreakDay);
 
@@ -131,7 +136,8 @@ public sealed class StreakEngine : IStreakEngine
         StreakModelDefinition model,
         int baseStreak,
         StreakModelRuntimeState priorModelState,
-        DateOnly rewardDayId)
+        DateOnly rewardDayId,
+        SeasonBoundaryInfo? seasonBoundary)
     {
         StreakEngineModelComputation computation = new()
         {
@@ -154,7 +160,7 @@ public sealed class StreakEngine : IStreakEngine
                 ApplyDecay(ref computation);
                 break;
             case StreakModelType.TieredSeasonalReset:
-                ApplyTieredSeasonal(model as TieredSeasonalResetStreakModel, rewardDayId, ref computation);
+                ApplyTieredSeasonal(model as TieredSeasonalResetStreakModel, rewardDayId, seasonBoundary, ref computation);
                 break;
             case StreakModelType.MilestoneMetaReward:
                 ApplyMilestone(model as MilestoneMetaRewardStreakModel, ref computation);
@@ -191,20 +197,24 @@ public sealed class StreakEngine : IStreakEngine
     private void ApplyTieredSeasonal(
         TieredSeasonalResetStreakModel? model,
         DateOnly rewardDayId,
+        SeasonBoundaryInfo? seasonBoundary,
         ref StreakEngineModelComputation computation)
     {
-        // Seasonal reset boundary detection is not wired yet; placeholder keeps streak as-is.
         if (model is null)
         {
             _logger.LogError("Streak model type {ModelType} missing TieredSeasonalReset configuration.", StreakModelType.TieredSeasonalReset);
             return;
         }
 
+        if (seasonBoundary != null && seasonBoundary.HasSeasonEnded(rewardDayId))
+        {
+            computation.EffectiveStreakDay = MinimumStreakDay;
+            computation.ModelState = StreakModelRuntimeState.Empty;
+        }
+
         TieredSeasonalResetTierDefinition? tier = SelectTier(model, computation.EffectiveStreakDay);
         if (tier != null)
             computation.ModelMultiplier *= tier.BonusMultiplier;
-
-        _ = rewardDayId;
     }
 
     private void ApplyMilestone(
