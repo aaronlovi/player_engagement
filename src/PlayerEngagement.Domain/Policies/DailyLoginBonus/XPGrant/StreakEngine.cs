@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.Versioning;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -85,7 +84,7 @@ public sealed class StreakEngine : IStreakEngine
         if (!lastRewardDayId.HasValue)
             return MinimumStreakDay;
 
-        int gapDays = rewardDayId.DayNumber - lastRewardDayId.Value.DayNumber;
+        int gapDays = CalculateGapDays(lastRewardDayId.Value, rewardDayId);
         if (gapDays <= 0)
             return currentStreak;
 
@@ -103,14 +102,29 @@ public sealed class StreakEngine : IStreakEngine
         }
 
         if (model is DecayCurveStreakModel decayModel)
-        {
-            decimal decayed = currentStreak * (1m - decayModel.DecayPercent);
-            int floored = (int)Math.Floor(decayed);
-            floored = Math.Max(floored, MinimumStreakDay);
-            return floored;
-        }
+            return ApplyDecayForMisses(currentStreak, decayModel.DecayPercent, missedDays);
 
         return MinimumStreakDay;
+    }
+
+    private static int CalculateGapDays(DateOnly lastRewardDayId, DateOnly currentRewardDayId)
+    {
+        int gapDays = currentRewardDayId.DayNumber - lastRewardDayId.DayNumber;
+        return Math.Max(0, gapDays);
+    }
+
+    private static int ApplyDecayForMisses(int currentStreak, decimal decayPercent, int missedDays)
+    {
+        decimal decayed = currentStreak;
+        decimal decayFactor = 1m - decayPercent;
+        for (int i = 0; i < missedDays; i++)
+        {
+            decayed = Math.Floor(decayed * decayFactor);
+            if (decayed < MinimumStreakDay)
+                return MinimumStreakDay;
+        }
+
+        return Math.Max((int)decayed, MinimumStreakDay);
     }
 
     private StreakEngineModelComputation ApplyModelRules(
@@ -168,17 +182,11 @@ public sealed class StreakEngine : IStreakEngine
         }
     }
 
-    private void ApplyWeeklyCycle(ref StreakEngineModelComputation computation)
-    {
-        if (computation.EffectiveStreakDay > WeeklyCycleResetStreakModel.CycleLength)
-            computation.EffectiveStreakDay = MinimumStreakDay;
-    }
+    private static void ApplyWeeklyCycle(ref StreakEngineModelComputation computation) => 
+        computation.EffectiveStreakDay = Math.Min(computation.EffectiveStreakDay, WeeklyCycleResetStreakModel.CycleLength);
 
-    private void ApplyDecay(ref StreakEngineModelComputation computation)
-    {
-        if (computation.EffectiveStreakDay < MinimumStreakDay)
-            computation.EffectiveStreakDay = MinimumStreakDay;
-    }
+    private static void ApplyDecay(ref StreakEngineModelComputation computation) =>
+        computation.EffectiveStreakDay = Math.Max(computation.EffectiveStreakDay, MinimumStreakDay);
 
     private void ApplyTieredSeasonal(
         TieredSeasonalResetStreakModel? model,

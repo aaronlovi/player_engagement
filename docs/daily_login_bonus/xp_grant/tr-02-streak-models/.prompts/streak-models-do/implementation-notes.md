@@ -6,6 +6,7 @@
 - Added logging guardrails for missing model configuration (Plateau, Seasonal, Milestone) using a typed logger.
 - Added new test project `PlayerEngagement.Domain.Tests` to solution and covered Plateau/Cap behaviors with xUnit tests (consecutive growth, plateau clamp, grace-covered miss, and reset beyond grace).
 - Introduced test factory helpers for policy documents to reduce direct `new` usage per testing guideline.
+- Implemented Decay/Soft Reset miss handling (per-miss decay with floor+clamp) and added xUnit coverage for decay scenarios and grace interactions.
 
 ## Next steps (per plan)
 - Flesh out Decay/Soft Reset rules for multi-miss scenarios and model-specific state.

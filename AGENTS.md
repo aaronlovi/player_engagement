@@ -85,6 +85,7 @@ Target xUnit for new tests, mirroring project structure (e.g., `src/PlayerEngage
 - **Assertion libraries:** Do not use `FluentAssertions` in C# test projects; stick with xUnit’s built-in `Assert` APIs (or MSTest/NUnit equivalents if ever introduced) to keep diagnostics consistent across suites.
 - **Database unit tests:** Keep unit tests focused on business logic. Skip direct tests of Postgres statements (anything under `src/PlayerEngagement.Infrastructure/Persistence/Statements`). Exercise persistence behaviors through `IPlayerEngagementDbmService` and especially `PlayerEngagementDbmInMemoryService`, which provides a safe test double. Reserve the actual Postgres-backed `PlayerEngagementDbmService` for future integration tests that run against a live database.
 - **Test factories:** In C# tests and frontend/Angular tests, build DTOs/records/view models through test factory helpers that accept `null` or defaults for every parameter and coalesce to sensible fallback values. Avoid direct `new` calls with long parameter lists inside tests.
+- **Guard patterns:** Prefer `Math.Max/Math.Min` (or type-appropriate equivalents) over ternaries for simple clamping to keep intent clear.
 
 ## Commit & Pull Request Guidelines
 

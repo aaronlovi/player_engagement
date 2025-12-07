@@ -77,21 +77,54 @@ internal static class PolicyDocumentFactory
             streakCurve: streakCurve ?? DefaultPlateauCurve());
     }
 
+    public static PolicyDocument CreateDecayPolicy(
+        decimal decayPercent,
+        int graceAllowedMisses,
+        int graceWindowDays,
+        int? baseXp = null,
+        IReadOnlyList<StreakCurveEntry>? streakCurve = null)
+    {
+        DecayCurveStreakModel model = new(decayPercent, graceWindowDays);
+        GracePolicyDefinition grace = new(graceAllowedMisses, graceWindowDays);
+        PolicyVersionDocument version = CreatePolicyVersionDocument(
+            baseXpAmount: baseXp,
+            streakModel: model,
+            gracePolicy: grace);
+
+        return CreatePolicyDocument(
+            description: "Decay test policy",
+            version: version,
+            streakCurve: streakCurve ?? DefaultDecayCurve());
+    }
+
     private static IReadOnlyList<StreakCurveEntry> DefaultPlateauCurve()
     {
-        return new List<StreakCurveEntry>
-        {
+        return
+        [
             new StreakCurveEntry(0, 1m, 0, false),
             new StreakCurveEntry(1, 1.1m, 0, false),
             new StreakCurveEntry(2, 1.2m, 0, false)
-        };
+        ];
+    }
+
+    private static IReadOnlyList<StreakCurveEntry> DefaultDecayCurve()
+    {
+        return
+        [
+            new StreakCurveEntry(0, 1m, 0, false),
+            new StreakCurveEntry(1, 1.1m, 0, false),
+            new StreakCurveEntry(2, 1.2m, 0, false),
+            new StreakCurveEntry(3, 1.3m, 0, false),
+            new StreakCurveEntry(4, 1.4m, 0, false),
+            new StreakCurveEntry(5, 1.5m, 0, false)
+        ];
     }
 
     private static IReadOnlyList<StreakCurveEntry> DefaultStreakCurve()
     {
-        return new List<StreakCurveEntry>
-        {
+        return
+        [
             new StreakCurveEntry(0, 1m, 0, false)
-        };
+        ];
     }
 }
