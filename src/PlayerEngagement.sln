@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerEngagement.Shared", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerEngagement.Shared.Tests", "PlayerEngagement.Shared.Tests\PlayerEngagement.Shared.Tests.csproj", "{8AD98B03-2B22-40EF-9C1D-A7E798D6EFFF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayerEngagement.Domain.Tests", "PlayerEngagement.Domain.Tests\PlayerEngagement.Domain.Tests.csproj", "{903059F0-77E7-4885-8697-573825BF06A9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,5 +56,9 @@ Global
 		{8AD98B03-2B22-40EF-9C1D-A7E798D6EFFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8AD98B03-2B22-40EF-9C1D-A7E798D6EFFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8AD98B03-2B22-40EF-9C1D-A7E798D6EFFF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{903059F0-77E7-4885-8697-573825BF06A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{903059F0-77E7-4885-8697-573825BF06A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{903059F0-77E7-4885-8697-573825BF06A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{903059F0-77E7-4885-8697-573825BF06A9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
