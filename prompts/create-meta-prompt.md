@@ -28,7 +28,7 @@ Build a Codex-to-Codex pipeline that can chain tasks and prompts reliably. Ensur
 - Numbered runnable prompts: keep using `./prompts/NNN-name.md` for standard tasks. Leave the helper files in `/prompts` unnumbered.
 - To run via the standard runner, surface the exact path(s) to pass into the flow from `prompts/run-prompt.md` (e.g., target `.prompts/{slug}-{purpose}/prompt.md` explicitly). If numbered prompts are relevant references, list them under “Key references.”
 - When generating prompt files, use proper Markdown headings (`#` for the main title, `##` for sections) to keep prompts readable and consistent.
-- Do-prompts should include a closing instruction (e.g., in Plan/Next steps) that, if work remains, explicitly directs creation of the next do-prompt (e.g., `{slug}-do-2`) using `prompts/create-meta-prompt.md`, references the relevant plan doc, and suggests running it via `prompts/run-prompt.md`.
+- Do-prompts must include a closing instruction (e.g., in Plan/Next steps) that explicitly states the next do-prompt must be created when any scope remains (e.g., `{slug}-do-2`) using `prompts/create-meta-prompt.md`, references the relevant plan doc, and only suggests (does not auto-run) executing it via `prompts/run-prompt.md`; the creation step is mandatory so the workflow never stalls.
 - After execution, move `prompt.md` to `.prompts/{slug}-{purpose}/completed/prompt.md` only on success; do not auto-archive. If execution fails or is partial, leave the prompt in place and record status in the output file.
 - Structure the generated prompt with concise sections (omit unused):
   - Objective
@@ -45,7 +45,7 @@ Build a Codex-to-Codex pipeline that can chain tasks and prompts reliably. Ensur
 - Research output file: `.prompts/{slug}-research/research.md`
 - Plan output file: `.prompts/{slug}-plan/plan.md`
 - Do/implementation uses the repo itself; by default add a brief `.prompts/{slug}-do/implementation-notes.md` for discoverability; only co-locate with the primary change if that improves clarity. Keep location consistent per task.
-- Do-prompts: include a closing instruction for generating the next do-prompt (`{slug}-do-2`, `{slug}-do-3`, …) via `prompts/create-meta-prompt.md` (reference `.prompts/{slug}-plan/plan.md`) and running it with `prompts/run-prompt.md`. When executing a do-prompt with remaining scope, actually create the follow-on prompt before finishing so the chain continues automatically—no manual gaps.
+- Do-prompts: include a closing instruction for generating the next do-prompt (`{slug}-do-2`, `{slug}-do-3`, …) via `prompts/create-meta-prompt.md` (reference `.prompts/{slug}-plan/plan.md`) and only suggest running it with `prompts/run-prompt.md`. When executing a do-prompt with remaining scope, actually create the follow-on prompt before finishing so the chain continues automatically—no manual gaps; creation is required, while running remains a suggestion.
 - During execution, if scope/decisions are ambiguous, pause and ask the user before proceeding; do not mark a prompt as complete without resolving or explicitly capturing the open questions.
 - For research, plan, and any implementation notes, append a `## Metadata` block with Markdown subsections (no XML):
   - `### Status` — success / partial / failed (for implementation, note if follow-up is needed; use this vocabulary consistently).
