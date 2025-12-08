@@ -4,6 +4,7 @@ using System.Threading;
 using InnoAndLogic.Shared;
 using InnoAndLogic.Shared.Models;
 using PlayerEngagement.Infrastructure.Persistence.DTOs.DailyLoginBonus.XPGrant;
+using PlayerEngagement.Infrastructure.Persistence.DTOs.Seasons;
 
 namespace PlayerEngagement.Infrastructure.Persistence;
 
@@ -14,6 +15,7 @@ internal class PlayerEngagementDbmInMemoryData {
     private static readonly Dictionary<(string PolicyKey, long PolicyVersion), List<PolicyStreakCurveEntryDTO>> StreakCurves = [];
     private static readonly Dictionary<(string PolicyKey, long PolicyVersion), List<PolicySeasonalBoostDTO>> SeasonalBoosts = [];
     private static readonly Dictionary<string, List<PolicySegmentOverrideDTO>> SegmentOverrides = new(StringComparer.OrdinalIgnoreCase);
+    private static SeasonCalendarDTO _currentSeason = SeasonCalendarDTO.Empty;
     private static readonly object Sync = new();
     private static long _nextInternalId = 1;
     private static long NextInternalId() => Interlocked.Increment(ref _nextInternalId);
@@ -92,6 +94,12 @@ internal class PlayerEngagementDbmInMemoryData {
         }
     }
 
+    internal static SeasonCalendarDTO GetCurrentSeason() {
+        lock (Sync) {
+            return _currentSeason;
+        }
+    }
+
     // Helper mutators for tests or seeding
     internal static void UpsertActivePolicy(ActivePolicyDTO dto) {
         lock (Sync) {
@@ -120,6 +128,11 @@ internal class PlayerEngagementDbmInMemoryData {
     internal static void SetSegmentOverrides(string policyKey, IEnumerable<PolicySegmentOverrideDTO> overrides) {
         lock (Sync)
             SegmentOverrides[policyKey] = [.. overrides];
+    }
+
+    internal static void SetCurrentSeason(SeasonCalendarDTO season) {
+        lock (Sync)
+            _currentSeason = season;
     }
 
     internal static Result<long> CreatePolicyDraft(

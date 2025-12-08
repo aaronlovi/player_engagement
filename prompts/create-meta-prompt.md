@@ -45,7 +45,7 @@ Build a Codex-to-Codex pipeline that can chain tasks and prompts reliably. Ensur
 - Research output file: `.prompts/{slug}-research/research.md`
 - Plan output file: `.prompts/{slug}-plan/plan.md`
 - Do/implementation uses the repo itself; by default add a brief `.prompts/{slug}-do/implementation-notes.md` for discoverability; only co-locate with the primary change if that improves clarity. Keep location consistent per task.
-- Do-prompts: include a closing instruction—if work remains, generate the next do-prompt (`{slug}-do-2`, `{slug}-do-3`, …) via `prompts/create-meta-prompt.md`, referencing `.prompts/{slug}-plan/plan.md`, and run it with `prompts/run-prompt.md`.
+- Do-prompts: include a closing instruction for generating the next do-prompt (`{slug}-do-2`, `{slug}-do-3`, …) via `prompts/create-meta-prompt.md` (reference `.prompts/{slug}-plan/plan.md`) and running it with `prompts/run-prompt.md`. When executing a do-prompt with remaining scope, create that follow-on prompt as part of completion so the chain continues automatically.
 - For research, plan, and any implementation notes, append a `## Metadata` block with Markdown subsections (no XML):
   - `### Status` — success / partial / failed (for implementation, note if follow-up is needed; use this vocabulary consistently).
   - `### Confidence` — brief text or percentage.

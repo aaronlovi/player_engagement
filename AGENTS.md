@@ -88,6 +88,7 @@ Target xUnit for new tests, mirroring project structure (e.g., `src/PlayerEngage
 - **Database unit tests:** Keep unit tests focused on business logic. Skip direct tests of Postgres statements (anything under `src/PlayerEngagement.Infrastructure/Persistence/Statements`). Exercise persistence behaviors through `IPlayerEngagementDbmService` and especially `PlayerEngagementDbmInMemoryService`, which provides a safe test double. Reserve the actual Postgres-backed `PlayerEngagementDbmService` for future integration tests that run against a live database.
 - **Test factories:** In C# tests and frontend/Angular tests, build DTOs/records/view models through test factory helpers that accept `null` or defaults for every parameter and coalesce to sensible fallback values. Avoid direct `new` calls with long parameter lists inside tests.
 - **Guard patterns:** Prefer `Math.Max/Math.Min` (or type-appropriate equivalents) over ternaries for simple clamping to keep intent clear.
+- **In-memory DBM for tests:** Prefer the provided in-memory Dbm service for test doubles; extend it instead of introducing ad-hoc fakes when exercising persistence-adjacent behaviors.
 
 ## Commit & Pull Request Guidelines
 
