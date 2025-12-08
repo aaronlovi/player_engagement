@@ -65,6 +65,8 @@ Adopt default .NET formatting: four-space indentation, file-scoped namespaces wh
 - Do not use nested classes/records; keep all types top-level in their own files for clarity.
 - Avoid LINQ in production code paths to reduce allocations; LINQ is acceptable only in unit tests where brevity matters.
 - Provide XML documentation for all public types and members (classes, records, methods, properties, fields) to keep contracts explicit.
+- Add XML `<param>` documentation for record parameters to clarify intent.
+- Include entry/exit/success/failure logging in Dbm service methods (e.g., log on method entry, log errors on failure, log IDs/counts on success).
 
 ## Frontend (Angular) Guidelines
 

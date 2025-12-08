@@ -39,6 +39,7 @@ Use this to select and execute prompt files in `./prompts/` (numbered) or explic
 6) Execute (sequential recommended):
    - Read the prompt file.
    - Follow its instructions faithfully (use `rg` for search, `apply_patch` for edits, respect style/sandbox notes). Read linked repo conventions (README/CONTRIBUTING/AGENTS/etc.) before edits. Honor prompt-specific verification/sandbox directions. For chained meta prompts, read the latest metadata in referenced research/plan/implementation notes before proceeding; expect `### Status` to be one of success/partial/failed.
+   - If you hit ambiguous scope or unresolved decisions, pause and ask the user for guidance before proceeding; do not mark the prompt as executed without either resolving the questions or noting it as partial.
    - Run tests/commands only if allowed; if blocked by sandbox/approval, record what to run later.
    - Complete one prompt before starting the next.
 7) Parallel note:

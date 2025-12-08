@@ -62,5 +62,5 @@ public interface IPlayerEngagementDbmService : IDbmService {
     Task<Result<List<PolicyStreakCurveEntryDTO>>> GetPolicyStreakCurveAsync(string policyKey, long policyVersion, CancellationToken ct);
     Task<Result<List<PolicySeasonalBoostDTO>>> GetPolicySeasonalBoostsAsync(string policyKey, long policyVersion, CancellationToken ct);
     Task<Result<List<PolicySegmentOverrideDTO>>> GetPolicySegmentOverridesAsync(string policyKey, CancellationToken ct);
-    Task<Result<SeasonCalendarDTO>> GetCurrentSeasonAsync(CancellationToken ct);
+    Task<Result<SeasonCalendarWithNextDTO>> GetCurrentSeasonAsync(CancellationToken ct);
 }

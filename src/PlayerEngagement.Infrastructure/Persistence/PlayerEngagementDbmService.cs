@@ -410,9 +410,19 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
         return Result<List<PolicySegmentOverrideDTO>>.Success(copy);
     }
 
-    public Task<Result<SeasonCalendarDTO>> GetCurrentSeasonAsync(CancellationToken ct) {
-        _logger.LogWarning("GetCurrentSeasonAsync not implemented; returning empty season.");
-        return Task.FromResult(Result<SeasonCalendarDTO>.Success(SeasonCalendarDTO.Empty));
+    public async Task<Result<SeasonCalendarWithNextDTO>> GetCurrentSeasonAsync(CancellationToken ct) {
+        _logger.LogInformation("GetCurrentSeasonAsync start.");
+        var stmt = new GetCurrentSeasonStmt(SchemaName);
+        Result exec = await Executor.ExecuteQueryWithRetry(stmt, ct);
+        if (exec.IsFailure)
+        {
+            _logger.LogError("GetCurrentSeasonAsync failed: {Error}", exec.ErrorMessage);
+            return Result<SeasonCalendarWithNextDTO>.Failure(exec);
+        }
+
+        SeasonCalendarWithNextDTO dto = stmt.Result;
+        _logger.LogInformation("GetCurrentSeasonAsync succeeded: currentSeasonId={SeasonId}", dto.Current.SeasonId);
+        return Result<SeasonCalendarWithNextDTO>.Success(dto);
     }
 
     #region PRIVATE HELPERS

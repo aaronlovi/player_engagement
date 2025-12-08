@@ -45,7 +45,8 @@ Build a Codex-to-Codex pipeline that can chain tasks and prompts reliably. Ensur
 - Research output file: `.prompts/{slug}-research/research.md`
 - Plan output file: `.prompts/{slug}-plan/plan.md`
 - Do/implementation uses the repo itself; by default add a brief `.prompts/{slug}-do/implementation-notes.md` for discoverability; only co-locate with the primary change if that improves clarity. Keep location consistent per task.
-- Do-prompts: include a closing instruction for generating the next do-prompt (`{slug}-do-2`, `{slug}-do-3`, …) via `prompts/create-meta-prompt.md` (reference `.prompts/{slug}-plan/plan.md`) and running it with `prompts/run-prompt.md`. When executing a do-prompt with remaining scope, create that follow-on prompt as part of completion so the chain continues automatically.
+- Do-prompts: include a closing instruction for generating the next do-prompt (`{slug}-do-2`, `{slug}-do-3`, …) via `prompts/create-meta-prompt.md` (reference `.prompts/{slug}-plan/plan.md`) and running it with `prompts/run-prompt.md`. When executing a do-prompt with remaining scope, actually create the follow-on prompt before finishing so the chain continues automatically—no manual gaps.
+- During execution, if scope/decisions are ambiguous, pause and ask the user before proceeding; do not mark a prompt as complete without resolving or explicitly capturing the open questions.
 - For research, plan, and any implementation notes, append a `## Metadata` block with Markdown subsections (no XML):
   - `### Status` — success / partial / failed (for implementation, note if follow-up is needed; use this vocabulary consistently).
   - `### Confidence` — brief text or percentage.

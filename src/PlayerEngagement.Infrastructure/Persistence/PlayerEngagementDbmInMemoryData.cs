@@ -16,6 +16,7 @@ internal class PlayerEngagementDbmInMemoryData {
     private static readonly Dictionary<(string PolicyKey, long PolicyVersion), List<PolicySeasonalBoostDTO>> SeasonalBoosts = [];
     private static readonly Dictionary<string, List<PolicySegmentOverrideDTO>> SegmentOverrides = new(StringComparer.OrdinalIgnoreCase);
     private static SeasonCalendarDTO _currentSeason = SeasonCalendarDTO.Empty;
+    private static SeasonCalendarDTO _nextSeason = SeasonCalendarDTO.Empty;
     private static readonly object Sync = new();
     private static long _nextInternalId = 1;
     private static long NextInternalId() => Interlocked.Increment(ref _nextInternalId);
@@ -94,9 +95,9 @@ internal class PlayerEngagementDbmInMemoryData {
         }
     }
 
-    internal static SeasonCalendarDTO GetCurrentSeason() {
+    internal static SeasonCalendarWithNextDTO GetCurrentSeason() {
         lock (Sync) {
-            return _currentSeason;
+            return new SeasonCalendarWithNextDTO(_currentSeason, _nextSeason);
         }
     }
 
@@ -133,6 +134,11 @@ internal class PlayerEngagementDbmInMemoryData {
     internal static void SetCurrentSeason(SeasonCalendarDTO season) {
         lock (Sync)
             _currentSeason = season;
+    }
+
+    internal static void SetNextSeason(SeasonCalendarDTO season) {
+        lock (Sync)
+            _nextSeason = season;
     }
 
     internal static Result<long> CreatePolicyDraft(

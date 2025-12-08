@@ -306,10 +306,10 @@ public sealed class PlayerEngagementDbmInMemoryService : DbmInMemoryService, IPl
         }
     }
 
-    public Task<Result<SeasonCalendarDTO>> GetCurrentSeasonAsync(CancellationToken ct) {
+    public Task<Result<SeasonCalendarWithNextDTO>> GetCurrentSeasonAsync(CancellationToken ct) {
         lock (Locker) {
-            SeasonCalendarDTO dto = PlayerEngagementDbmInMemoryData.GetCurrentSeason();
-            return Task.FromResult(Result<SeasonCalendarDTO>.Success(dto));
+            SeasonCalendarWithNextDTO dto = PlayerEngagementDbmInMemoryData.GetCurrentSeason();
+            return Task.FromResult(Result<SeasonCalendarWithNextDTO>.Success(dto));
         }
     }
 }

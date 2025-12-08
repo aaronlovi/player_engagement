@@ -77,7 +77,7 @@ order by start_utc asc;
             reader.GetDateTime(_endIndex));
 
         Boosts.Add(dto);
-        return true;
+        return true; // Continue processing rows
     }
 
     private static string GetSql(string schemaName) {
