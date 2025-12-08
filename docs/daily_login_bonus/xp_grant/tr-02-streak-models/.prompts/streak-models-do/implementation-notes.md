@@ -3,18 +3,15 @@
 ## Work done
 
 - Added streak engine contract and types (state, context, result) plus runtime model state placeholders.
-- Implemented initial `StreakEngine` with Plateau/Cap, Weekly Cycle reset, Decay scaffold, and milestone tracking stub; grace-first handling and streak curve lookup included; XP calculation rounds away from zero.
-- Added logging guardrails for missing model configuration (Plateau, Seasonal, Milestone) using a typed logger.
-- Added new test project `PlayerEngagement.Domain.Tests` to solution and covered Plateau/Cap behaviors with xUnit tests (consecutive growth, plateau clamp, grace-covered miss, and reset beyond grace).
+- Implemented `StreakEngine` with Plateau/Cap, Weekly Cycle reset, Decay, Tiered Seasonal tier selection/boundary reset, and milestone tracking stub; grace-first handling and streak curve lookup included; XP calculation rounds away from zero.
+- Added logging guardrails for missing model configuration (Plateau, Seasonal, Milestone) and milestone hit info logs using a typed logger.
+- Added new test project `PlayerEngagement.Domain.Tests` to solution and covered Plateau/Cap, Decay, and Tiered Seasonal behaviors with xUnit tests (growth, clamp, grace-covered miss, decay multi-miss, tier multipliers, season boundary reset).
 - Introduced test factory helpers for policy documents to reduce direct `new` usage per testing guideline.
-- Implemented Decay/Soft Reset miss handling (per-miss decay with floor+clamp) and added xUnit coverage for decay scenarios and grace interactions.
-- Implemented tier multiplier application for Tiered Seasonal Reset and added a tier selection test (season boundary/reset still pending).
 
 ## Next steps (per plan)
 
-- Implement Tiered Seasonal Reset logic with SeasonGrain integration (season boundary reset) and finalize tier behavior.
-- Implement Milestone Meta-Reward state persistence and observability hooks; extend metrics/logging.
-- Wire engine into eligibility/claim flows, policy/DTO validation, and persistence of streak/model_state.
+- Implement Milestone Meta-Reward state persistence and observability hooks; extend metrics/logging beyond current logs.
+- Wire engine into eligibility/claim flows, policy/DTO validation, and persistence of streak/model_state (deferred until orchestration exists).
 - Update docs/runbooks and have owner run `dotnet test src/PlayerEngagement.sln`.
 
 ## Metadata
@@ -36,7 +33,7 @@ Medium — foundational engine and Plateau/Cap logic are in place; remaining mod
 
 ### Open Questions
 
-- Detailed seasonal boundary handling (SeasonGrain reload cadence, tier selection) and milestone schema for future non-XP rewards.
+- SeasonGrain integration details (reload cadence, authoritative boundaries) and milestone schema for future non-XP rewards.
 
 ### Assumptions
 
