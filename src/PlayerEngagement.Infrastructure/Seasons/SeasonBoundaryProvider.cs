@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using InnoAndLogic.Shared;
 using Microsoft.Extensions.Logging;
 using PlayerEngagement.Domain.Policies.DailyLoginBonus.XPGrant;
-using PlayerEngagement.Domain.Seasons;
 using PlayerEngagement.Infrastructure.Persistence;
 using PlayerEngagement.Infrastructure.Persistence.DTOs.Seasons;
 

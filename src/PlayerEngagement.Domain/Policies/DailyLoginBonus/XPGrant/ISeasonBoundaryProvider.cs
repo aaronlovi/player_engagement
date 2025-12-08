@@ -1,8 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
-using PlayerEngagement.Domain.Policies.DailyLoginBonus.XPGrant;
 
-namespace PlayerEngagement.Domain.Seasons;
+namespace PlayerEngagement.Domain.Policies.DailyLoginBonus.XPGrant;
 
 /// <summary>
 /// Provides season boundary information for streak computations.
