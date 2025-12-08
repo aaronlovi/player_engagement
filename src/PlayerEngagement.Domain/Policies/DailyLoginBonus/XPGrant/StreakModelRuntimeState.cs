@@ -9,7 +9,7 @@ namespace PlayerEngagement.Domain.Policies.DailyLoginBonus.XPGrant;
 public sealed record StreakModelRuntimeState
 {
     /// <summary>Shared empty instance to avoid allocations.</summary>
-    public static readonly StreakModelRuntimeState Empty = new(Array.Empty<int>());
+    public static readonly StreakModelRuntimeState Empty = new([]);
 
     /// <summary>Creates a new runtime state.</summary>
     /// <param name="ClaimedMilestones">Milestone days already claimed (for idempotency).</param>

@@ -227,23 +227,33 @@ public sealed class StreakEngine : IStreakEngine
             return;
         }
 
+        MilestoneEvaluation evaluation = EvaluateMilestones(model, computation);
+        if (evaluation.Hits.Count == 0)
+            return;
+
+        computation.MilestoneHits = evaluation.Hits;
+        computation.ModelState = evaluation.ModelState;
+
+        foreach (MilestoneMetaRewardMilestone hit in evaluation.Hits) {
+            _logger.LogInformation("Milestone hit at day {MilestoneDay} for streak day {EffectiveDay}.",
+                hit.Day, computation.EffectiveStreakDay);
+        }
+    }
+
+    private static MilestoneEvaluation EvaluateMilestones(
+        MilestoneMetaRewardStreakModel model,
+        StreakEngineModelComputation computation)
+    {
         IReadOnlyCollection<int> claimed = computation.ModelState.ClaimedMilestones;
         List<MilestoneMetaRewardMilestone> hits = new(model.Milestones.Count);
-        List<int> updatedClaimed = new(model.Milestones.Count);
+        List<int> updatedClaimed = new(model.Milestones.Count + claimed.Count);
 
         foreach (int claimedDay in claimed)
             updatedClaimed.Add(claimedDay);
 
         foreach (MilestoneMetaRewardMilestone milestone in model.Milestones)
         {
-            bool alreadyClaimed = false;
-            for (int i = 0; i < updatedClaimed.Count && !alreadyClaimed; i++) {
-                if (updatedClaimed[i] != milestone.Day)
-                    continue;
-                alreadyClaimed = true;
-            }
-
-            if (alreadyClaimed)
+            if (HasClaimed(updatedClaimed, milestone.Day))
                 continue;
 
             if (computation.EffectiveStreakDay == milestone.Day)
@@ -253,15 +263,22 @@ public sealed class StreakEngine : IStreakEngine
             }
         }
 
-        if (hits.Count > 0)
+        StreakModelRuntimeState modelState = hits.Count == 0
+            ? computation.ModelState
+            : new StreakModelRuntimeState([.. updatedClaimed]);
+
+        return new MilestoneEvaluation([.. hits], modelState);
+    }
+
+    private static bool HasClaimed(IReadOnlyList<int> claimed, int day)
+    {
+        for (int i = 0; i < claimed.Count; i++)
         {
-            computation.MilestoneHits = [.. hits];
-            computation.ModelState = new StreakModelRuntimeState([.. updatedClaimed]);
-            foreach (MilestoneMetaRewardMilestone hit in hits) {
-                _logger.LogInformation("Milestone hit at day {MilestoneDay} for streak day {EffectiveDay}.",
-                    hit.Day, computation.EffectiveStreakDay);
-            }
+            if (claimed[i] == day)
+                return true;
         }
+
+        return false;
     }
 
     private static TieredSeasonalResetTierDefinition? SelectTier(TieredSeasonalResetStreakModel model, int effectiveStreakDay)
