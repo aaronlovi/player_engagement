@@ -10,7 +10,7 @@
 
 ## Next steps (per plan)
 
-- Implement Milestone Meta-Reward state persistence and observability hooks; extend metrics/logging beyond current logs.
+- Milestone Meta-Reward state persistence and logging are in place; extend metrics/logging when claim/eligibility wiring exists.
 - Wire engine into eligibility/claim flows, policy/DTO validation, and persistence of streak/model_state (deferred until orchestration exists).
 - Update docs/runbooks and have owner run `dotnet test src/PlayerEngagement.sln`.
 
@@ -33,7 +33,7 @@ Medium — foundational engine and Plateau/Cap logic are in place; remaining mod
 
 ### Open Questions
 
-- SeasonGrain integration details (reload cadence, authoritative boundaries) and milestone schema for future non-XP rewards.
+- SeasonGrain integration details (reload cadence, authoritative boundaries), milestone schema for future non-XP rewards, and where metrics should be recorded once claim/eligibility flows exist.
 
 ### Assumptions
 
