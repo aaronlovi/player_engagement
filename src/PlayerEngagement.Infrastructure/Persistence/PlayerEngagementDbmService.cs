@@ -9,6 +9,7 @@ using InnoAndLogic.Shared;
 using InnoAndLogic.Shared.Models;
 using Microsoft.Extensions.Logging;
 using PlayerEngagement.Infrastructure.Persistence.DTOs.DailyLoginBonus.XPGrant;
+using PlayerEngagement.Infrastructure.Persistence.DTOs.Seasons;
 using PlayerEngagement.Infrastructure.Persistence.Statements.DailyLoginBonus.XPGrant;
 
 namespace PlayerEngagement.Infrastructure.Persistence;
@@ -407,6 +408,11 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
         List<PolicySegmentOverrideDTO> copy = [.. stmt.Overrides];
         _logger.LogInformation("GetPolicySegmentOverridesAsync complete: policyKey={PolicyKey}, count={Count}", policyKey, copy.Count);
         return Result<List<PolicySegmentOverrideDTO>>.Success(copy);
+    }
+
+    public Task<Result<SeasonCalendarDTO>> GetCurrentSeasonAsync(CancellationToken ct) {
+        _logger.LogWarning("GetCurrentSeasonAsync not implemented; returning empty season.");
+        return Task.FromResult(Result<SeasonCalendarDTO>.Success(SeasonCalendarDTO.Empty));
     }
 
     #region PRIVATE HELPERS

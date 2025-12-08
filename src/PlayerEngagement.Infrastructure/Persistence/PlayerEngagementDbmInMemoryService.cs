@@ -7,6 +7,7 @@ using InnoAndLogic.Shared;
 using InnoAndLogic.Shared.Models;
 using Microsoft.Extensions.Logging;
 using PlayerEngagement.Infrastructure.Persistence.DTOs.DailyLoginBonus.XPGrant;
+using PlayerEngagement.Infrastructure.Persistence.DTOs.Seasons;
 
 namespace PlayerEngagement.Infrastructure.Persistence;
 
@@ -304,4 +305,7 @@ public sealed class PlayerEngagementDbmInMemoryService : DbmInMemoryService, IPl
             return Task.FromResult(Result<List<PolicySegmentOverrideDTO>>.Success(overrides));
         }
     }
+
+    public Task<Result<SeasonCalendarDTO>> GetCurrentSeasonAsync(CancellationToken ct) =>
+        Task.FromResult(Result<SeasonCalendarDTO>.Success(SeasonCalendarDTO.Empty));
 }

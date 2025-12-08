@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using InnoAndLogic.Persistence;
 using InnoAndLogic.Shared;
 using PlayerEngagement.Infrastructure.Persistence.DTOs.DailyLoginBonus.XPGrant;
+using PlayerEngagement.Infrastructure.Persistence.DTOs.Seasons;
 
 namespace PlayerEngagement.Infrastructure.Persistence;
 
@@ -61,4 +62,5 @@ public interface IPlayerEngagementDbmService : IDbmService {
     Task<Result<List<PolicyStreakCurveEntryDTO>>> GetPolicyStreakCurveAsync(string policyKey, long policyVersion, CancellationToken ct);
     Task<Result<List<PolicySeasonalBoostDTO>>> GetPolicySeasonalBoostsAsync(string policyKey, long policyVersion, CancellationToken ct);
     Task<Result<List<PolicySegmentOverrideDTO>>> GetPolicySegmentOverridesAsync(string policyKey, CancellationToken ct);
+    Task<Result<SeasonCalendarDTO>> GetCurrentSeasonAsync(CancellationToken ct);
 }
