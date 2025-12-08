@@ -1,21 +1,25 @@
 # TR-02 Streak Models Implementation Plan
 
 ## Scope
+
 - Translate docs/daily_login_bonus/xp_grant/tr-02-streak-models/implementation_plan.md (steps 1–12) into executable work for the streak engine and integrations.
 - Align with TR-02 high/low-level requirements, soft_decay_streak_model.md, milestone_options.md, XP grant HLD/technical/business requirements, and AGENTS.md constraints (pure functions, no LINQ in prod, explicit usings, XML docs for new public members, UTC timestamps, policy-version awareness, no Dapper).
 
 ## Inputs / Outputs (engine contract)
+
 - Inputs: policy version (model type + parameters + streak curve rows), prior streak state (current_streak, longest_streak, grace_used, last_reward_day_id, model_state JSON), reward-day id, claim timestamp.
 - Outputs: new streak state, XP multiplier/additive bonus derived from streak curve and model logic, milestone/season notes, receipt-ready fields for claim/eligibility, observability breadcrumbs (model type, curve index, grace/decay/season/milestone decisions).
 - Determinism/idempotency: transition must be pure for the given inputs; retries reuse stored award and do not mutate state again.
 
 ## Dependencies
+
 - Policy storage/validation: streak_model_type + streak_model_parameters schema; streak curve table; season metadata from SeasonGrain/Dbm.
 - Persistence: daily_login_bonus_xp_streaks (TR-06) model_state JSON; daily_login_award uniqueness on (user_id, reward_day_id); xp_ledger append-only.
 - Time: reward-day resolution per TR-03 (anchor TZ + claim window) provided by orchestrator.
 - Observability: metrics/log hooks in claim/eligibility flows; milestone flags per milestone_options.md.
 
 ## Work Plan (mapped to steps 1–12)
+
 1) Confirm engine scope & contract  
    - Draft interface/DTOs capturing inputs/outputs above; align with reward-day resolver contract.  
    - Validate model_state shape expectations and serialization.
@@ -56,32 +60,45 @@
     - Record what to run: dotnet test src/PlayerEngagement.sln (owner executes).
 
 ## Observability & Testing Expectations
+
 - Logs: model type, prior/current streak, grace usage, decay/season boundary checks, milestone hits, curve index chosen, policy_version, receipt_id. JSON structured.  
 - Metrics: claims_total/already_claimed_total/xp_granted_sum (existing), plus streak_length_hist by model, grace_usage_total, milestone_unlock_total, policy_version_count.  
 - Tests: xUnit, no FluentAssertions; property tests for streak transitions; concurrency/idempotency simulation; DST/timezone cases through reward-day resolver.
 
 ## Deliverables
+
 - Engine interfaces/types with XML docs; model implementations and tests per model; updated claim/eligibility wiring; observability plumbing; policy validation updates; documentation/runbook updates.  
 - Plan to store outputs under respective projects (Domain/Infrastructure/Host) per AGENTS namespace guidance.
 
 ## Open Questions / Risks
+
 - Exact season data source freshness and cache invalidation timing for SeasonGrain.  
 - Milestone schema stability (RewardType/RewardValue strings) until asset catalog exists.  
 - Potential need for additional property tests for extreme decay percentages or large streaks.
 
 ## Metadata
+
 ### Status
+
 success
+
 ### Confidence
+
 High; scope and requirements are well-documented.
+
 ### Dependencies
+
 - AGENTS.md
 - docs/daily_login_bonus/xp_grant/tr-02-streak-models/implementation_plan.md
 - TR-02 high/low-level requirements, soft_decay_streak_model.md, milestone_options.md
 - XP grant business/technical/HLD docs
+
 ### Open Questions
+
 - SeasonGrain data freshness/caching specifics.
 - Milestone RewardType/RewardValue final shapes when non-XP assets arrive.
+
 ### Assumptions
+
 - Reward-day resolution per TR-03 is already available to the engine.  
 - Policy storage and SeasonGrain interfaces can be extended without schema conflicts.

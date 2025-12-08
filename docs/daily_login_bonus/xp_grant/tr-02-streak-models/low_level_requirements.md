@@ -37,7 +37,7 @@
 
 ## Concurrency & Idempotency
 
-- Use the award uniqueness on `(user_id, reward_day_id)` to guard concurrent claims. Streak transition should be computed once; retries reuse stored award/receipt and do not mutate streak state again.
+- Use the award uniqueness on `(user_id, reward_day_id)` to guard concurrent claims. Streak transition should be computed once; retries reuse stored award/receipt and do not mutate streak state again. (Wiring into claim/eligibility flows is deferred until orchestration exists.)
 - Transition function must be re-runnable safely against the same inputs to support dry-run/preview APIs.
 
 ## Observability & Testing
