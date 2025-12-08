@@ -14,14 +14,14 @@
 - Implement Dbm query path end-to-end (DTO mapping, statement already present) and ensure in-memory DBM mirrors the schema.
 - Implement SeasonGrain (single instance) using Dbm provider: load on activation, block until ready, return SeasonBoundaryInfo (null when none), support Refresh after admin changes/season end.
 - Add XML docs/tests as feasible (season statement/provider/grain); keep scope single-instance; no metrics yet.
-- If any scope remains, then create `season-grain-do-5` via `prompts/create-meta-prompt.md` referencing the plan.
+- If any scope remains, you must create `season-grain-do-5` via `prompts/create-meta-prompt.md`, explicitly reference `.prompts/season-grain-plan/plan.md`, and only suggest (do not run) executing it through `prompts/run-prompt.md`; creation is mandatory to avoid workflow stalls.
 
 ## Plan
 
 - Add migration SQL for `daily_login_bonus_xp_seasons`; wire into migrations list.
 - Ensure Dbm `GetCurrentSeasonAsync` uses the new table; update in-memory DBM data setters/getters as needed.
 - Implement SeasonGrain contract/activation/readiness using SeasonBoundaryProvider/Dbm; return null when no active season.
-- Add/update tests where possible; update implementation notes; if scope remains, create season-grain-do-5.
+- Add/update tests where possible; update implementation notes; if any scope remains, you must create season-grain-do-5 via `prompts/create-meta-prompt.md`, reference `.prompts/season-grain-plan/plan.md`, and only suggest running it via `prompts/run-prompt.md` (do not auto-run); ensure the follow-on prompt exists before finishing when scope is incomplete.
 
 ## Outputs
 
