@@ -37,6 +37,8 @@ Keep C# namespaces aligned with folder structure (e.g., file `Policies/Mappers/F
 5. You report the compile/test results back to me.
 6. If everything passes, I create the commit.
 
+- Do not stage or commit any changes unless the repo owner explicitly asks you to or explicitly approves staging/committing for that task.
+
 - Only the repo owner runs compile/tests to avoid polluting this assistant’s context; I will not execute those commands.
 - Never update the implementation plan, stage changes, or create a commit until you have completed your review and shared compile/test results per steps 2–5 above.
 
