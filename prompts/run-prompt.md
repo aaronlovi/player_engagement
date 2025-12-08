@@ -3,15 +3,18 @@
 Use this to select and execute prompt files in `./prompts/` (numbered) or explicit prompt paths (e.g., slugged `.prompts/{slug}-{purpose}/prompt.md`) within the current Codex context. Helpers in `/prompts` are not runnable tasks. Default to safe, sequential execution.
 
 ## Usage
+
 - Invocation argument `$TARGETS`: empty → most recent numbered prompt; number(s) or partial name(s) → resolve matching files; explicit paths are allowed (including `.prompts/**/prompt.md`); optional `--parallel` or `--sequential` flag (default sequential).
 - Run only prompts you explicitly resolved; do not move/rename prompt files unless instructed.
 
 ## Safety and sandbox
+
 - Respect current sandbox/approval constraints; do not request escalations if disallowed. Follow the target repo’s `AGENTS.md`; if absent for prompt work, use shared defaults in `prompts/PROMPT_RULES.md`.
 - Prefer read/search commands; avoid destructive git commands; do not commit unless the user explicitly asks.
 - Parallel only if prompts touch disjoint files/directories; otherwise force sequential.
 
 ## Steps
+
 1) Snapshot context (optional but helpful):
    - `git status --short`
    - `ls -t ./prompts/*.md | head -5` (ignore if none)
@@ -47,5 +50,6 @@ Use this to select and execute prompt files in `./prompts/` (numbered) or explic
    - Do not auto-archive or commit; only do so if explicitly requested.
 
 ## Output format
+
 - For each prompt: `✓ Executed: <prompt-path>` plus a brief result summary.
 - For multiple prompts: indicate strategy (sequential/parallel), list prompts with status, and provide a consolidated summary.
