@@ -421,7 +421,10 @@ public sealed class PlayerEngagementDbmService : DbmService, IPlayerEngagementDb
         }
 
         SeasonCalendarWithNextDTO dto = stmt.Result;
-        _logger.LogInformation("GetCurrentSeasonAsync succeeded: currentSeasonId={SeasonId}", dto.Current.SeasonId);
+        _logger.LogInformation(
+            "GetCurrentSeasonAsync succeeded: currentSeasonId={CurrentSeasonId}, nextSeasonId={NextSeasonId}",
+            dto.Current.SeasonId,
+            dto.Next.SeasonId);
         return Result<SeasonCalendarWithNextDTO>.Success(dto);
     }
 

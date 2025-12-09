@@ -8,7 +8,7 @@ The front-end/admin interface sits in `ui/player-engagement-config-ui`, built wi
 
 Current implementation work targets a local development environment. Use Docker Desktop plus the compose files under `infra/` for background services such as Postgres or Redis; cloud/Kubernetes deployment is out of scope for now.
 
-When modeling back-end behavior, favor Orleans grains as the primary caching boundary. Each grain should reload its state (including policy configuration) from persistence on activation and avoid relying on distributed caches like Redis unless a specific cross-grain composition requires it. This keeps cache coherence simple and resilient if a node goes offline.
+When modeling back-end behavior, favor Orleans grains as the primary caching boundary. Each grain should reload its state (including policy configuration) from persistence on activation and avoid relying on distributed caches like Redis unless a specific cross-grain composition requires it. This keeps cache coherence simple and resilient if a node goes offline. Grains live in `src/PlayerEngagement.Grains/PlayerEngagement.Grains.csproj` with interfaces in `src/PlayerEngagement.Grains.Interfaces/PlayerEngagement.Grains.Interfaces.csproj`; grain-focused tests belong in a future `src/PlayerEngagement.Grains.Tests` project (not yet created).
 
 For database design, avoid using the Dapper library; rely on hand-written data access aligned with project conventions. Tables should typically include an identity `BIGINT` primary key unless a compelling reason dictates a different strategy. Default to non-nullable columns—store empty strings instead of null for text fields, and only allow nullable timestamps when semantically required (e.g., `obsoleted_at`).
 

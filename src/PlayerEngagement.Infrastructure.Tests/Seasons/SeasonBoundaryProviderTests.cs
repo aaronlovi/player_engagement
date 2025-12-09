@@ -20,6 +20,7 @@ public sealed class SeasonBoundaryProviderTests
             "Test",
             new DateTime(2024, 1, 1),
             new DateTime(2024, 1, 31)));
+        PlayerEngagementDbmInMemoryData.SetNextSeason(SeasonCalendarDTO.Empty);
 
         PlayerEngagementDbmInMemoryService dbm = new(new NullLoggerFactory());
         SeasonBoundaryProvider provider = new(dbm, NullLoggerFactory.Instance);
@@ -35,6 +36,25 @@ public sealed class SeasonBoundaryProviderTests
     public async Task GetCurrentSeason_ReturnsNullWhenEmpty()
     {
         PlayerEngagementDbmInMemoryData.SetCurrentSeason(SeasonCalendarDTO.Empty);
+        PlayerEngagementDbmInMemoryData.SetNextSeason(SeasonCalendarDTO.Empty);
+        PlayerEngagementDbmInMemoryService dbm = new(new NullLoggerFactory());
+        SeasonBoundaryProvider provider = new(dbm, NullLoggerFactory.Instance);
+
+        SeasonBoundaryInfo? result = await provider.GetCurrentSeasonAsync(CancellationToken.None);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetCurrentSeason_HandlesNextSeasonWhenNoCurrent()
+    {
+        PlayerEngagementDbmInMemoryData.SetCurrentSeason(SeasonCalendarDTO.Empty);
+        PlayerEngagementDbmInMemoryData.SetNextSeason(new SeasonCalendarDTO(
+            2,
+            "Next",
+            new DateTime(2024, 2, 1),
+            new DateTime(2024, 2, 29)));
+
         PlayerEngagementDbmInMemoryService dbm = new(new NullLoggerFactory());
         SeasonBoundaryProvider provider = new(dbm, NullLoggerFactory.Instance);
 
@@ -51,6 +71,7 @@ public sealed class SeasonBoundaryProviderTests
             "One",
             new DateTime(2024, 1, 1),
             new DateTime(2024, 1, 31)));
+        PlayerEngagementDbmInMemoryData.SetNextSeason(SeasonCalendarDTO.Empty);
 
         PlayerEngagementDbmInMemoryService dbm = new(new NullLoggerFactory());
         SeasonBoundaryProvider provider = new(dbm, NullLoggerFactory.Instance);
@@ -61,6 +82,7 @@ public sealed class SeasonBoundaryProviderTests
             "Two",
             new DateTime(2024, 2, 1),
             new DateTime(2024, 2, 28)));
+        PlayerEngagementDbmInMemoryData.SetNextSeason(SeasonCalendarDTO.Empty);
 
         await provider.RefreshAsync(CancellationToken.None);
         SeasonBoundaryInfo? result = await provider.GetCurrentSeasonAsync(CancellationToken.None);

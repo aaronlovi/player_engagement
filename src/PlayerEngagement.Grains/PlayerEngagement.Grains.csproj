@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Orleans.Core" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../PlayerEngagement.Domain/PlayerEngagement.Domain.csproj" />
+    <ProjectReference Include="../PlayerEngagement.Grains.Interfaces/PlayerEngagement.Grains.Interfaces.csproj" />
+  </ItemGroup>
+
+</Project>

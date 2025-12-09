@@ -9,17 +9,20 @@ namespace PlayerEngagement.Infrastructure.Persistence.Statements.DailyLoginBonus
 internal sealed class GetCurrentSeasonStmt : PostgresQueryDbStmtBase
 {
     private const string SqlTemplate = @"
-with active as (
+with params as (
+    select timezone('utc', now())::date as today_utc
+),
+active as (
     select season_id, label, start_date, end_date
-    from ${schema}.daily_login_bonus_xp_seasons
-    where start_date <= current_date and end_date >= current_date
+    from ${schema}.daily_login_bonus_xp_seasons, params p
+    where start_date <= p.today_utc and end_date >= p.today_utc
     order by start_date asc
     limit 1
 ),
 next as (
     select season_id, label, start_date, end_date
-    from ${schema}.daily_login_bonus_xp_seasons
-    where start_date > current_date
+    from ${schema}.daily_login_bonus_xp_seasons, params p
+    where start_date > p.today_utc
     order by start_date asc
     limit 1
 )
@@ -32,8 +35,9 @@ select
     coalesce(n.label, '') as next_label,
     coalesce(n.start_date, '0001-01-01') as next_start_date,
     coalesce(n.end_date, '0001-01-01') as next_end_date
-from active a
-cross join next n;
+from params p
+left join active a on true
+left join next n on true;
 ";
 
     private static string? _sql;

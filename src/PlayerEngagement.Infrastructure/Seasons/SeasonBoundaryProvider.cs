@@ -33,6 +33,9 @@ public sealed class SeasonBoundaryProvider : ISeasonBoundaryProvider
         if (!_loaded)
             await EnsureLoadedAsync(cancellationToken);
 
+        if (!_loaded)
+            throw new InvalidOperationException("SeasonBoundaryProvider has not completed initial load.");
+
         return _currentSeason;
     }
 
@@ -50,6 +53,7 @@ public sealed class SeasonBoundaryProvider : ISeasonBoundaryProvider
             if (_loaded && !force)
                 return;
 
+            _logger.LogInformation("Loading season boundaries (force={Force})", force);
             Result<SeasonCalendarWithNextDTO> result = await _dbmService.GetCurrentSeasonAsync(cancellationToken);
             if (result.IsFailure)
             {
@@ -57,17 +61,23 @@ public sealed class SeasonBoundaryProvider : ISeasonBoundaryProvider
                 return;
             }
 
-            if (result.Value!.Current.IsEmpty)
+            SeasonCalendarWithNextDTO value = result.Value ?? SeasonCalendarWithNextDTO.Empty;
+            if (value.Current.IsEmpty)
             {
                 _currentSeason = null;
-                _nextSeason = MapToBoundary(result.Value.Next);
+                _nextSeason = MapToBoundary(value.Next);
                 _loaded = true;
+                _logger.LogInformation("Season boundaries loaded: no current season. nextSeasonId={NextSeasonId}", value.Next.SeasonId);
                 return;
             }
 
-            _currentSeason = MapToBoundary(result.Value.Current);
-            _nextSeason = MapToBoundary(result.Value.Next);
+            _currentSeason = MapToBoundary(value.Current);
+            _nextSeason = MapToBoundary(value.Next);
             _loaded = true;
+            _logger.LogInformation(
+                "Season boundaries loaded: currentSeasonId={CurrentSeasonId}, nextSeasonId={NextSeasonId}",
+                value.Current.SeasonId,
+                value.Next.SeasonId);
         }
         finally
         {

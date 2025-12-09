@@ -12,7 +12,7 @@
 
 - Add migration to create `daily_login_bonus_xp_seasons` table (season_id BIGINT PK, label TEXT, start_date DATE, end_date DATE, created_at TIMESTAMPTZ).
 - Implement Dbm query path end-to-end (DTO mapping, statement already present) and ensure in-memory DBM mirrors the schema.
-- Implement SeasonGrain (single instance) using Dbm provider: load on activation, block until ready, return SeasonBoundaryInfo (null when none), support Refresh after admin changes/season end.
+- Implement SeasonGrain (single instance) using Dbm provider: load on activation, block until ready, return SeasonBoundaryInfo (null when none), support Refresh after admin changes/season end; grains live in `src/PlayerEngagement.Grains/PlayerEngagement.Grains.csproj` with interfaces in `src/PlayerEngagement.Grains.Interfaces/PlayerEngagement.Grains.Interfaces.csproj`, and grain tests should be added in a future `src/PlayerEngagement.Grains.Tests` project once created.
 - Add XML docs/tests as feasible (season statement/provider/grain); keep scope single-instance; no metrics yet.
 - If any scope remains, you must create `season-grain-do-5` via `prompts/create-meta-prompt.md`, explicitly reference `.prompts/season-grain-plan/plan.md`, and only suggest (do not run) executing it through `prompts/run-prompt.md`; creation is mandatory to avoid workflow stalls.
 

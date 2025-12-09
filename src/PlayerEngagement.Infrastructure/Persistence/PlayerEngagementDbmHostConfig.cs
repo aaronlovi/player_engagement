@@ -7,7 +7,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using PlayerEngagement.Domain.Policies.DailyLoginBonus.XPGrant;
 using PlayerEngagement.Infrastructure.Policies.Services.DailyLoginBonus.XPGrant;
+using PlayerEngagement.Infrastructure.Seasons;
 
 namespace PlayerEngagement.Infrastructure.Persistence;
 
@@ -50,6 +52,7 @@ public static class PlayerEngagementDbmHostConfig {
         };
 
         _ = configured.AddScoped<IPolicyDocumentPersistenceService, PolicyDocumentPersistenceService>();
+        _ = configured.AddSingleton<ISeasonBoundaryProvider, SeasonBoundaryProvider>();
         return configured;
     }
 

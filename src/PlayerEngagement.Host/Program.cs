@@ -15,8 +15,10 @@ using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Hosting;
 using Orleans.Serialization;
+using PlayerEngagement.Grains.DailyLoginBonus.XPGrant;
 using PlayerEngagement.Infrastructure.Persistence;
 using Serilog;
+using Hosting = Microsoft.Extensions.Hosting;
 
 namespace PlayerEngagement.Host;
 
